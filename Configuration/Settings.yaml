@@ -1,0 +1,41 @@
+Mw:
+  Metamorph:
+    transformations:
+      extensionInventory:
+        name: ExtensionInventory
+        position: 10
+      classInventory:
+        name: ClassInventory
+        position: 20
+      cleanupPackages:
+        name: CleanupPackages
+        position: 30
+      createPackages:
+        name: CreatePackages
+        position: 40
+      createClasses:
+        name: CreateClasses
+        position: 50
+      rewritePackageClasses:
+        name: PackageClassRewrite
+        position: 60
+    visitors:
+      - ClassNamespaceRewriterVisitor
+      - ExtbaseClassReplacementVisitor
+      - ExtbaseClassEliminationVisitor
+      - ReplaceMakeInstanceCallsVisitor
+    staticReplacements:
+      TYPO3\CMS\Extbase\Mvc\Controller\ActionController: TYPO3\Flow\Mvc\Controller\ActionController
+      TYPO3\CMS\Core\Utility\GeneralUtility: Mw\Metamorph\TYPO3\Utility\GeneralUtility
+      TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper: TYPO3\Fluid\Core\ViewHelper\AbstractViewHelper
+      TYPO3\CMS\Fluid\ViewHelpers\IfViewHelper: TYPO3\Fluid\ViewHelpers\IfViewHelper
+      TYPO3\CMS\Extbase\Persistence\ObjectStorage: Doctrine\Common\Collections\Collection
+      TYPO3\CMS\Extbase\Persistence\QueryInterface: TYPO3\Flow\Persistence\QueryInterface
+      TYPO3\CMS\Extbase\Persistence\Repository: TYPO3\Flow\Persistence\Repository
+      Tx_Extbase_Mvc_Controller_ActionController: TYPO3\Flow\Mvc\Controller\ActionController
+      Tx_Fluid_Core_ViewHelper_AbstractViewHelper: TYPO3\Fluid\Core\ViewHelper\AbstractViewHelper
+      Tx_Fluid_ViewHelpers_IfViewHelper: TYPO3\Fluid\ViewHelpers\IfViewHelper
+      Tx_Extbase_Persistence_ObjectStorage: Doctrine\Common\Collections\Collection
+      Tx_Extbase_Persistence_QueryInterface: TYPO3\Flow\Persistence\QueryInterface
+      Tx_Extbase_Persistence_Repository: TYPO3\Flow\Persistence\Repository
+      t3lib_div: Mw\Metamorph\TYPO3\Utility\GeneralUtility
