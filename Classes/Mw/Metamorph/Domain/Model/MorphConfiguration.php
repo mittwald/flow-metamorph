@@ -9,6 +9,7 @@ class MorphConfiguration
 {
 
 
+
     private $name;
 
 

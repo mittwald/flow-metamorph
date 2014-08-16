@@ -17,6 +17,7 @@ class ClassInventory extends AbstractTransformation
 {
 
 
+
     private $classMap;
 
 

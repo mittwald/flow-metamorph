@@ -17,6 +17,7 @@ class PackageClassRewrite implements Transformation
 {
 
 
+
     /**
      * @var \TYPO3\Flow\Object\ObjectManagerInterface
      * @Flow\Inject
@@ -66,7 +67,7 @@ class PackageClassRewrite implements Transformation
 
     public function execute(MorphConfiguration $configuration, MorphState $state, OutputInterface $out)
     {
-        $classMap   = $state->readYamlFile('ClassMap', TRUE);
+        $classMap = $state->readYamlFile('ClassMap', TRUE);
 
         $this->traverser = new NodeTraverser();
         $this->traverser->addVisitor(new NameResolver());

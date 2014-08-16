@@ -19,6 +19,7 @@ class MorphConfigurationRepository implements RepositoryInterface
 {
 
 
+
     /**
      * @var \Mw\Metamorph\Domain\Factory\MorphConfigurationFactory
      * @Flow\Inject
@@ -96,18 +97,21 @@ class MorphConfigurationRepository implements RepositoryInterface
      */
     public function findAll()
     {
-        $files   = Files::readDirectoryRecursively($this->configurationPath, '.yaml');
+        $files = glob($this->configurationPath . '/*.yaml');
 
         /** @var \Mw\Metamorph\Domain\Factory\MorphConfigurationFactory $factory */
         $factory = $this->morphConfigurationFactory;
 
-        return array_map(function ($filename) use ($factory)
-        {
-            $name          = basename($filename, '.yaml');
-            $configuration = Yaml::parse(file_get_contents($filename));
+        return array_map(
+            function ($filename) use ($factory)
+            {
+                $name          = basename($filename, '.yaml');
+                $configuration = Yaml::parse(file_get_contents($filename));
 
-            return $factory->createFromConfigurationArray($name, $configuration);
-        }, $files);
+                return $factory->createFromConfigurationArray($name, $configuration);
+            },
+            $files
+        );
     }
 
 
@@ -116,7 +120,7 @@ class MorphConfigurationRepository implements RepositoryInterface
      * Finds an object matching the given identifier.
      *
      * @param mixed $identifier The identifier of the object to find
-     * @return object The matching object if found, otherwise NULL
+     * @return \Mw\Metamorph\Domain\Model\MorphConfiguration The matching object if found, otherwise NULL
      * @api
      */
     public function findByIdentifier($identifier)

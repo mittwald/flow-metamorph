@@ -9,6 +9,7 @@ class AbstractVisitor extends NodeVisitorAbstract
 {
 
 
+
     protected $settings;
 
 

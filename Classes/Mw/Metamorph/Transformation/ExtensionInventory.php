@@ -11,6 +11,7 @@ class ExtensionInventory extends AbstractTransformation
 {
 
 
+
     public function execute(MorphConfiguration $configuration, MorphState $state, OutputInterface $out)
     {
         $rootDirectory     = $configuration->getSourceDirectory() . '/typo3conf/ext';

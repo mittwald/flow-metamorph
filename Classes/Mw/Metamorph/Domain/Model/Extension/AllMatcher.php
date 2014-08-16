@@ -6,6 +6,7 @@ class AllMatcher implements ExtensionMatcher
 {
 
 
+
     public function match($extensionKey)
     {
         return TRUE;

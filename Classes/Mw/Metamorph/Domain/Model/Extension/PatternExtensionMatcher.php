@@ -6,6 +6,7 @@ class PatternExtensionMatcher implements ExtensionMatcher
 {
 
 
+
     public function __construct($pattern)
     {
         $this->pattern = $pattern;

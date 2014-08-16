@@ -10,6 +10,7 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
 {
 
 
+
     /**
      * @var \PhpParser\Node\Stmt\Namespace_[]
      */
@@ -42,14 +43,20 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
         }
         if ($node instanceof Node\Stmt\Class_)
         {
-            if ($node->extends && ($node->extends->toString() === 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity' || $node->extends->toString() === 'Tx_Extbase_DomainObject_AbstractEntity'))
+            if ($node->extends && ($node->extends->toString(
+                    ) === 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity' || $node->extends->toString(
+                    ) === 'Tx_Extbase_DomainObject_AbstractEntity')
+            )
             {
                 $this->increaseStatCounter($node->extends->toString());
                 $node->extends = NULL;
 
                 $this->addAnnotation($node->getDocComment(), '@Flow\\Entity');
             }
-            if ($node->extends && ($node->extends->toString() === 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject' || $node->extends->toString() === 'Tx_Extbase_DomainObject_AbstractValueObject'))
+            if ($node->extends && ($node->extends->toString(
+                    ) === 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject' || $node->extends->toString(
+                    ) === 'Tx_Extbase_DomainObject_AbstractValueObject')
+            )
             {
                 $this->increaseStatCounter($node->extends->toString());
                 $node->extends = NULL;

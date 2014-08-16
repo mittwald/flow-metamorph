@@ -6,6 +6,7 @@ class UnionMatcher implements ExtensionMatcher
 {
 
 
+
     /** @var \Mw\Metamorph\Domain\Model\Extension\ExtensionMatcher[] */
     private $matchers;
 

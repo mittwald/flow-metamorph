@@ -9,6 +9,7 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor
 {
 
 
+
     /**
      * @var \PhpParser\Node\Stmt\Namespace_
      */

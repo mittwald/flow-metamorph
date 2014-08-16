@@ -9,6 +9,7 @@ class ExtbaseClassReplacementVisitor extends AbstractVisitor
 {
 
 
+
     /**
      * @var array
      */

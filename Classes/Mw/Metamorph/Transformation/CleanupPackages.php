@@ -12,6 +12,7 @@ class CleanupPackages implements Transformation
 {
 
 
+
     /**
      * @var \TYPO3\Flow\Package\PackageManagerInterface
      * @Flow\Inject

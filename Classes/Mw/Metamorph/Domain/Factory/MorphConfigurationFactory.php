@@ -20,6 +20,7 @@ class MorphConfigurationFactory
 {
 
 
+
     /**
      * @param string $name
      * @param array  $morphConfiguration
@@ -84,6 +85,7 @@ class MorphConfigurationFactory
         {
             return new UnionMatcher($matchers);
         }
+
         return new AllMatcher();
     }
-} 
+}

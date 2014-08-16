@@ -5,6 +5,8 @@ namespace Mw\Metamorph\Command;
 /*                                                                        *
  * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
  *                                                                        *
+ * (C) 2014 Martin Helmich <m.helmich@mittwald.de>                        *
+ *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
 
 use Mw\Metamorph\Exception\MorphNotFoundException;
@@ -18,6 +20,7 @@ use TYPO3\Flow\Cli\CommandController;
  */
 class MorphCommandController extends CommandController
 {
+
 
 
     /**
@@ -61,7 +64,6 @@ class MorphCommandController extends CommandController
      */
     public function executeCommand($morphConfigurationName)
     {
-        $self  = $this;
         $morph = $this->morphConfigurationRepository->findByIdentifier($morphConfigurationName);
 
         if ($morph === NULL)
@@ -74,7 +76,7 @@ class MorphCommandController extends CommandController
 
         $this->outputLine('Executing morph <b>%s</b>.', [$morph->getName()]);
 
-        $this->morphService->execute($morph, new ResponseWrapper($this->response) );
+        $this->morphService->execute($morph, new ResponseWrapper($this->response));
     }
 
 }

@@ -9,6 +9,7 @@ class ResponseWrapper implements OutputInterface
 {
 
 
+
     const MAXIMUM_LINE_LENGTH = 79;
 
 
@@ -41,7 +42,12 @@ class ResponseWrapper implements OutputInterface
         $lines = explode(PHP_EOL, $text);
         foreach ($lines as $line)
         {
-            $formattedText = str_repeat(' ', $leftPadding) . wordwrap($line, self::MAXIMUM_LINE_LENGTH - $leftPadding, PHP_EOL . str_repeat(' ', $leftPadding), TRUE);
+            $formattedText = str_repeat(' ', $leftPadding) . wordwrap(
+                    $line,
+                    self::MAXIMUM_LINE_LENGTH - $leftPadding,
+                    PHP_EOL . str_repeat(' ', $leftPadding),
+                    TRUE
+                );
             $this->outputLine($formattedText, $arguments);
         }
     }

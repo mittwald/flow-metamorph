@@ -6,6 +6,7 @@ interface OutputInterface
 {
 
 
+
     /**
      * Outputs specified text to the console window
      * You can specify arguments that will be passed to the text via sprintf

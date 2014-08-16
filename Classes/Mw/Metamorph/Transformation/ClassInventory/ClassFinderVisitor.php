@@ -10,7 +10,10 @@ class ClassFinderVisitor extends NodeVisitorAbstract
 {
 
 
+
     private $classList;
+
+
     private $filename;
 
 
@@ -18,7 +21,7 @@ class ClassFinderVisitor extends NodeVisitorAbstract
     public function __construct(\ArrayAccess $classList, $filename)
     {
         $this->classList = $classList;
-        $this->filename = $filename;
+        $this->filename  = $filename;
     }
 
 
@@ -27,7 +30,7 @@ class ClassFinderVisitor extends NodeVisitorAbstract
     {
         if ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Interface_)
         {
-            $name = $node->namespacedName->toString();
+            $name                   = $node->namespacedName->toString();
             $this->classList[$name] = $this->filename;
         }
     }
