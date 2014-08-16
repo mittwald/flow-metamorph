@@ -3,7 +3,8 @@
     "type": "typo3-flow-package",
     "description": "Add description here",
     "require": {
-        "typo3/flow": "*"
+        "typo3/flow": "*",
+        "nikic/php-parser": "1.0.*@dev"
     },
     "autoload": {
         "psr-0": {
