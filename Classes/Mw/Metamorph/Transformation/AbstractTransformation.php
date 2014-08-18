@@ -10,4 +10,15 @@ abstract class AbstractTransformation implements Transformation
 
 
 
+    protected $settings;
+
+
+
+    public function setSettings(array $settings)
+    {
+        $this->settings = $settings;
+    }
+
+
+
 }

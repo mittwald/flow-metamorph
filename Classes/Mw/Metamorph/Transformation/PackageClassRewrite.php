@@ -14,7 +14,7 @@ use PhpParser\PrettyPrinter\Standard;
 use TYPO3\Flow\Annotations as Flow;
 
 
-class PackageClassRewrite implements Transformation
+class PackageClassRewrite extends AbstractTransformation
 {
 
 
@@ -34,21 +34,8 @@ class PackageClassRewrite implements Transformation
     private $printer;
 
 
-    /**
-     * @var array
-     */
-    private $settings;
-
-
     /** @var \PhpParser\NodeTraverser */
     private $traverser;
-
-
-
-    public function injectSettings(array $settings)
-    {
-        $this->settings = $settings;
-    }
 
 
 
@@ -67,21 +54,22 @@ class PackageClassRewrite implements Transformation
         $this->traverser = new NodeTraverser();
         $this->traverser->addVisitor(new NameResolver());
 
-        foreach ($this->settings['visitors'] as $visitor)
+        foreach ($this->settings['visitors'] as $visitorClass)
         {
-            if (!class_exists($visitor))
+            if (!class_exists($visitorClass))
             {
-                $visitorClass = 'Mw\\Metamorph\\Transformation\\RewriteNodeVisitors\\' . $visitor;
-
-                /** @var \Mw\Metamorph\Transformation\RewriteNodeVisitors\AbstractVisitor $visitor */
-                $visitor = $this->objectManager->get($visitorClass);
-                $visitor->setClassMap($classMap);
-
-                $this->traverser->addVisitor($visitor);
-                $out->outputLine('  - Adding node visitor <i>%s</i>.', [$visitorClass]);
+                $visitorClass = 'Mw\\Metamorph\\Transformation\\RewriteNodeVisitors\\' . $visitorClass;
             }
+
+            /** @var \Mw\Metamorph\Transformation\RewriteNodeVisitors\AbstractVisitor $visitor */
+            $visitor = $this->objectManager->get($visitorClass);
+            $visitor->setClassMap($classMappings);
+
+            $this->traverser->addVisitor($visitor);
+            $out->outputLine('  - Adding node visitor <i>%s</i>.', [$visitorClass]);
         }
 
+        #foreach ($classMap['classes'] as $oldClassname => $classConfiguration)
         foreach ($classMappings->getClassMappings() as $classMapping)
         {
             $this->replaceExtbaseClassnamesInClass($classMapping, $out);

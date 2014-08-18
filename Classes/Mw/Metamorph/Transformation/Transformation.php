@@ -12,6 +12,10 @@ interface Transformation
 
 
 
+    public function setSettings(array $settings);
+
+
+
     public function execute(MorphConfiguration $configuration, MorphState $state, OutputInterface $out);
 
 }

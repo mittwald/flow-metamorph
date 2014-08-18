@@ -7,6 +7,8 @@ Mw:
       classInventory:
         name: ClassInventory
         position: 20
+        settings:
+          visitors: []
       cleanupPackages:
         name: CleanupPackages
         position: 30
@@ -19,11 +21,13 @@ Mw:
       rewritePackageClasses:
         name: PackageClassRewrite
         position: 60
-    visitors:
-      - ClassNamespaceRewriterVisitor
-      - ExtbaseClassReplacementVisitor
-      - ExtbaseClassEliminationVisitor
-      - ReplaceMakeInstanceCallsVisitor
+        settings:
+          visitors:
+            - ClassNamespaceRewriterVisitor
+            - ExtbaseClassReplacementVisitor
+            - ExtbaseClassEliminationVisitor
+            - ReplaceMakeInstanceCallsVisitor
+            - ReplaceAnnotationsVisitor
     staticReplacements:
       TYPO3\CMS\Extbase\Mvc\Controller\ActionController: TYPO3\Flow\Mvc\Controller\ActionController
       TYPO3\CMS\Core\Utility\GeneralUtility: Mw\Metamorph\TYPO3\Utility\GeneralUtility

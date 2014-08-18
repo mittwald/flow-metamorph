@@ -8,7 +8,7 @@ use Mw\Metamorph\Io\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 
 
-class CleanupPackages implements Transformation
+class CleanupPackages extends AbstractTransformation
 {
 
 

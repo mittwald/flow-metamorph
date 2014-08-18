@@ -71,6 +71,7 @@ class MorphService
 
             /** @var \Mw\Metamorph\Transformation\Transformation $transformation */
             $transformation = $this->objectManager->get($name);
+            $transformation->setSettings(isset($item['settings']) ? $item['settings'] : []);
 
             try
             {
