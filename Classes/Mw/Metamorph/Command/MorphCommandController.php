@@ -59,10 +59,11 @@ class MorphCommandController extends CommandController
      * Morph a TYPO3 CMS application.
      *
      * @param string $morphConfigurationName The name of the morph configuration to execute.
-     * @throws \Exception
+     * @param bool $reset Completely reset stored state before beginning.
+     * @throws \Mw\Metamorph\Exception\MorphNotFoundException
      * @return void
      */
-    public function executeCommand($morphConfigurationName)
+    public function executeCommand($morphConfigurationName, $reset = FALSE)
     {
         $morph = $this->morphConfigurationRepository->findByIdentifier($morphConfigurationName);
 
@@ -72,6 +73,12 @@ class MorphCommandController extends CommandController
                 'No morph configuration with identifier <b>' . $morphConfigurationName . '</b> found!',
                 1399993315
             );
+        }
+
+        if (TRUE === $reset)
+        {
+            $this->outputLine('Resetting state for morph <b>%s</b>.', [$morph->getName()]);
+            $this->morphService->reset($morph, new ResponseWrapper($this->response));
         }
 
         $this->outputLine('Executing morph <b>%s</b>.', [$morph->getName()]);

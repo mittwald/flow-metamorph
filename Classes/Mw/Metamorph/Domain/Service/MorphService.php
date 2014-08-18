@@ -42,6 +42,14 @@ class MorphService
 
 
 
+    public function reset(MorphConfiguration $configuration, OutputInterface $out)
+    {
+        $state = new MorphState(FLOW_PATH_ROOT . 'Build/Metamorph/' . $configuration->getName());
+        Files::emptyDirectoryRecursively($state->getWorkingDirectory());
+    }
+
+
+
     public function execute(MorphConfiguration $configuration, OutputInterface $out)
     {
         $state = new MorphState(FLOW_PATH_ROOT . 'Build/Metamorph/' . $configuration->getName());
