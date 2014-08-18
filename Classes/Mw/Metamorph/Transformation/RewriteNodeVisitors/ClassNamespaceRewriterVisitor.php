@@ -10,15 +10,11 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor
 
 
 
-    /**
-     * @var \PhpParser\Node\Stmt\Namespace_
-     */
+    /** @var \PhpParser\Node\Stmt\Namespace_ */
     protected $currentNamespaceNode = NULL;
 
 
-    /**
-     * @var \PhpParser\Node\Stmt\Class_
-     */
+    /** @var \PhpParser\Node\Stmt\Class_ */
     protected $currentClassNode = NULL;
 
 
@@ -47,9 +43,11 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor
         {
             $text = $node->getDocComment()->getText();
 
-            foreach ($this->classMap['classes'] as $old => $config)
+            foreach ($this->classMap->getClassMappings() as $classMapping)
             {
-                $new = $config['newClassname'];
+                $new = $classMapping->getNewClassName();
+                $old = $classMapping->getOldClassName();
+
                 if (strpos($text, $old) !== FALSE)
                 {
                     $text = str_replace($old, $new, $text);
@@ -68,7 +66,7 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor
             $this->currentClassNode = $node;
             $oldName                = $node->namespacedName->toString();
 
-            if (isset($this->classMap['classes'][$oldName]))
+            if ($this->classMap->hasClassMapping($oldName))
             {
                 list($namespace, $relativeClassName) = $this->getNamespaceAndRelativeNameForOldClass($oldName);
 
@@ -82,7 +80,7 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor
         elseif ($node instanceof Node\Name)
         {
             $oldName = $node->toString();
-            if (isset($this->classMap['classes'][$oldName]))
+            if ($this->classMap->hasClassMapping($oldName))
             {
                 list($namespace, $relativeClassName) = $this->getNamespaceAndRelativeNameForOldClass($oldName);
                 $fqcn = $namespace . '\\' . $relativeClassName;
@@ -97,9 +95,10 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor
         elseif ($node instanceof Node\Scalar\String)
         {
             $text = $node->value;
-            foreach ($this->classMap['classes'] as $old => $config)
+            foreach ($this->classMap->getClassMappings() as $classMapping)
             {
-                $new = $config['newClassname'];
+                $old = $classMapping->getOldClassName();
+                $new = $classMapping->getNewClassName();
                 if (strpos($text, $old) !== FALSE)
                 {
                     $text = str_replace($old, $new, $text);
@@ -114,7 +113,7 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor
 
     private function getNamespaceAndRelativeNameForOldClass($oldClass)
     {
-        $newName           = $this->classMap['classes'][$oldClass]['newClassname'];
+        $newName           = $this->classMap->getClassMapping($oldClass)->getNewClassName();
         $newNameComponents = explode('\\', $newName);
 
         $relativeClassName = array_pop($newNameComponents);

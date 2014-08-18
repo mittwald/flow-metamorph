@@ -3,13 +3,14 @@ namespace Mw\Metamorph\Transformation;
 
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
+use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Service\MorphState;
 use Mw\Metamorph\Io\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Utility\Files;
 
 
-class CreateClasses implements Transformation
+class CreateClasses extends AbstractTransformation
 {
 
 
@@ -24,21 +25,19 @@ class CreateClasses implements Transformation
 
     public function execute(MorphConfiguration $configuration, MorphState $state, OutputInterface $out)
     {
-        $packageMap = $state->readYamlFile('PackageMap', TRUE);
-        $classMap   = $state->readYamlFile('ClassMap', TRUE);
-
+        $classMappings     = $state->getClassMapping();
         $packageClassCount = [];
 
-        foreach ($classMap['classes'] as $oldClassName => $classConfiguration)
+        foreach ($classMappings->getClassMappings() as $classMapping)
         {
-            if ($classConfiguration['action'] !== 'MORPH')
+            if ($classMapping->getAction() !== ClassMapping::ACTION_MORPH)
             {
                 continue;
             }
 
-            $package      = $this->packageManager->getPackage($classConfiguration['package']);
-            $source       = file_get_contents($classConfiguration['source']);
-            $newClassName = $classConfiguration['newClassname'];
+            $package      = $this->packageManager->getPackage($classMapping->getPackage());
+            $source       = file_get_contents($classMapping->getSourceFile());
+            $newClassName = $classMapping->getNewClassName();
 
             $relativeFilename = str_replace('\\', '/', $newClassName) . '.php';
             $absoluteFilename = $package->getClassesPath() . '/' . $relativeFilename;
@@ -53,10 +52,10 @@ class CreateClasses implements Transformation
             }
             $packageClassCount[$package->getPackageKey()]++;
 
-            $classMap['classes'][$oldClassName]['target'] = $absoluteFilename;
+            $classMapping->setTargetFile($absoluteFilename);
         }
 
-        $state->writeYamlFile('ClassMap', $classMap);
+        $state->updateClassMapping($classMappings);
 
         foreach ($packageClassCount as $package => $count)
         {

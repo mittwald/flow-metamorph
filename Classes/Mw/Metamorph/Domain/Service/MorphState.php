@@ -2,6 +2,9 @@
 namespace Mw\Metamorph\Domain\Service;
 
 
+use Mw\Metamorph\Domain\Model\State\ClassMapping;
+use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
+use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Symfony\Component\Yaml\Yaml;
 
@@ -53,6 +56,49 @@ class MorphState
         }
 
         return $data;
+    }
+
+
+
+    /**
+     * @param bool $ensureReviewed
+     * @return PackageMapping[]
+     */
+    public function getPackageMapping($ensureReviewed = TRUE)
+    {
+        $extensionData = $this->readYamlFile('PackageMap', $ensureReviewed)['extensions'];
+        return array_map(
+            function ($key) use ($extensionData)
+            {
+                return PackageMapping::jsonUnserialize(
+                    $extensionData[$key],
+                    $key
+                );
+            },
+            array_keys($extensionData)
+        );
+    }
+
+
+
+    /**
+     * @param bool $ensureReviewed
+     * @return ClassMappingContainer
+     */
+    public function getClassMapping($ensureReviewed = TRUE)
+    {
+        $classData = $this->readYamlFile('ClassMap', $ensureReviewed);
+        return ClassMappingContainer::jsonUnserialize($classData);
+    }
+
+
+
+    /**
+     * @param ClassMappingContainer $classMappingContainer
+     */
+    public function updateClassMapping(ClassMappingContainer $classMappingContainer)
+    {
+        $this->writeYamlFile('ClassMap', $classMappingContainer->jsonSerialize());
     }
 
 

@@ -3,6 +3,7 @@ namespace Mw\Metamorph\Transformation;
 
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
+use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Service\MorphState;
 use Mw\Metamorph\Io\OutputInterface;
 use PhpParser\Lexer;
@@ -25,15 +26,11 @@ class PackageClassRewrite implements Transformation
     protected $objectManager;
 
 
-    /**
-     * @var \PhpParser\Parser
-     */
+    /** @var \PhpParser\Parser */
     private $parser;
 
 
-    /**
-     * @var \PhpParser\PrettyPrinterAbstract
-     */
+    /** @var \PhpParser\PrettyPrinterAbstract */
     private $printer;
 
 
@@ -43,9 +40,7 @@ class PackageClassRewrite implements Transformation
     private $settings;
 
 
-    /**
-     * @var \PhpParser\NodeTraverser
-     */
+    /** @var \PhpParser\NodeTraverser */
     private $traverser;
 
 
@@ -67,7 +62,7 @@ class PackageClassRewrite implements Transformation
 
     public function execute(MorphConfiguration $configuration, MorphState $state, OutputInterface $out)
     {
-        $classMap = $state->readYamlFile('ClassMap', TRUE);
+        $classMappings = $state->getClassMapping();
 
         $this->traverser = new NodeTraverser();
         $this->traverser->addVisitor(new NameResolver());
@@ -87,26 +82,21 @@ class PackageClassRewrite implements Transformation
             }
         }
 
-        foreach ($classMap['classes'] as $oldClassname => $classConfiguration)
+        foreach ($classMappings->getClassMappings() as $classMapping)
         {
-            $this->replaceExtbaseClassnamesInClass($oldClassname, $classConfiguration, $out);
+            $this->replaceExtbaseClassnamesInClass($classMapping, $out);
         }
-
-//        foreach ($statistics as $class => $count)
-//        {
-//            $out->outputLine('  - Replaced <b>%d</b> occurrences of class <i>%s</i>.', [$count, $class]);
-//        }
     }
 
 
 
-    private function replaceExtbaseClassnamesInClass($oldClassname, $classConfiguration, OutputInterface $out)
+    private function replaceExtbaseClassnamesInClass(ClassMapping $classMapping, OutputInterface $out)
     {
-        $filecontent = file_get_contents($classConfiguration['target']);
+        $filecontent = file_get_contents($classMapping->getTargetFile());
         $syntaxTree  = $this->parser->parse($filecontent);
 
         $syntaxTree = $this->traverser->traverse($syntaxTree);
 
-        file_put_contents($classConfiguration['target'], $this->printer->prettyPrintFile($syntaxTree));
+        file_put_contents($classMapping->getTargetFile(), $this->printer->prettyPrintFile($syntaxTree));
     }
 }

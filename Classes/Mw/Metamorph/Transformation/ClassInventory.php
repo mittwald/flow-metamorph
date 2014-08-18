@@ -3,14 +3,19 @@ namespace Mw\Metamorph\Transformation;
 
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
+use Mw\Metamorph\Domain\Model\State\ClassMapping;
+use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
+use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Service\MorphState;
-use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Io\OutputInterface;
 use Mw\Metamorph\Transformation\ClassInventory\ClassFinderVisitor;
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
+use PhpParser\NodeVisitor;
 use PhpParser\Parser;
+use TYPO3\Flow\Object\ObjectManagerInterface;
+use TYPO3\Flow\Annotations as Flow;
 
 
 class ClassInventory extends AbstractTransformation
@@ -18,13 +23,21 @@ class ClassInventory extends AbstractTransformation
 
 
 
-    private $classMap;
+    /** @var ClassMappingContainer */
+    private $classMappings = NULL;
 
 
     /**
      * @var \PhpParser\Parser
      */
     private $parser;
+
+
+    /**
+     * @var ObjectManagerInterface
+     * @Flow\Inject
+     */
+    protected $objectManager;
 
 
 
@@ -37,31 +50,27 @@ class ClassInventory extends AbstractTransformation
 
     public function execute(MorphConfiguration $configuration, MorphState $state, OutputInterface $out)
     {
-        $packageMap     = $state->readYamlFile('PackageMap', TRUE);
-        $this->classMap = $state->readYamlFile('ClassMap', FALSE);
+        $packageMappings     = $state->getPackageMapping(TRUE);
+        $this->classMappings = $state->getClassMapping(FALSE);
 
-        foreach ($packageMap['extensions'] as $extensionKey => $extensionConfiguration)
+        foreach ($packageMappings as $packageMapping)
         {
-            if ($extensionConfiguration['action'] === 'MORPH')
+            if ($packageMapping->getAction() === PackageMapping::ACTION_MORPH)
             {
-                $this->readClassesFromExtension($configuration, $extensionKey, $extensionConfiguration, $out);
+                $this->readClassesFromExtension($packageMapping, $out);
             }
         }
 
-        $state->writeYamlFile('ClassMap', $this->classMap);
+        $state->updateClassMapping($this->classMappings);
     }
 
 
 
     private function readClassesFromExtension(
-        MorphConfiguration $configuration,
-        $extensionKey,
-        array $extensionConfiguration,
+        PackageMapping $packageMapping,
         OutputInterface $out
     ) {
-        $extensionPath = $configuration->getSourceDirectory() . '/typo3conf/ext/' . $extensionKey;
-
-        $directoryIterator = new \RecursiveDirectoryIterator($extensionPath);
+        $directoryIterator = new \RecursiveDirectoryIterator($packageMapping->getFilePath());
         $iteratorIterator  = new \RecursiveIteratorIterator($directoryIterator);
         $regexIterator     = new \RegexIterator($iteratorIterator, '/^.+\.php$/i', \RecursiveRegexIterator::GET_MATCH);
 
@@ -70,45 +79,62 @@ class ClassInventory extends AbstractTransformation
         foreach ($regexIterator as $match)
         {
             $filename = $match[0];
-            $this->readClassesFromFile($filename, $classList);
+            $this->readClassesFromFile($filename, $classList, $out);
         }
 
-        $out->outputLine('  - <b>%d</b> classes found in EXT:<i>%s</i>.', [count($classList), $extensionKey]);
+        $out->outputLine(
+            '  - <b>%d</b> classes found in EXT:<i>%s</i>.',
+            [count($classList), $packageMapping->getExtensionKey()]
+        );
 
         foreach ($classList as $className => $filename)
         {
-            if (!isset($this->classMap['classes']) || !array_key_exists($className, $this->classMap['classes']))
+            if (FALSE === $this->classMappings->hasClassMapping($className))
             {
-                $this->classMap['reviewed']            = FALSE;
-                $this->classMap['classes'][$className] = [
-                    'source'       => $filename,
-                    'action'       => 'MORPH',
-                    'newClassname' => $this->guessMorphedClassName($className, $filename, $extensionConfiguration),
-                    'package'      => $extensionConfiguration['packageKey']
-                ];
+                $classMapping = new ClassMapping($filename, $className, $this->guessMorphedClassName(
+                    $className,
+                    $filename,
+                    $packageMapping
+                ), $packageMapping->getPackageKey());
+
+                $this->classMappings->addClassMapping($classMapping);
             }
         }
     }
 
 
 
-    private function readClassesFromFile($filename, \ArrayAccess $classList)
+    private function readClassesFromFile($filename, \ArrayAccess $classList, OutputInterface $out)
     {
-        $filecontent = file_get_contents($filename);
-        $syntaxTree  = $this->parser->parse($filecontent);
+        $fileContent = file_get_contents($filename);
+        $syntaxTree  = $this->parser->parse($fileContent);
 
         $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
         $traverser->addVisitor(new ClassFinderVisitor($classList, $filename));
+
+        foreach ($this->settings['visitors'] as $visitorClassName)
+        {
+            if (FALSE === class_exists($visitorClassName))
+            {
+                $visitorClassName = 'Mw\\Metamorph\\Transformation\\ClassInventory\\' . $visitorClassName;
+            }
+
+            $visitor = $this->objectManager->get($visitorClassName);
+            if ($visitor instanceof NodeVisitor)
+            {
+                $traverser->addVisitor($visitor);
+            }
+        }
 
         $traverser->traverse($syntaxTree);
     }
 
 
 
-    private function guessMorphedClassName($className, $filename, $extensionConfiguration)
+    private function guessMorphedClassName($className, $filename, PackageMapping $packageMapping)
     {
-        $newPackageNamespace       = str_replace('.', '\\', $extensionConfiguration['packageKey']);
+        $newPackageNamespace       = str_replace('.', '\\', $packageMapping->getPackageKey());
         $filenameInferredNamespace = str_replace('/', '\\', str_replace(['class.', '.php'], '', $filename));
 
         $actualNamespaceParts   = explode('\\', $className);

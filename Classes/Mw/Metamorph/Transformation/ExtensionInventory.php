@@ -18,6 +18,7 @@ class ExtensionInventory extends AbstractTransformation
         $directoryIterator = new \DirectoryIterator($rootDirectory);
         $matcher           = $configuration->getExtensionMatcher();
 
+        /** @var PackageMapping[] $extensions */
         $extensions = [];
 
         $packageMapping = $state->readYamlFile('PackageMap', FALSE);
@@ -35,7 +36,11 @@ class ExtensionInventory extends AbstractTransformation
             if ($matcher->match($extensionKey))
             {
                 $out->outputLine('  - EXT:<i>%s</i>: <u>FOUND</u>', [$extensionKey]);
-                $extensions[] = $extensionKey;
+
+                $mapping = new PackageMapping($directoryInfo->getPathname(), $extensionKey);
+                $mapping->setPackageKey($this->convertExtensionKeyToPackageName($extensionKey));
+
+                $extensions[$extensionKey] = $mapping;
             }
             else
             {
@@ -43,11 +48,13 @@ class ExtensionInventory extends AbstractTransformation
             }
         }
 
+        // Remove extensions that are defined in the package map, but not present anymore
+        // in the source directory.
         if (isset($packageMapping['extensions']))
         {
             foreach ($packageMapping['extensions'] as $key => $value)
             {
-                if (!in_array($key, $extensions))
+                if (!array_key_exists($key, $extensions))
                 {
                     unset($packageMapping['extensions'][$key]);
                 }
@@ -56,13 +63,10 @@ class ExtensionInventory extends AbstractTransformation
 
         foreach ($extensions as $extension)
         {
-            if (!isset($packageMapping['extensions']) || !array_key_exists($extension, $packageMapping['extensions']))
+            if (!isset($packageMapping['extensions']) || !array_key_exists($extension->getExtensionKey(), $packageMapping['extensions']))
             {
-                $packageMapping['reviewed']               = FALSE;
-                $packageMapping['extensions'][$extension] = [
-                    'action'     => 'MORPH',
-                    'packageKey' => $this->convertExtensionKeyToPackageName($extension)
-                ];
+                $packageMapping['reviewed']                                  = FALSE;
+                $packageMapping['extensions'][$extension->getExtensionKey()] = $extension->jsonSerialize();
             }
         }
 

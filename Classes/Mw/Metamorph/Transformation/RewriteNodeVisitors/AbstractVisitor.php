@@ -2,6 +2,7 @@
 namespace Mw\Metamorph\Transformation\RewriteNodeVisitors;
 
 
+use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use PhpParser\NodeVisitorAbstract;
 
 
@@ -13,6 +14,7 @@ class AbstractVisitor extends NodeVisitorAbstract
     protected $settings;
 
 
+    /** @var ClassMappingContainer */
     protected $classMap;
 
 
@@ -24,7 +26,7 @@ class AbstractVisitor extends NodeVisitorAbstract
 
 
 
-    public function setClassMap(array $classMap)
+    public function setClassMap(ClassMappingContainer $classMap)
     {
         $this->classMap = $classMap;
     }
