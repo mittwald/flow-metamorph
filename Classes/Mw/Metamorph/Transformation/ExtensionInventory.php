@@ -41,6 +41,8 @@ class ExtensionInventory extends AbstractTransformation
                 $mapping = new PackageMapping($directoryInfo->getPathname(), $extensionKey);
                 $mapping->setPackageKey($this->convertExtensionKeyToPackageName($extensionKey));
 
+                $this->enrichPackageDataWithEmConfData($mapping);
+
                 $extensions[$extensionKey] = $mapping;
             }
             else
@@ -79,5 +81,40 @@ class ExtensionInventory extends AbstractTransformation
     private function convertExtensionKeyToPackageName($extensionKey)
     {
         return str_replace(' ', '.', ucwords(str_replace('_', ' ', $extensionKey)));
+    }
+
+
+
+    private function enrichPackageDataWithEmConfData(PackageMapping $packageMapping)
+    {
+        $emConfFile = $packageMapping->getFilePath() . '/ext_emconf.php';
+        if (FALSE === file_exists($emConfFile))
+        {
+            return;
+        }
+
+        $_EXTKEY = $packageMapping->getExtensionKey();
+        /** @noinspection PhpIncludeInspection */
+        include_once($emConfFile);
+        if (isset($EM_CONF))
+        {
+            $conf = $EM_CONF[$_EXTKEY];
+
+            $packageMapping->setDescription($conf['description']);
+            $packageMapping->setVersion($conf['version']);
+
+            $trimExplode = function ($list)
+            {
+                return array_filter(array_map(function ($e) { return trim($e); }, explode(',', $list)));
+            };
+
+            $authors      = $trimExplode($conf['author']);
+            $authorEmails = $trimExplode($conf['author_email']);
+
+            for ($i = 0; $i < count($authors); $i ++)
+            {
+                $packageMapping->addAuthor($authors[$i], isset($authorEmails[$i]) ?: NULL);
+            }
+        }
     }
 }
