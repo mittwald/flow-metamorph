@@ -74,7 +74,9 @@ class MorphService
 
     public function execute(MorphConfiguration $configuration, OutputInterface $out)
     {
-        $state = new MorphState(FLOW_PATH_ROOT . 'Build/Metamorph/' . $configuration->getName());
+        $package    = $this->packageManager->getPackage($configuration->getName());
+        $workingDir = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph']);
+        $state      = new MorphState($workingDir);
 
         Files::createDirectoryRecursively($state->getWorkingDirectory());
 
