@@ -244,11 +244,6 @@ class MorphConfigurationRepository implements RepositoryInterface
 
         foreach ($packages as $package)
         {
-            if ($package->getPackageMetaData()->getPackageType() !== 'typo3-flow-site')
-            {
-                continue;
-            }
-
             $morphPath = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Morph.yml']);
             if (FALSE === file_exists($morphPath))
             {
