@@ -2,6 +2,7 @@
 namespace Mw\Metamorph\Domain\Repository;
 
 
+
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Symfony\Component\Yaml\Yaml;
 use TYPO3\Flow\Persistence\RepositoryInterface;
@@ -25,6 +26,13 @@ class MorphConfigurationRepository implements RepositoryInterface
      * @Flow\Inject
      */
     protected $morphConfigurationFactory;
+
+
+    /**
+     * @var \TYPO3\Flow\Package\PackageManagerInterface
+     * @Flow\Inject
+     */
+    protected $packageManager;
 
 
     /**
@@ -97,21 +105,19 @@ class MorphConfigurationRepository implements RepositoryInterface
      */
     public function findAll()
     {
-        $files = glob($this->configurationPath . '/*.yaml');
+        $packages = $this->getAllMorphPackages();
 
         /** @var \Mw\Metamorph\Domain\Factory\MorphConfigurationFactory $factory */
         $factory = $this->morphConfigurationFactory;
 
-        return array_map(
-            function ($filename) use ($factory)
-            {
-                $name          = basename($filename, '.yaml');
-                $configuration = Yaml::parse(file_get_contents($filename));
+        return array_map(function (\TYPO3\Flow\Package\Package $package) use ($factory)
+        {
+            $filename      = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Morph.yml']);
+            $name          = $package->getPackageKey();
+            $configuration = Yaml::parse(file_get_contents($filename));
 
-                return $factory->createFromConfigurationArray($name, $configuration);
-            },
-            $files
-        );
+            return $factory->createFromConfigurationArray($name, $configuration);
+        }, $packages);
     }
 
 
@@ -125,7 +131,9 @@ class MorphConfigurationRepository implements RepositoryInterface
      */
     public function findByIdentifier($identifier)
     {
-        $filename = $this->configurationPath . '/' . $identifier . '.yaml';
+        $package = $this->packageManager->getPackage($identifier);
+        $filename      = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Morph.yml']);
+
         if (!file_exists($filename))
         {
             return NULL;
@@ -217,13 +225,35 @@ class MorphConfigurationRepository implements RepositoryInterface
      *  - findOneBy<PropertyName>($value, $caseSensitive = TRUE)
      *  - countBy<PropertyName>($value, $caseSensitive = TRUE)
      *
-     * @param string $method    Name of the method
-     * @param array  $arguments The arguments
+     * @param string $method Name of the method
+     * @param array $arguments The arguments
      * @return mixed The result of the repository method
      * @api
      */
     public function __call($method, $arguments)
     {
         // TODO: Implement __call() method.
+    }
+
+
+
+    private function getAllMorphPackages()
+    {
+        /** @var \TYPO3\Flow\Package\Package[] $packages */
+        $packages      = $this->packageManager->getActivePackages();
+        $foundPackages = [];
+
+        foreach ($packages as $package)
+        {
+            $morphPath = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Morph.yml']);
+            if (FALSE === file_exists($morphPath))
+            {
+                continue;
+            }
+
+            $foundPackages[] = $package;
+        }
+
+        return $foundPackages;
     }
 }

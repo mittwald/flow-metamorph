@@ -4,7 +4,8 @@
     "description": "Add description here",
     "require": {
         "typo3/flow": "*",
-        "nikic/php-parser": "dev-master"
+        "nikic/php-parser": "dev-master",
+        "symfony/console": "*"
     },
     "autoload": {
         "psr-0": {
