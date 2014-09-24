@@ -256,6 +256,6 @@ class MorphConfigurationRepository implements RepositoryInterface
             $foundPackages[] = $package;
         }
 
-        return $packages;
+        return $foundPackages;
     }
 }
