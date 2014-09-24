@@ -58,14 +58,10 @@ class MorphService
 
         $morphData = [
             'sourceDirectory'   => $data->getSourceDirectory(),
+            'extensions'        => array_map(function($pattern) { return ['pattern' => $pattern]; }, $data->getExtensionPatterns()),
             'doctrineMode'      => $data->isKeepingTableStructure() ? 'KEEP_SCHEMA' : 'MIGRATE',
-            'pibaseRefactoring' => $data->isAggressivelyRefactoringPiBaseExtensions() ? 'AGGRESSIVE' : 'CAUTIOUS'
+            'pibaseRefactoring' => $data->isAggressivelyRefactoringPiBaseExtensions() ? 'AGGRESSIVE' : 'CAUTIOUS',
         ];
-
-        if ($data->getExtensionPatterns())
-        {
-            $morphData['extensions'] = $data->getExtensionPatterns();
-        }
 
         $configurationPath = $package->getConfigurationPath();
         $morphPath         = Files::concatenatePaths([$configurationPath, 'Metamorph', 'Morph.yml']);
