@@ -72,6 +72,7 @@ class MorphService
         $configurationPath = $package->getConfigurationPath();
         $morphPath         = Files::concatenatePaths([$configurationPath, 'Metamorph', 'Morph.yml']);
 
+        Files::createDirectoryRecursively(dirname($morphPath));
         file_put_contents($morphPath, \Symfony\Component\Yaml\Yaml::dump($morphData));
     }
 
