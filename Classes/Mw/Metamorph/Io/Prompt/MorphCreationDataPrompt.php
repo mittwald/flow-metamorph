@@ -54,7 +54,8 @@ class MorphCreationDataPrompt implements MorphCreationData
      */
     public function isKeepingTableStructure()
     {
-        // TODO: Implement isKeepingTableStructure() method.
+        $this->output->outputFormatted('Do you want to re-use the existing table structure? If you choose "yes", Metamorph will use the existing table structures and enrich your doctrine models with the respective annotations.');
+        return $this->promptBoolean('Re-use existing tables');
     }
 
 
@@ -64,6 +65,25 @@ class MorphCreationDataPrompt implements MorphCreationData
      */
     public function isAggressivelyRefactoringPiBaseExtensions()
     {
-        // TODO: Implement isAggressivelyRefactoringPiBaseExtensions() method.
+        $this->output->outputFormatted('Do you want to perform additional refactorings on piBase extensions? Please note that this might be dangerous.');
+        return $this->promptBoolean('Aggressive refactoring');
+    }
+
+
+
+    private function promptBoolean($prompt)
+    {
+        $input = NULL;
+        while ($input !== 'n' && $input !== 'y')
+        {
+            if ($input !== NULL)
+            {
+                $this->output->outputLine('<error>Please enter either "y" or "n"!</error>');
+            }
+            $this->output->output('<comment>' . $prompt . '</comment> [y/n]: ');
+            $input = readline();
+        }
+
+        return $input === 'y';
     }
 }
