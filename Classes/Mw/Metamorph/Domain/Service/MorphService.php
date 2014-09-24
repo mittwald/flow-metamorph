@@ -54,7 +54,7 @@ class MorphService
     public function create($packageKey, MorphCreationData $data)
     {
         $metaData = new MetaData($packageKey);
-        $package  = $this->packageManager->createPackage($packageKey, $metaData, NULL, 'typo3-flow-site');
+        $package  = $this->packageManager->createPackage($packageKey, $metaData);
 
         $morphData = [
             'sourceDirectory'   => $data->getSourceDirectory(),
