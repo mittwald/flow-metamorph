@@ -2,7 +2,6 @@
 namespace Mw\Metamorph\Io;
 
 
-
 use Symfony\Component\Console\Output\OutputInterface as SymfonyOutputInterface;
 
 class SymfonyConsoleOutput implements OutputInterface
@@ -35,7 +34,7 @@ class SymfonyConsoleOutput implements OutputInterface
      */
     public function output($text, array $arguments = array())
     {
-        $this->output->write(sprintf($text, $arguments));
+        $this->output->write(vsprintf($text, $arguments));
     }
 
 
@@ -51,7 +50,7 @@ class SymfonyConsoleOutput implements OutputInterface
      */
     public function outputLine($text = '', array $arguments = array())
     {
-        $this->output->writeln(sprintf($text, $arguments));
+        $this->output->writeln(vsprintf($text, $arguments));
     }
 
 
