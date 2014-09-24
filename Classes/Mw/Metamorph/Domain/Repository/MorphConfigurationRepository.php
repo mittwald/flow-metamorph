@@ -132,7 +132,7 @@ class MorphConfigurationRepository implements RepositoryInterface
     {
         $package = $this->packageManager->getPackage($identifier);
         $filename      = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Morph.yml']);
-            
+
         if (!file_exists($filename))
         {
             return NULL;
