@@ -31,7 +31,7 @@ class MorphCreationDataPrompt implements MorphCreationData
     public function getSourceDirectory()
     {
         $this->output->outputFormatted('Please enter the path to the root directory of the TYPO3 CMS site that you want to migrate');
-        $this->output->output('<u>Source Directory</u>: ');
+        $this->output->output('<comment>Source Directory</comment>: ');
 
         $sourceDirectory = readline();
         return $sourceDirectory;
