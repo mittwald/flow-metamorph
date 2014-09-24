@@ -130,7 +130,9 @@ class MorphConfigurationRepository implements RepositoryInterface
      */
     public function findByIdentifier($identifier)
     {
-        $filename = $this->configurationPath . '/' . $identifier . '.yaml';
+        $package = $this->packageManager->getPackage($identifier);
+        $filename      = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Morph.yml']);
+            
         if (!file_exists($filename))
         {
             return NULL;
