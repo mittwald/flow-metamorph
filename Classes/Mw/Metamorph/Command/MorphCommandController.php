@@ -2,12 +2,15 @@
 namespace Mw\Metamorph\Command;
 
 
+
 /*                                                                        *
  * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
  *                                                                        *
  *                                                                        */
 
+use Mw\Metamorph\Domain\Model\DefaultMorphCreationData;
 use Mw\Metamorph\Exception\MorphNotFoundException;
+use Mw\Metamorph\Io\Prompt\MorphCreationDataPrompt;
 use Mw\Metamorph\Io\ResponseWrapper;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Cli\CommandController;
@@ -32,6 +35,17 @@ class MorphCommandController extends CommandController
      * @Flow\Inject
      */
     protected $morphService;
+
+
+
+    public function createCommand($packageKey, $nonInteractive = FALSE)
+    {
+        $dataProvider = $nonInteractive
+            ? new DefaultMorphCreationData()
+            : new MorphCreationDataPrompt(new ResponseWrapper($this->response));
+
+        $this->morphService->create($packageKey, $dataProvider);
+    }
 
 
 
@@ -74,7 +88,7 @@ class MorphCommandController extends CommandController
 
         $this->outputLine('Executing morph <b>%s</b>.', [$morph->getName()]);
 
-        $this->morphService->execute($morph, new ResponseWrapper($this->response) );
+        $this->morphService->execute($morph, new ResponseWrapper($this->response));
     }
 
 }

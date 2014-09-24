@@ -2,12 +2,15 @@
 namespace Mw\Metamorph\Domain\Service;
 
 
+
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
+use Mw\Metamorph\Domain\Model\MorphCreationData;
 use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Exception\InvalidConfigurationException;
 use Mw\Metamorph\Io\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Mvc\ResponseInterface;
+use TYPO3\Flow\Package\MetaData;
 use TYPO3\Flow\Utility\Files;
 use TYPO3\Flow\Utility\PositionalArraySorter;
 
@@ -29,6 +32,13 @@ class MorphService
     protected $objectManager;
 
 
+    /**
+     * @var \TYPO3\Flow\Package\PackageManagerInterface
+     * @Flow\Inject
+     */
+    protected $packageManager;
+
+
     /** @var array */
     private $settings;
 
@@ -37,6 +47,32 @@ class MorphService
     public function injectSettings(array $settings)
     {
         $this->settings = $settings;
+    }
+
+
+
+    public function create($packageKey, MorphCreationData $data)
+    {
+        $metaData = new MetaData($packageKey);
+        $metaData->setPackageType('typo3-flow-site');
+
+        $package = $this->packageManager->createPackage($packageKey);
+
+        $morphData = [
+            'sourceDirectory'   => $data->getSourceDirectory(),
+            'doctrineMode'      => $data->isKeepingTableStructure() ? 'KEEP_SCHEMA' : 'MIGRATE',
+            'pibaseRefactoring' => $data->isAggressivelyRefactoringPiBaseExtensions() ? 'AGGRESSIVE' : 'CAUTIOUS'
+        ];
+
+        if ($data->getExtensionPatterns())
+        {
+            $morphData['extensions'] = $data->getExtensionPatterns();
+        }
+
+        $configurationPath = $package->getConfigurationPath();
+        $morphPath         = Files::concatenatePaths([$configurationPath, 'Metamorph', 'Morph.yml']);
+
+        file_put_contents($morphPath, \Symfony\Component\Yaml\Yaml::dump($morphData));
     }
 
 
