@@ -2,18 +2,19 @@
 namespace Mw\Metamorph\Transformation;
 
 
+
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Mw\Metamorph\Io\OutputInterface;
 use Mw\Metamorph\Transformation\ClassInventory\ClassFinderVisitor;
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitor;
 use PhpParser\Parser;
+use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Object\ObjectManagerInterface;
 use TYPO3\Flow\Annotations as Flow;
 
@@ -82,20 +83,24 @@ class ClassInventory extends AbstractTransformation
             $this->readClassesFromFile($filename, $classList, $out);
         }
 
-        $out->outputLine(
-            '  - <b>%d</b> classes found in EXT:<i>%s</i>.',
-            [count($classList), $packageMapping->getExtensionKey()]
+        $out->writeln(
+            vsprintf(
+                '  - <b>%d</b> classes found in EXT:<i>%s</i>.',
+                [count($classList), $packageMapping->getExtensionKey()]
+            )
         );
 
         foreach ($classList as $className => $filename)
         {
             if (FALSE === $this->classMappings->hasClassMapping($className))
             {
-                $classMapping = new ClassMapping($filename, $className, $this->guessMorphedClassName(
-                    $className,
-                    $filename,
-                    $packageMapping
-                ), $packageMapping->getPackageKey());
+                $classMapping = new ClassMapping(
+                    $filename, $className, $this->guessMorphedClassName(
+                        $className,
+                        $filename,
+                        $packageMapping
+                    ), $packageMapping->getPackageKey()
+                );
 
                 $this->classMappings->addClassMapping($classMapping);
             }

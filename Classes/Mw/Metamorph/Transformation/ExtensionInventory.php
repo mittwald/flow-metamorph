@@ -5,7 +5,7 @@ namespace Mw\Metamorph\Transformation;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Mw\Metamorph\Io\OutputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 
 class ExtensionInventory extends AbstractTransformation
@@ -36,7 +36,7 @@ class ExtensionInventory extends AbstractTransformation
 
             if ($matcher->match($extensionKey))
             {
-                $out->outputLine('  - EXT:<i>%s</i>: <u>FOUND</u>', [$extensionKey]);
+                $out->writeln(sprintf('  - EXT:<i>%s</i>: <u>FOUND</u>', $extensionKey));
 
                 $mapping = new PackageMapping($directoryInfo->getPathname(), $extensionKey);
                 $mapping->setPackageKey($this->convertExtensionKeyToPackageName($extensionKey));
@@ -47,7 +47,7 @@ class ExtensionInventory extends AbstractTransformation
             }
             else
             {
-                $out->outputLine('  - EXT:<i>%s</i>: <u>IGNORING</u>', [$extensionKey]);
+                $out->writeln(sprintf('  - EXT:<i>%s</i>: <u>IGNORING</u>', $extensionKey));
             }
         }
 

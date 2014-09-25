@@ -6,7 +6,7 @@ namespace Mw\Metamorph\Domain\Service;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\MorphCreationData;
 use Mw\Metamorph\Exception\HumanInterventionRequiredException;
-use Mw\Metamorph\Io\OutputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\MetaData;
 use TYPO3\Flow\Utility\Files;
@@ -101,7 +101,7 @@ class MorphService
                 $name = 'Mw\\Metamorph\\Transformation\\' . $name;
             }
 
-            $out->outputLine("Executing step <i>{$name}</i>.");
+            $out->writeln("Executing step <comment>{$name}</comment>.");
 
             /** @var \Mw\Metamorph\Transformation\Transformation $transformation */
             $transformation = $this->objectManager->get($name);
@@ -113,11 +113,11 @@ class MorphService
             }
             catch (HumanInterventionRequiredException $exception)
             {
-                $out->outputLine();
-                $out->outputLine('<u><b>Human intervention required</b></u>');
-                $out->outputLine();
-                $out->outputFormatted($exception->getMessage(), [], 2);
-                $out->outputLine();
+                $out->writeln('');
+                $out->writeln('<u><b>Human intervention required</b></u>');
+                $out->writeln('');
+                $out->writeln($exception->getMessage(), [], 2);
+                $out->writeln('');
 
                 return;
             }

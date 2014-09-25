@@ -6,7 +6,7 @@ use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
 use Mw\Metamorph\Exception\HumanInterventionRequiredException;
-use Mw\Metamorph\Io\OutputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Eel\Package;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\MetaData;
@@ -47,7 +47,7 @@ class CreatePackages extends AbstractTransformation
                 NULL,
                 'typo3-flow-package'
             );
-            $out->outputLine('  - Created package <i>%s</i>', [$package->getPackageKey()]);
+            $out->writeln(vsprintf('  - Created package <i>%s</i>', [$package->getPackageKey()]));
         }
     }
 

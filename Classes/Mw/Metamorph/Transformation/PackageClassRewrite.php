@@ -5,7 +5,7 @@ namespace Mw\Metamorph\Transformation;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Mw\Metamorph\Io\OutputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
@@ -66,10 +66,9 @@ class PackageClassRewrite extends AbstractTransformation
             $visitor->setClassMap($classMappings);
 
             $this->traverser->addVisitor($visitor);
-            $out->outputLine('  - Adding node visitor <i>%s</i>.', [$visitorClass]);
+            $out->writeln(sprintf('  - Adding node visitor <i>%s</i>.', $visitorClass));
         }
 
-        #foreach ($classMap['classes'] as $oldClassname => $classConfiguration)
         foreach ($classMappings->getClassMappings() as $classMapping)
         {
             $this->replaceExtbaseClassnamesInClass($classMapping, $out);

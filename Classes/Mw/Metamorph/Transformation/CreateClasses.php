@@ -5,7 +5,7 @@ namespace Mw\Metamorph\Transformation;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Mw\Metamorph\Io\OutputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Utility\Files;
 
@@ -59,7 +59,7 @@ class CreateClasses extends AbstractTransformation
 
         foreach ($packageClassCount as $package => $count)
         {
-            $out->outputLine('  - <b>%d</b> classes written to package <i>%s</i>.', [$count, $package]);
+            $out->writeln(vsprintf('  - <b>%d</b> classes written to package <i>%s</i>.', [$count, $package]));
         }
     }
 }

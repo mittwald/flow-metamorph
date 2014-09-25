@@ -12,6 +12,7 @@ namespace Mw\Metamorph\Command;
 
 use Mw\Metamorph\Domain\Model\DefaultMorphCreationData;
 use Mw\Metamorph\Exception\MorphNotFoundException;
+use Mw\Metamorph\Io\DecoratedOutput;
 use Mw\Metamorph\Io\Prompt\MorphCreationDataPrompt;
 use Mw\Metamorph\Io\ResponseWrapper;
 use Mw\Metamorph\Io\SymfonyConsoleOutput;
@@ -51,11 +52,9 @@ class MorphCommandController extends CommandController
      */
     public function createCommand($packageKey, $nonInteractive = FALSE)
     {
-        $output = new \Symfony\Component\Console\Output\ConsoleOutput();
-
         $dataProvider = $nonInteractive
             ? new DefaultMorphCreationData()
-            : new MorphCreationDataPrompt(new SymfonyConsoleOutput($output));
+            : new MorphCreationDataPrompt(new DecoratedOutput($this->output));
 
         $this->morphService->create($packageKey, $dataProvider);
     }
@@ -102,12 +101,12 @@ class MorphCommandController extends CommandController
         if (TRUE === $reset)
         {
             $this->outputLine('Resetting state for morph <b>%s</b>.', [$morph->getName()]);
-            $this->morphService->reset($morph, new ResponseWrapper($this->response));
+            $this->morphService->reset($morph, $this->output);
         }
 
         $this->outputLine('Executing morph <b>%s</b>.', [$morph->getName()]);
 
-        $this->morphService->execute($morph, new ResponseWrapper($this->response));
+        $this->morphService->execute($morph, new DecoratedOutput($this->output));
     }
 
 }

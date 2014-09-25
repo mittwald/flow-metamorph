@@ -4,7 +4,7 @@ namespace Mw\Metamorph\Transformation;
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Mw\Metamorph\Io\OutputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 
 
@@ -37,11 +37,11 @@ class CleanupPackages extends AbstractTransformation
             if ($this->packageManager->isPackageAvailable($packageKey))
             {
                 $this->packageManager->deletePackage($packageKey);
-                $out->outputLine('  - PKG:<i>%s</i>: <u>DELETED</u>', [$packageKey]);
+                $out->writeln(vsprintf('  - PKG:<i>%s</i>: <u>DELETED</u>', [$packageKey]));
             }
             else
             {
-                $out->outputLine('  - PKG:<i>%s</i>: not present', [$packageKey]);
+                $out->writeln(vsprintf('  - PKG:<i>%s</i>: not present', [$packageKey]));
             }
         }
     }
