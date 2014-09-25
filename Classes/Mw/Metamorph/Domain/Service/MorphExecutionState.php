@@ -2,14 +2,13 @@
 namespace Mw\Metamorph\Domain\Service;
 
 
-use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Symfony\Component\Yaml\Yaml;
 
 
-class MorphState
+class MorphExecutionState
 {
 
 

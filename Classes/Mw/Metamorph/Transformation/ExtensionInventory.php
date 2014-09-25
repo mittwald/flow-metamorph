@@ -4,7 +4,7 @@ namespace Mw\Metamorph\Transformation;
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
-use Mw\Metamorph\Domain\Service\MorphState;
+use Mw\Metamorph\Domain\Service\MorphExecutionState;
 use Mw\Metamorph\Io\OutputInterface;
 
 
@@ -13,7 +13,7 @@ class ExtensionInventory extends AbstractTransformation
 
 
 
-    public function execute(MorphConfiguration $configuration, MorphState $state, OutputInterface $out)
+    public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
         $rootDirectory     = $configuration->getSourceDirectory() . '/typo3conf/ext';
         $directoryIterator = new \DirectoryIterator($rootDirectory);

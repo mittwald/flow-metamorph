@@ -4,7 +4,7 @@ namespace Mw\Metamorph\Transformation;
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
-use Mw\Metamorph\Domain\Service\MorphState;
+use Mw\Metamorph\Domain\Service\MorphExecutionState;
 use Mw\Metamorph\Io\OutputInterface;
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
@@ -47,7 +47,7 @@ class PackageClassRewrite extends AbstractTransformation
 
 
 
-    public function execute(MorphConfiguration $configuration, MorphState $state, OutputInterface $out)
+    public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
         $classMappings = $state->getClassMapping();
 

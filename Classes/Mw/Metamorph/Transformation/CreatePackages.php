@@ -4,7 +4,7 @@ namespace Mw\Metamorph\Transformation;
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
-use Mw\Metamorph\Domain\Service\MorphState;
+use Mw\Metamorph\Domain\Service\MorphExecutionState;
 use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Io\OutputInterface;
 use TYPO3\Eel\Package;
@@ -27,7 +27,7 @@ class CreatePackages extends AbstractTransformation
 
 
 
-    public function execute(MorphConfiguration $configuration, MorphState $state, OutputInterface $out)
+    public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
         $packageMap = $state->readYamlFile('PackageMap', TRUE);
 

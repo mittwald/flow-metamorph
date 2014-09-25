@@ -6,7 +6,7 @@ use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
-use Mw\Metamorph\Domain\Service\MorphState;
+use Mw\Metamorph\Domain\Service\MorphExecutionState;
 use Mw\Metamorph\Io\OutputInterface;
 use Mw\Metamorph\Transformation\ClassInventory\ClassFinderVisitor;
 use PhpParser\Lexer;
@@ -48,7 +48,7 @@ class ClassInventory extends AbstractTransformation
 
 
 
-    public function execute(MorphConfiguration $configuration, MorphState $state, OutputInterface $out)
+    public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
         $packageMappings     = $state->getPackageMapping(TRUE);
         $this->classMappings = $state->getClassMapping(FALSE);

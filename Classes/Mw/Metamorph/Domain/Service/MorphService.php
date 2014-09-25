@@ -54,7 +54,7 @@ class MorphService
     {
         $package    = $this->packageManager->getPackage($configuration->getName());
         $workingDir = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Work']);
-        $state      = new MorphState($workingDir);
+        $state      = new MorphExecutionState($workingDir);
 
         Files::emptyDirectoryRecursively($state->getWorkingDirectory());
     }
@@ -86,7 +86,7 @@ class MorphService
     {
         $package    = $this->packageManager->getPackage($configuration->getName());
         $workingDir = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Work']);
-        $state      = new MorphState($workingDir);
+        $state      = new MorphExecutionState($workingDir);
 
         Files::createDirectoryRecursively($state->getWorkingDirectory());
 
