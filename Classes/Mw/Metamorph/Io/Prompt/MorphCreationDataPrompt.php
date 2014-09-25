@@ -44,7 +44,21 @@ class MorphCreationDataPrompt implements MorphCreationData
      */
     public function getExtensionPatterns()
     {
-        // TODO: Implement getExtensionPatterns() method.
+        $this->output->outputFormatted('Please enter a list of regular expressions that extensions keys should match to be converted. You can enter multiple patterns in sequence; editing will stop when you insert an empty pattern. When you specify no pattern at all, all extensions will be converted.');
+        $lastInput = NULL;
+        $patterns  = [];
+
+        while ($lastInput !== '')
+        {
+            if ($lastInput)
+            {
+                $patterns[] = $lastInput;
+            }
+            $this->output->output('<comment>Enter regex</comment> [%s]: ', [implode(', ', $patterns)]);
+            $lastInput = readline();
+        }
+
+        return $patterns;
     }
 
 
@@ -71,19 +85,37 @@ class MorphCreationDataPrompt implements MorphCreationData
 
 
 
-    private function promptBoolean($prompt)
+    /**
+     * @return string
+     */
+    public function getVersionControlSystem()
+    {
+        $this->output->outputFormatted('Do you want metamorph to track changes to your package using a version control system?');
+        $this->promptChoice('Version control system', ['git', 'none']);
+    }
+
+
+
+    private function promptChoice($prompt, array $allowedValues)
     {
         $input = NULL;
-        while ($input !== 'n' && $input !== 'y')
+        while (FALSE == in_array($input, $allowedValues))
         {
             if ($input !== NULL)
             {
-                $this->output->outputLine('<error>Please enter either "y" or "n"!</error>');
+                $this->output->outputLine('<error>Please enter either one of "%s"!</error>', [implode(', ', $allowedValues)]);
             }
-            $this->output->output('<comment>' . $prompt . '</comment> [y/n]: ');
+            $this->output->output('<comment>%s</comment> [%s]: ', [$prompt, implode(',', $allowedValues)]);
             $input = readline();
         }
 
-        return $input === 'y';
+        return $input;
+    }
+
+
+
+    private function promptBoolean($prompt)
+    {
+        return $this->promptChoice($prompt, ['y', 'n']);
     }
 }

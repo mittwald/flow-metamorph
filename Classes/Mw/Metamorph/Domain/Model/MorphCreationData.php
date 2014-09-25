@@ -32,4 +32,11 @@ interface MorphCreationData
      * @return bool
      */
     public function isAggressivelyRefactoringPiBaseExtensions();
-} 
+
+
+
+    /**
+     * @return string
+     */
+    public function getVersionControlSystem();
+}

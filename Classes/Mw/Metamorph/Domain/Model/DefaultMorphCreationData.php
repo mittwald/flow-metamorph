@@ -43,4 +43,16 @@ class DefaultMorphCreationData implements MorphCreationData
     {
         return FALSE;
     }
+
+
+
+    /**
+     * @return string
+     */
+    public function getVersionControlSystem()
+    {
+        return 'git';
+    }
+
+
 }
