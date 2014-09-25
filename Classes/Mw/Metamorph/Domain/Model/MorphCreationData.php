@@ -32,4 +32,5 @@ interface MorphCreationData
      * @return bool
      */
     public function isAggressivelyRefactoringPiBaseExtensions();
-} 
+
+}
