@@ -62,15 +62,24 @@ class MorphCommandController extends CommandController
     {
         $commands = $this->morphConfigurationRepository->findAll();
 
-        $this->outputLine('Found <b>%d</b> morph configurations:', [count($commands)]);
-        $this->outputLine();
-
-        foreach ($commands as $command)
+        if (count($commands))
         {
-            $this->outputFormatted($command->getName(), [], 4);
+            $this->outputLine('Found <comment>%d</comment> morph configurations:', [count($commands)]);
+            $this->outputLine();
+
+            foreach ($commands as $command)
+            {
+                $this->outputFormatted($command->getName(), [], 4);
+            }
+
+            $this->outputLine();
+        }
+        else
+        {
+            $this->outputLine('Found <comment>no</comment> morph configurations.');
+            $this->outputLine('Use <comment>./flow morph:create</comment> to create a morph configuration.');
         }
 
-        $this->outputLine();
     }
 
 
