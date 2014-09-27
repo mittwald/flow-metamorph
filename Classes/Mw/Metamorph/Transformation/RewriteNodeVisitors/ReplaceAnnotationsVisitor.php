@@ -15,8 +15,9 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor
 
     /** @var array */
     private $annotationMapping = [
-        '@inject'   => '@Flow\\Inject',
-        '@validate' => '@Flow\\Validate'
+        '@inject'       => '@Flow\\Inject',
+        '@validate'     => '@Flow\\Validate',
+        '@dontvalidate' => '@Flow\\IgnoreValidation'
     ];
 
 
