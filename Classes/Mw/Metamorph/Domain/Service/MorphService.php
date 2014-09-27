@@ -12,9 +12,10 @@ namespace Mw\Metamorph\Domain\Service;
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\MorphCreationData;
-use Mw\Metamorph\Domain\Service\Aspect\MorphCreationAspect;
-use Mw\Metamorph\Domain\Service\Aspect\MorphExecutionAspect;
-use Mw\Metamorph\Domain\Service\Aspect\MorphResetAspect;
+use Mw\Metamorph\Domain\Service\Concern\MorphCreationConcern;
+use Mw\Metamorph\Domain\Service\Concern\MorphExecutionConcern;
+use Mw\Metamorph\Domain\Service\Concern\MorphResetConcern;
+use Mw\Metamorph\Io\DecoratedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\MetaData;
@@ -32,44 +33,44 @@ class MorphService implements MorphServiceInterface
 
 
     /**
-     * @var MorphCreationAspect
+     * @var MorphCreationConcern
      * @Flow\Inject
      */
-    protected $creationAspect;
+    protected $creationConcern;
 
 
     /**
-     * @var MorphResetAspect
+     * @var MorphResetConcern
      * @Flow\Inject
      */
-    protected $resetAspect;
+    protected $resetConcern;
 
 
     /**
-     * @var MorphExecutionAspect
+     * @var MorphExecutionConcern
      * @Flow\Inject
      */
-    protected $executionAspect;
+    protected $executionConcern;
 
 
 
     public function reset(MorphConfiguration $configuration, OutputInterface $out)
     {
-        $this->resetAspect->reset($configuration, $out);
+        $this->resetConcern->reset($configuration, $out);
     }
 
 
 
     public function create($packageKey, MorphCreationData $data, OutputInterface $out)
     {
-        $this->creationAspect->create($packageKey, $data, $out);
+        $this->creationConcern->create($packageKey, $data, $out);
     }
 
 
 
     public function execute(MorphConfiguration $configuration, OutputInterface $out)
     {
-        $this->executionAspect->execute($configuration, $out);
+        $this->executionConcern->execute($configuration, new DecoratedOutput($out));
     }
 
 }

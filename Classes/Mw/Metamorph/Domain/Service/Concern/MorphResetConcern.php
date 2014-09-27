@@ -1,5 +1,5 @@
 <?php
-namespace Mw\Metamorph\Domain\Service\Aspect;
+namespace Mw\Metamorph\Domain\Service\Concern;
 
 
 /*                                                                        *
@@ -16,7 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Utility\Files;
 use TYPO3\Flow\Annotations as Flow;
 
-class MorphResetAspect
+class MorphResetConcern
 {
 
 

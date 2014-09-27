@@ -1,5 +1,5 @@
 <?php
-namespace Mw\Metamorph\Domain\Service\Aspect;
+namespace Mw\Metamorph\Domain\Service\Concern;
 
 
 /*                                                                        *
@@ -19,7 +19,7 @@ use TYPO3\Flow\Utility\PositionalArraySorter;
 use TYPO3\Flow\Annotations as Flow;
 
 
-class MorphExecutionAspect
+class MorphExecutionConcern
 {
 
 

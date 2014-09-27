@@ -1,5 +1,5 @@
 <?php
-namespace Mw\Metamorph\Domain\Service\Aspect;
+namespace Mw\Metamorph\Domain\Service\Concern;
 
 
 /*                                                                        *
@@ -19,9 +19,9 @@ use TYPO3\Flow\Utility\Files;
 
 
 /**
- * Class MorphCreationAspect
+ * Class MorphCreationConcern
  */
-class MorphCreationAspect
+class MorphCreationConcern
 {
 
 
