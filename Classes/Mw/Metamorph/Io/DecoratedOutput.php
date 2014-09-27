@@ -10,8 +10,10 @@ class DecoratedOutput implements DecoratedOutputInterface
 {
 
 
+
     /** @var OutputInterface */
     private $output;
+
 
 
     public function __construct(OutputInterface $output)
@@ -20,23 +22,30 @@ class DecoratedOutput implements DecoratedOutputInterface
     }
 
 
-    public function writeFormatted($text, $leftPadding=0)
+
+    public function writeFormatted($text, $leftPadding = 0)
     {
         $lines = explode(PHP_EOL, $text);
         foreach ($lines as $line)
         {
-            $formattedText = str_repeat(' ', $leftPadding) . wordwrap($line, 80 - $leftPadding, PHP_EOL . str_repeat(' ', $leftPadding), TRUE);
+            $formattedText = str_repeat(' ', $leftPadding) . wordwrap(
+                    $line,
+                    80 - $leftPadding,
+                    PHP_EOL . str_repeat(' ', $leftPadding),
+                    TRUE
+                );
             $this->writeln($formattedText);
         }
     }
+
 
 
     /**
      * Writes a message to the output.
      *
      * @param string|array $messages The message as an array of lines or a single string
-     * @param bool $newline Whether to add a newline
-     * @param int $type The type of output (one of the OUTPUT constants)
+     * @param bool         $newline  Whether to add a newline
+     * @param int          $type     The type of output (one of the OUTPUT constants)
      *
      * @throws \InvalidArgumentException When unknown output type is given
      *
@@ -48,11 +57,12 @@ class DecoratedOutput implements DecoratedOutputInterface
     }
 
 
+
     /**
      * Writes a message to the output and adds a newline at the end.
      *
      * @param string|array $messages The message as an array of lines of a single string
-     * @param int $type The type of output (one of the OUTPUT constants)
+     * @param int          $type     The type of output (one of the OUTPUT constants)
      *
      * @throws \InvalidArgumentException When unknown output type is given
      *
@@ -62,6 +72,7 @@ class DecoratedOutput implements DecoratedOutputInterface
     {
         $this->output->writeln($messages, $type);
     }
+
 
 
     /**
@@ -77,6 +88,7 @@ class DecoratedOutput implements DecoratedOutputInterface
     }
 
 
+
     /**
      * Gets the current verbosity of the output.
      *
@@ -88,6 +100,7 @@ class DecoratedOutput implements DecoratedOutputInterface
     {
         return $this->output->getVerbosity();
     }
+
 
 
     /**
@@ -103,6 +116,7 @@ class DecoratedOutput implements DecoratedOutputInterface
     }
 
 
+
     /**
      * Gets the decorated flag.
      *
@@ -116,6 +130,7 @@ class DecoratedOutput implements DecoratedOutputInterface
     }
 
 
+
     /**
      * Sets output formatter.
      *
@@ -127,6 +142,7 @@ class DecoratedOutput implements DecoratedOutputInterface
     {
         $this->output->setFormatter($formatter);
     }
+
 
 
     /**

@@ -68,7 +68,10 @@ class MorphService
 
         $morphData = [
             'sourceDirectory'   => $data->getSourceDirectory(),
-            'extensions'        => array_map(function($pattern) { return ['pattern' => $pattern]; }, $data->getExtensionPatterns()),
+            'extensions'        => array_map(
+                function ($pattern) { return ['pattern' => $pattern]; },
+                $data->getExtensionPatterns()
+            ),
             'doctrineMode'      => $data->isKeepingTableStructure() ? 'KEEP_SCHEMA' : 'MIGRATE',
             'pibaseRefactoring' => $data->isAggressivelyRefactoringPiBaseExtensions() ? 'AGGRESSIVE' : 'CAUTIOUS',
         ];

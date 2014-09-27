@@ -38,7 +38,7 @@ class PackageMapping implements \JsonSerializable
     public function __construct($filePath, $extensionKey = NULL)
     {
         $this->filePath     = $filePath;
-        $this->extensionKey = $extensionKey ? : basename($filePath);
+        $this->extensionKey = $extensionKey ?: basename($filePath);
     }
 
 

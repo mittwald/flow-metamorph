@@ -66,7 +66,11 @@ class ExtensionInventory extends AbstractTransformation
 
         foreach ($extensions as $extension)
         {
-            if (!isset($packageMapping['extensions']) || !array_key_exists($extension->getExtensionKey(), $packageMapping['extensions']))
+            if (!isset($packageMapping['extensions']) || !array_key_exists(
+                    $extension->getExtensionKey(),
+                    $packageMapping['extensions']
+                )
+            )
             {
                 $packageMapping['reviewed']                                  = FALSE;
                 $packageMapping['extensions'][$extension->getExtensionKey()] = $extension->jsonSerialize();
@@ -111,7 +115,7 @@ class ExtensionInventory extends AbstractTransformation
             $authors      = $trimExplode($conf['author']);
             $authorEmails = $trimExplode($conf['author_email']);
 
-            for ($i = 0; $i < count($authors); $i ++)
+            for ($i = 0; $i < count($authors); $i++)
             {
                 $packageMapping->addAuthor($authors[$i], isset($authorEmails[$i]) ?: NULL);
             }

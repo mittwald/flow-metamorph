@@ -7,6 +7,7 @@ interface MorphCreationData
 {
 
 
+
     /**
      * @return string
      */

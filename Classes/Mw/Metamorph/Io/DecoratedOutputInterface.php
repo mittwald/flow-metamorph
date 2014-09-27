@@ -9,6 +9,7 @@ interface DecoratedOutputInterface extends OutputInterface
 {
 
 
+
     public function writeFormatted($text);
 
 }

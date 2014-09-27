@@ -6,6 +6,7 @@ class DefaultMorphCreationData implements MorphCreationData
 {
 
 
+
     /**
      * @return string
      */

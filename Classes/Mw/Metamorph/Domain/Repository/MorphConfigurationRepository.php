@@ -3,11 +3,10 @@ namespace Mw\Metamorph\Domain\Repository;
 
 
 
-use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Symfony\Component\Yaml\Yaml;
+use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Persistence\RepositoryInterface;
 use TYPO3\Flow\Utility\Files;
-use TYPO3\Flow\Annotations as Flow;
 
 
 /**
@@ -110,14 +109,17 @@ class MorphConfigurationRepository implements RepositoryInterface
         /** @var \Mw\Metamorph\Domain\Factory\MorphConfigurationFactory $factory */
         $factory = $this->morphConfigurationFactory;
 
-        return array_map(function (\TYPO3\Flow\Package\Package $package) use ($factory)
-        {
-            $filename      = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Morph.yml']);
-            $name          = $package->getPackageKey();
-            $configuration = Yaml::parse(file_get_contents($filename));
+        return array_map(
+            function (\TYPO3\Flow\Package\Package $package) use ($factory)
+            {
+                $filename      = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Morph.yml']);
+                $name          = $package->getPackageKey();
+                $configuration = Yaml::parse(file_get_contents($filename));
 
-            return $factory->createFromConfigurationArray($name, $configuration);
-        }, $packages);
+                return $factory->createFromConfigurationArray($name, $configuration);
+            },
+            $packages
+        );
     }
 
 
@@ -131,8 +133,8 @@ class MorphConfigurationRepository implements RepositoryInterface
      */
     public function findByIdentifier($identifier)
     {
-        $package = $this->packageManager->getPackage($identifier);
-        $filename      = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Morph.yml']);
+        $package  = $this->packageManager->getPackage($identifier);
+        $filename = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Morph.yml']);
 
         if (!file_exists($filename))
         {
@@ -225,8 +227,8 @@ class MorphConfigurationRepository implements RepositoryInterface
      *  - findOneBy<PropertyName>($value, $caseSensitive = TRUE)
      *  - countBy<PropertyName>($value, $caseSensitive = TRUE)
      *
-     * @param string $method Name of the method
-     * @param array $arguments The arguments
+     * @param string $method    Name of the method
+     * @param array  $arguments The arguments
      * @return mixed The result of the repository method
      * @api
      */

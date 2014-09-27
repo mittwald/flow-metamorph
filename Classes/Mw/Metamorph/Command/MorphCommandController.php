@@ -2,7 +2,6 @@
 namespace Mw\Metamorph\Command;
 
 
-
 /*                                                                        *
  * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
  *                                                                        *
@@ -14,8 +13,6 @@ use Mw\Metamorph\Domain\Model\DefaultMorphCreationData;
 use Mw\Metamorph\Exception\MorphNotFoundException;
 use Mw\Metamorph\Io\DecoratedOutput;
 use Mw\Metamorph\Io\Prompt\MorphCreationDataPrompt;
-use Mw\Metamorph\Io\ResponseWrapper;
-use Mw\Metamorph\Io\SymfonyConsoleOutput;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Cli\CommandController;
 
@@ -46,8 +43,8 @@ class MorphCommandController extends CommandController
     /**
      * Creates a new site package with a morph configuration.
      *
-     * @param string $packageKey The package key to use for the morph package.
-     * @param bool $nonInteractive Set this flag to suppress interactive prompts during package creation.
+     * @param string $packageKey     The package key to use for the morph package.
+     * @param bool   $nonInteractive Set this flag to suppress interactive prompts during package creation.
      * @return void
      */
     public function createCommand($packageKey, $nonInteractive = FALSE)
@@ -82,7 +79,7 @@ class MorphCommandController extends CommandController
      * Morph a TYPO3 CMS application.
      *
      * @param string $morphConfigurationName The name of the morph configuration to execute.
-     * @param bool $reset Completely reset stored state before beginning.
+     * @param bool   $reset                  Completely reset stored state before beginning.
      * @throws \Mw\Metamorph\Exception\MorphNotFoundException
      * @return void
      */

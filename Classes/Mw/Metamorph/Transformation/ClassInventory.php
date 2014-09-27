@@ -11,12 +11,12 @@ use Mw\Metamorph\Domain\Service\MorphExecutionState;
 use Mw\Metamorph\Transformation\ClassInventory\ClassFinderVisitor;
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
-use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitor;
+use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
 use Symfony\Component\Console\Output\OutputInterface;
-use TYPO3\Flow\Object\ObjectManagerInterface;
 use TYPO3\Flow\Annotations as Flow;
+use TYPO3\Flow\Object\ObjectManagerInterface;
 
 
 class ClassInventory extends AbstractTransformation

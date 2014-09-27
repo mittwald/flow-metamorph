@@ -10,10 +10,12 @@ class MorphCreationDataPrompt implements MorphCreationData
 {
 
 
+
     /**
      * @var DecoratedOutputInterface
      */
     protected $output;
+
 
 
     public function __construct(DecoratedOutputInterface $output)
@@ -22,12 +24,15 @@ class MorphCreationDataPrompt implements MorphCreationData
     }
 
 
+
     /**
      * @return string
      */
     public function getSourceDirectory()
     {
-        $this->output->writeFormatted('Please enter the path to the root directory of the TYPO3 CMS site that you want to migrate');
+        $this->output->writeFormatted(
+            'Please enter the path to the root directory of the TYPO3 CMS site that you want to migrate'
+        );
         $this->output->writeln('<comment>Source Directory</comment>: ');
 
         $sourceDirectory = readline();
@@ -35,12 +40,15 @@ class MorphCreationDataPrompt implements MorphCreationData
     }
 
 
+
     /**
      * @return array
      */
     public function getExtensionPatterns()
     {
-        $this->output->writeFormatted('Please enter a list of regular expressions that extensions keys should match to be converted. You can enter multiple patterns in sequence; editing will stop when you insert an empty pattern. When you specify no pattern at all, all extensions will be converted.');
+        $this->output->writeFormatted(
+            'Please enter a list of regular expressions that extensions keys should match to be converted. You can enter multiple patterns in sequence; editing will stop when you insert an empty pattern. When you specify no pattern at all, all extensions will be converted.'
+        );
         $lastInput = NULL;
         $patterns  = [];
 
@@ -58,14 +66,18 @@ class MorphCreationDataPrompt implements MorphCreationData
     }
 
 
+
     /**
      * @return bool
      */
     public function isKeepingTableStructure()
     {
-        $this->output->writeFormatted('Do you want to re-use the existing table structure? If you choose "yes", Metamorph will use the existing table structures and enrich your doctrine models with the respective annotations.');
+        $this->output->writeFormatted(
+            'Do you want to re-use the existing table structure? If you choose "yes", Metamorph will use the existing table structures and enrich your doctrine models with the respective annotations.'
+        );
         return $this->promptBoolean('Re-use existing tables');
     }
+
 
 
     /**
@@ -73,9 +85,12 @@ class MorphCreationDataPrompt implements MorphCreationData
      */
     public function isAggressivelyRefactoringPiBaseExtensions()
     {
-        $this->output->writeFormatted('Do you want to perform additional refactorings on piBase extensions? Please note that this might be dangerous.');
+        $this->output->writeFormatted(
+            'Do you want to perform additional refactorings on piBase extensions? Please note that this might be dangerous.'
+        );
         return $this->promptBoolean('Aggressive refactoring');
     }
+
 
 
     /**
@@ -83,9 +98,12 @@ class MorphCreationDataPrompt implements MorphCreationData
      */
     public function getVersionControlSystem()
     {
-        $this->output->writeFormatted('Do you want metamorph to track changes to your package using a version control system?');
+        $this->output->writeFormatted(
+            'Do you want metamorph to track changes to your package using a version control system?'
+        );
         $this->promptChoice('Version control system', ['git', 'none']);
     }
+
 
 
     private function promptChoice($prompt, array $allowedValues)
@@ -95,7 +113,9 @@ class MorphCreationDataPrompt implements MorphCreationData
         {
             if ($input !== NULL)
             {
-                $this->output->writeln(sprintf('<error>Please enter either one of "%s"!</error>', implode(', ', $allowedValues)));
+                $this->output->writeln(
+                    sprintf('<error>Please enter either one of "%s"!</error>', implode(', ', $allowedValues))
+                );
             }
             $this->output->write(sprintf('<comment>%s</comment> [%s]: ', $prompt, implode(',', $allowedValues)));
             $input = readline();
@@ -103,6 +123,7 @@ class MorphCreationDataPrompt implements MorphCreationData
 
         return $input;
     }
+
 
 
     private function promptBoolean($prompt)

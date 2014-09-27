@@ -5,12 +5,9 @@ namespace Mw\Metamorph\Transformation;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Symfony\Component\Console\Output\OutputInterface;
-use TYPO3\Eel\Package;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\MetaData;
-use TYPO3\Flow\Utility\Files;
 
 
 
@@ -62,7 +59,9 @@ class CreatePackages extends AbstractTransformation
 
         foreach ($packageMapping->getAuthors() as $author)
         {
-            $metaData->addParty(new MetaData\Person('Developer', $author['name'], isset($author['email']) ? $author['email'] : NULL));
+            $metaData->addParty(
+                new MetaData\Person('Developer', $author['name'], isset($author['email']) ? $author['email'] : NULL)
+            );
         }
 
         return $metaData;
