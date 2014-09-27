@@ -49,27 +49,33 @@ class MorphCommandController extends CommandController
      */
     public function createCommand($packageKey, $nonInteractive = FALSE)
     {
+        $output       = new DecoratedOutput($this->output);
         $dataProvider = $nonInteractive
             ? new DefaultMorphCreationData()
-            : new MorphCreationDataPrompt(new DecoratedOutput($this->output));
+            : new MorphCreationDataPrompt($output);
 
-        $this->morphService->create($packageKey, $dataProvider);
+        $this->morphService->create($packageKey, $dataProvider, $output);
     }
 
 
 
+    /**
+     * List available morphs.
+     *
+     * @return void
+     */
     public function listCommand()
     {
-        $commands = $this->morphConfigurationRepository->findAll();
+        $morphs = $this->morphConfigurationRepository->findAll();
 
-        if (count($commands))
+        if (count($morphs))
         {
-            $this->outputLine('Found <comment>%d</comment> morph configurations:', [count($commands)]);
+            $this->outputLine('Found <comment>%d</comment> morph configurations:', [count($morphs)]);
             $this->outputLine();
 
-            foreach ($commands as $command)
+            foreach ($morphs as $morph)
             {
-                $this->outputFormatted($command->getName(), [], 4);
+                $this->outputFormatted($morph->getName(), [], 4);
             }
 
             $this->outputLine();

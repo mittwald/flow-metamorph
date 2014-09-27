@@ -2,15 +2,22 @@
 namespace Mw\Metamorph\Domain\Service;
 
 
+/*                                                                        *
+ * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
+ *                                                                        *
+ * (C) 2014 Martin Helmich <m.helmich@mittwald.de>                        *
+ *          Mittwald CM Service GmbH & Co. KG                             *
+ *                                                                        */
+
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\MorphCreationData;
-use Mw\Metamorph\Exception\HumanInterventionRequiredException;
+use Mw\Metamorph\Domain\Service\Aspect\MorphCreationAspect;
+use Mw\Metamorph\Domain\Service\Aspect\MorphExecutionAspect;
+use Mw\Metamorph\Domain\Service\Aspect\MorphResetAspect;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\MetaData;
-use TYPO3\Flow\Utility\Files;
-use TYPO3\Flow\Utility\PositionalArraySorter;
 
 
 /**
@@ -19,112 +26,50 @@ use TYPO3\Flow\Utility\PositionalArraySorter;
  * @package Mw\Metamorph\Domain\Service
  * @Flow\Scope("singleton")
  */
-class MorphService
+class MorphService implements MorphServiceInterface
 {
 
 
 
     /**
-     * @var \TYPO3\Flow\Object\ObjectManagerInterface
+     * @var MorphCreationAspect
      * @Flow\Inject
      */
-    protected $objectManager;
+    protected $creationAspect;
 
 
     /**
-     * @var \TYPO3\Flow\Package\PackageManagerInterface
+     * @var MorphResetAspect
      * @Flow\Inject
      */
-    protected $packageManager;
+    protected $resetAspect;
 
 
-    /** @var array */
-    private $settings;
-
-
-
-    public function injectSettings(array $settings)
-    {
-        $this->settings = $settings;
-    }
+    /**
+     * @var MorphExecutionAspect
+     * @Flow\Inject
+     */
+    protected $executionAspect;
 
 
 
     public function reset(MorphConfiguration $configuration, OutputInterface $out)
     {
-        $package    = $this->packageManager->getPackage($configuration->getName());
-        $workingDir = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Work']);
-        $state      = new MorphExecutionState($workingDir);
-
-        Files::emptyDirectoryRecursively($state->getWorkingDirectory());
+        $this->resetAspect->reset($configuration, $out);
     }
 
 
 
-    public function create($packageKey, MorphCreationData $data)
+    public function create($packageKey, MorphCreationData $data, OutputInterface $out)
     {
-        $metaData = new MetaData($packageKey);
-        $package  = $this->packageManager->createPackage($packageKey, $metaData);
-
-        $morphData = [
-            'sourceDirectory'   => $data->getSourceDirectory(),
-            'extensions'        => array_map(
-                function ($pattern) { return ['pattern' => $pattern]; },
-                $data->getExtensionPatterns()
-            ),
-            'doctrineMode'      => $data->isKeepingTableStructure() ? 'KEEP_SCHEMA' : 'MIGRATE',
-            'pibaseRefactoring' => $data->isAggressivelyRefactoringPiBaseExtensions() ? 'AGGRESSIVE' : 'CAUTIOUS',
-        ];
-
-        $configurationPath = $package->getConfigurationPath();
-        $morphPath         = Files::concatenatePaths([$configurationPath, 'Metamorph', 'Morph.yml']);
-
-        Files::createDirectoryRecursively(dirname($morphPath));
-        file_put_contents($morphPath, \Symfony\Component\Yaml\Yaml::dump($morphData));
+        $this->creationAspect->create($packageKey, $data, $out);
     }
 
 
 
     public function execute(MorphConfiguration $configuration, OutputInterface $out)
     {
-        $package    = $this->packageManager->getPackage($configuration->getName());
-        $workingDir = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Work']);
-        $state      = new MorphExecutionState($workingDir);
-
-        Files::createDirectoryRecursively($state->getWorkingDirectory());
-
-        $transformationConfig = $this->settings['transformations'];
-        $transformationConfig = (new PositionalArraySorter($transformationConfig))->toArray();
-
-        foreach ($transformationConfig as $item)
-        {
-            $name = $item['name'];
-            if (!class_exists($name))
-            {
-                $name = 'Mw\\Metamorph\\Transformation\\' . $name;
-            }
-
-            $out->writeln("Executing step <comment>{$name}</comment>.");
-
-            /** @var \Mw\Metamorph\Transformation\Transformation $transformation */
-            $transformation = $this->objectManager->get($name);
-            $transformation->setSettings(isset($item['settings']) ? $item['settings'] : []);
-
-            try
-            {
-                $transformation->execute($configuration, $state, $out);
-            }
-            catch (HumanInterventionRequiredException $exception)
-            {
-                $out->writeln('');
-                $out->writeln('<u><b>Human intervention required</b></u>');
-                $out->writeln('');
-                $out->writeln($exception->getMessage(), [], 2);
-                $out->writeln('');
-
-                return;
-            }
-        }
+        $this->executionAspect->execute($configuration, $out);
     }
 
 }
