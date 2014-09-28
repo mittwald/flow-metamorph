@@ -4,8 +4,10 @@ namespace Mw\Metamorph\Transformation;
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
-use Mw\Metamorph\Domain\Service\MorphState;
-use Mw\Metamorph\Io\OutputInterface;
+use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
+use Mw\Metamorph\Domain\Service\MorphExecutionState;
+use Symfony\Component\Console\Output\OutputInterface;
+use TYPO3\Flow\Annotations as Flow;
 
 
 class ExtensionInventory extends AbstractTransformation
@@ -13,16 +15,22 @@ class ExtensionInventory extends AbstractTransformation
 
 
 
-    public function execute(MorphConfiguration $configuration, MorphState $state, OutputInterface $out)
+    /**
+     * @var MorphConfigurationRepository
+     * @Flow\Inject
+     */
+    protected $morphRepository;
+
+
+
+    public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
         $rootDirectory     = $configuration->getSourceDirectory() . '/typo3conf/ext';
         $directoryIterator = new \DirectoryIterator($rootDirectory);
         $matcher           = $configuration->getExtensionMatcher();
 
-        /** @var PackageMapping[] $extensions */
-        $extensions = [];
-
-        $packageMapping = $state->readYamlFile('PackageMap', FALSE);
+        $packageMappingContainer = $configuration->getPackageMappingContainer();
+        $foundExtensionKeys      = [];
 
         foreach ($directoryIterator as $directoryInfo)
         {
@@ -36,44 +44,33 @@ class ExtensionInventory extends AbstractTransformation
 
             if ($matcher->match($extensionKey))
             {
-                $out->outputLine('  - EXT:<i>%s</i>: <u>FOUND</u>', [$extensionKey]);
+                $this->log('EXT:<comment>%s</comment>: <info>FOUND</info>', [$extensionKey]);
 
                 $mapping = new PackageMapping($directoryInfo->getPathname(), $extensionKey);
                 $mapping->setPackageKey($this->convertExtensionKeyToPackageName($extensionKey));
 
                 $this->enrichPackageDataWithEmConfData($mapping);
 
-                $extensions[$extensionKey] = $mapping;
+                $foundExtensionKeys[] = $extensionKey;
+                $packageMappingContainer->addPackageMapping($mapping);
             }
             else
             {
-                $out->outputLine('  - EXT:<i>%s</i>: <u>IGNORING</u>', [$extensionKey]);
+                $this->log('EXT:<comment>%s</comment>: <fg=cyan>IGNORING</fg=cyan>', [$extensionKey]);
             }
         }
 
         // Remove extensions that are defined in the package map, but not present anymore
         // in the source directory.
-        if (isset($packageMapping['extensions']))
+        foreach ($packageMappingContainer->getPackageMappings() as $packageMapping)
         {
-            foreach ($packageMapping['extensions'] as $key => $value)
+            if (FALSE === in_array($packageMapping->getExtensionKey(), $foundExtensionKeys))
             {
-                if (!array_key_exists($key, $extensions))
-                {
-                    unset($packageMapping['extensions'][$key]);
-                }
+                $packageMappingContainer->removePackageMapping($packageMapping->getExtensionKey());
             }
         }
 
-        foreach ($extensions as $extension)
-        {
-            if (!isset($packageMapping['extensions']) || !array_key_exists($extension->getExtensionKey(), $packageMapping['extensions']))
-            {
-                $packageMapping['reviewed']                                  = FALSE;
-                $packageMapping['extensions'][$extension->getExtensionKey()] = $extension->jsonSerialize();
-            }
-        }
-
-        $state->writeYamlFile('PackageMap', $packageMapping);
+        $this->morphRepository->update($configuration);
     }
 
 
@@ -111,7 +108,7 @@ class ExtensionInventory extends AbstractTransformation
             $authors      = $trimExplode($conf['author']);
             $authorEmails = $trimExplode($conf['author_email']);
 
-            for ($i = 0; $i < count($authors); $i ++)
+            for ($i = 0; $i < count($authors); $i++)
             {
                 $packageMapping->addAuthor($authors[$i], isset($authorEmails[$i]) ?: NULL);
             }

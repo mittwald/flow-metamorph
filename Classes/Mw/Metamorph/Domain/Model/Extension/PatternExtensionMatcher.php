@@ -7,6 +7,10 @@ class PatternExtensionMatcher implements ExtensionMatcher
 
 
 
+    private $pattern;
+
+
+
     public function __construct($pattern)
     {
         $this->pattern = $pattern;
@@ -17,6 +21,13 @@ class PatternExtensionMatcher implements ExtensionMatcher
     public function match($extensionKey)
     {
         return preg_match($this->pattern, $extensionKey);
+    }
+
+
+
+    public function getPattern()
+    {
+        return $this->pattern;
     }
 
 

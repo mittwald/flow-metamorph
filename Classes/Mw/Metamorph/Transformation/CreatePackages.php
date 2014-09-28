@@ -4,13 +4,10 @@ namespace Mw\Metamorph\Transformation;
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
-use Mw\Metamorph\Domain\Service\MorphState;
-use Mw\Metamorph\Exception\HumanInterventionRequiredException;
-use Mw\Metamorph\Io\OutputInterface;
-use TYPO3\Eel\Package;
+use Mw\Metamorph\Domain\Service\MorphExecutionState;
+use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\MetaData;
-use TYPO3\Flow\Utility\Files;
 
 
 
@@ -27,27 +24,20 @@ class CreatePackages extends AbstractTransformation
 
 
 
-    public function execute(MorphConfiguration $configuration, MorphState $state, OutputInterface $out)
+    public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
-        $packageMap = $state->readYamlFile('PackageMap', TRUE);
+        $packageMappingContainer = $configuration->getPackageMappingContainer();
+        $packageMappingContainer->assertReviewed();
 
-        /** @var PackageMapping[] $packages */
-        $packages = [];
-
-        foreach ($packageMap['extensions'] as $extensionConfiguration)
-        {
-            $packages[] = PackageMapping::jsonUnserialize($extensionConfiguration);
-        }
-
-        foreach ($packages as $package)
+        foreach ($packageMappingContainer->getPackageMappings() as $packageMapping)
         {
             $this->packageManager->createPackage(
-                $package->getPackageKey(),
-                $this->createPackageMetaData($package),
+                $packageMapping->getPackageKey(),
+                $this->createPackageMetaData($packageMapping),
                 NULL,
                 'typo3-flow-package'
             );
-            $out->outputLine('  - Created package <i>%s</i>', [$package->getPackageKey()]);
+            $this->log('PKG:<comment>%s</comment>: <fg=green>CREATED</fg=green>', [$packageMapping->getPackageKey()]);
         }
     }
 
@@ -62,7 +52,9 @@ class CreatePackages extends AbstractTransformation
 
         foreach ($packageMapping->getAuthors() as $author)
         {
-            $metaData->addParty(new MetaData\Person('Developer', $author['name'], isset($author['email']) ? $author['email'] : NULL));
+            $metaData->addParty(
+                new MetaData\Person('Developer', $author['name'], isset($author['email']) ? $author['email'] : NULL)
+            );
         }
 
         return $metaData;

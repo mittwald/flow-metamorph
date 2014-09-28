@@ -4,8 +4,9 @@ namespace Mw\Metamorph\Transformation;
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
-use Mw\Metamorph\Domain\Service\MorphState;
-use Mw\Metamorph\Io\OutputInterface;
+use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
+use Mw\Metamorph\Domain\Service\MorphExecutionState;
+use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Utility\Files;
 
@@ -22,13 +23,21 @@ class CreateClasses extends AbstractTransformation
     protected $packageManager;
 
 
+    /**
+     * @var MorphConfigurationRepository
+     * @Flow\Inject
+     */
+    protected $morphRepository;
 
-    public function execute(MorphConfiguration $configuration, MorphState $state, OutputInterface $out)
+
+
+    public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
-        $classMappings     = $state->getClassMapping();
+        $classMappingContainer = $configuration->getClassMappingContainer();
+        $classMappingContainer->assertReviewed();
         $packageClassCount = [];
 
-        foreach ($classMappings->getClassMappings() as $classMapping)
+        foreach ($classMappingContainer->getClassMappings() as $classMapping)
         {
             if ($classMapping->getAction() !== ClassMapping::ACTION_MORPH)
             {
@@ -55,11 +64,11 @@ class CreateClasses extends AbstractTransformation
             $classMapping->setTargetFile($absoluteFilename);
         }
 
-        $state->updateClassMapping($classMappings);
+        $this->morphRepository->update($configuration);
 
         foreach ($packageClassCount as $package => $count)
         {
-            $out->outputLine('  - <b>%d</b> classes written to package <i>%s</i>.', [$count, $package]);
+            $this->log('<comment>%d</comment> classes written to package <comment>%s</comment>.', [$count, $package]);
         }
     }
 }

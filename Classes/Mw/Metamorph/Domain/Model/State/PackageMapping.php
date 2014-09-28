@@ -13,32 +13,32 @@ class PackageMapping implements \JsonSerializable
     const ACTION_IGNORE = 'IGNORE';
 
 
-    private $extensionKey;
+    protected $extensionKey;
 
 
-    private $packageKey;
+    protected $packageKey;
 
 
-    private $filePath;
+    protected $filePath;
 
 
-    private $action = self::ACTION_MORPH;
+    protected $action = self::ACTION_MORPH;
 
 
-    private $description;
+    protected $description;
 
 
-    private $version;
+    protected $version;
 
 
-    private $authors = [];
+    protected $authors = [];
 
 
 
     public function __construct($filePath, $extensionKey = NULL)
     {
         $this->filePath     = $filePath;
-        $this->extensionKey = $extensionKey ? : basename($filePath);
+        $this->extensionKey = $extensionKey ?: basename($filePath);
     }
 
 

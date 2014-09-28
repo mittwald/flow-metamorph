@@ -3,8 +3,8 @@ namespace Mw\Metamorph\Transformation;
 
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
-use Mw\Metamorph\Domain\Service\MorphState;
-use Mw\Metamorph\Io\OutputInterface;
+use Mw\Metamorph\Domain\Service\MorphExecutionState;
+use Symfony\Component\Console\Output\OutputInterface;
 
 
 interface Transformation
@@ -16,6 +16,6 @@ interface Transformation
 
 
 
-    public function execute(MorphConfiguration $configuration, MorphState $state, OutputInterface $out);
+    public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out);
 
 }
