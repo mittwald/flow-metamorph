@@ -36,7 +36,7 @@ class ExtensionInventory extends AbstractTransformation
 
             if ($matcher->match($extensionKey))
             {
-                $out->writeln(sprintf('  - EXT:<i>%s</i>: <u>FOUND</u>', $extensionKey));
+                $this->log('EXT:<comment>%s</comment>: <info>FOUND</info>', [$extensionKey]);
 
                 $mapping = new PackageMapping($directoryInfo->getPathname(), $extensionKey);
                 $mapping->setPackageKey($this->convertExtensionKeyToPackageName($extensionKey));
@@ -47,7 +47,7 @@ class ExtensionInventory extends AbstractTransformation
             }
             else
             {
-                $out->writeln(sprintf('  - EXT:<i>%s</i>: <u>IGNORING</u>', $extensionKey));
+                $this->log('EXT:<comment>%s</comment>: <fg=cyan>IGNORING</fg=cyan>', [$extensionKey]);
             }
         }
 

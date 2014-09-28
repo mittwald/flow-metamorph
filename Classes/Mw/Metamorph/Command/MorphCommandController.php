@@ -9,10 +9,14 @@ namespace Mw\Metamorph\Command;
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
 
+
 use Mw\Metamorph\Command\Prompt\MorphCreationDataPrompt;
+use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\Dto\MorphCreationDto;
+use Mw\Metamorph\Domain\Service\MorphServiceInterface;
 use Mw\Metamorph\Exception\MorphNotFoundException;
 use Mw\Metamorph\Io\DecoratedOutput;
+use Mw\Metamorph\Logging\LoggingWrapper;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -30,17 +34,31 @@ class MorphCommandController extends CommandController
 
 
     /**
-     * @var \Mw\Metamorph\Domain\Repository\MorphConfigurationRepository
+     * @var MorphConfigurationRepository
      * @Flow\Inject
      */
     protected $morphConfigurationRepository;
 
 
     /**
-     * @var \Mw\Metamorph\Domain\Service\MorphService
+     * @var MorphServiceInterface
      * @Flow\Inject
      */
     protected $morphService;
+
+
+    /**
+     * @var LoggingWrapper
+     * @Flow\Inject
+     */
+    protected $loggingWrapper;
+
+
+
+    private function initializeLogging()
+    {
+        $this->loggingWrapper->setOutput(new DecoratedOutput($this->output));
+    }
 
 
 
@@ -53,6 +71,8 @@ class MorphCommandController extends CommandController
      */
     public function createCommand($packageKey, $nonInteractive = FALSE)
     {
+        $this->initializeLogging();
+
         $input  = new ArrayInput([]);
         $output = new DecoratedOutput($this->output);
 
@@ -81,6 +101,7 @@ class MorphCommandController extends CommandController
      */
     public function listCommand()
     {
+        $this->initializeLogging();
         $morphs = $this->morphConfigurationRepository->findAll();
 
         if (count($morphs))
@@ -115,6 +136,7 @@ class MorphCommandController extends CommandController
      */
     public function executeCommand($morphConfigurationName, $reset = FALSE)
     {
+        $this->initializeLogging();
         $morph = $this->morphConfigurationRepository->findByIdentifier($morphConfigurationName);
 
         if ($morph === NULL)
@@ -127,11 +149,8 @@ class MorphCommandController extends CommandController
 
         if (TRUE === $reset)
         {
-            $this->outputLine('Resetting state for morph <b>%s</b>.', [$morph->getName()]);
             $this->morphService->reset($morph, $this->output);
         }
-
-        $this->outputLine('Executing morph <b>%s</b>.', [$morph->getName()]);
 
         $this->morphService->execute($morph, new DecoratedOutput($this->output));
     }

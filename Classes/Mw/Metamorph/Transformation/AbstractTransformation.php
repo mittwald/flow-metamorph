@@ -18,4 +18,10 @@ abstract class AbstractTransformation implements Transformation
 
 
 
+    protected function log($message, array $arguments)
+    {
+    }
+
+
+
 }

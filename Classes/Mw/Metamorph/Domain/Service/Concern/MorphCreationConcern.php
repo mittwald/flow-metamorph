@@ -60,25 +60,6 @@ class MorphCreationConcern
         }
 
         $this->morphRepository->add($morphConfiguration);
-
-//        $metaData = new MetaData($packageKey);
-//        $package  = $this->packageManager->createPackage($packageKey, $metaData);
-//
-//        $morphData = [
-//            'sourceDirectory'       => $data->getSourceDirectory(),
-//            'extensions'            => array_map(
-//                function ($pattern) { return ['pattern' => $pattern]; },
-//                $data->getExtensionPatterns()
-//            ),
-//            'tableStructureMode'    => $data->isKeepingTableStructure() ? 'KEEP_SCHEMA' : 'MIGRATE',
-//            'pibaseRefactoringMode' => $data->isAggressivelyRefactoringPiBaseExtensions() ? 'AGGRESSIVE' : 'CAUTIOUS',
-//        ];
-//
-//        $configurationPath = $package->getConfigurationPath();
-//        $morphPath         = Files::concatenatePaths([$configurationPath, 'Metamorph', 'Morph.yml']);
-//
-//        Files::createDirectoryRecursively(dirname($morphPath));
-//        file_put_contents($morphPath, Yaml::dump($morphData));
     }
 
 

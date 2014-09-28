@@ -64,8 +64,6 @@ class MorphExecutionConcern
                 $name = 'Mw\\Metamorph\\Transformation\\' . $name;
             }
 
-            $out->writeln("Executing step <comment>{$name}</comment>.");
-
             /** @var \Mw\Metamorph\Transformation\Transformation $transformation */
             $transformation = $this->objectManager->get($name);
             $transformation->setSettings(isset($item['settings']) ? $item['settings'] : []);
@@ -76,12 +74,6 @@ class MorphExecutionConcern
             }
             catch (HumanInterventionRequiredException $exception)
             {
-                $out->writeln('');
-                $out->writeln('<u><b>Human intervention required</b></u>');
-                $out->writeln('');
-                $out->writeFormatted($exception->getMessage());
-                $out->writeln('');
-
                 return;
             }
         }

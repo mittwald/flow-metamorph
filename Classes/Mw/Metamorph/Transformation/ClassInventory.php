@@ -83,11 +83,9 @@ class ClassInventory extends AbstractTransformation
             $this->readClassesFromFile($filename, $classList, $out);
         }
 
-        $out->writeln(
-            vsprintf(
-                '  - <b>%d</b> classes found in EXT:<i>%s</i>.',
-                [count($classList), $packageMapping->getExtensionKey()]
-            )
+        $this->log(
+            '<comment>%d</comment> classes found in EXT:<comment>%s</comment>.',
+            [count($classList), $packageMapping->getExtensionKey()]
         );
 
         foreach ($classList as $className => $filename)

@@ -49,7 +49,7 @@ class MorphExecutionState
         {
             $what = strtolower(trim(preg_replace(',[A-Z],', ' $0', $filename)));
             throw new HumanInterventionRequiredException(
-                'Please review and adjust the ' . $what . ' in <i>' . $filepath . '</i> and change the "reviewed" property to TRUE.',
+                'Please review and adjust the ' . $what . ' in <info>' . $filepath . '</info> and change the "reviewed" property to TRUE.',
                 1399999104
             );
         }

@@ -66,7 +66,7 @@ class PackageClassRewrite extends AbstractTransformation
             $visitor->setClassMap($classMappings);
 
             $this->traverser->addVisitor($visitor);
-            $out->writeln(sprintf('  - Adding node visitor <i>%s</i>.', $visitorClass));
+            $this->log('Adding node visitor <info>%s</info>.', [$visitorClass]);
         }
 
         foreach ($classMappings->getClassMappings() as $classMapping)

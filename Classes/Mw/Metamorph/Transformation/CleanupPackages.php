@@ -37,11 +37,11 @@ class CleanupPackages extends AbstractTransformation
             if ($this->packageManager->isPackageAvailable($packageKey))
             {
                 $this->packageManager->deletePackage($packageKey);
-                $out->writeln(vsprintf('  - PKG:<i>%s</i>: <u>DELETED</u>', [$packageKey]));
+                $this->log('PKG:<comment>%s</comment>: <fg=red>DELETED</fg=red>', [$packageKey]);
             }
             else
             {
-                $out->writeln(vsprintf('  - PKG:<i>%s</i>: not present', [$packageKey]));
+                $this->log('PKG:<comment>%s</comment>: <fg=green>not present</fg=green>', [$packageKey]);
             }
         }
     }

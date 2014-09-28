@@ -59,7 +59,7 @@ class CreateClasses extends AbstractTransformation
 
         foreach ($packageClassCount as $package => $count)
         {
-            $out->writeln(vsprintf('  - <b>%d</b> classes written to package <i>%s</i>.', [$count, $package]));
+            $this->log('<comment>%d</comment> classes written to package <comment>%s</comment>.', [$count, $package]);
         }
     }
 }

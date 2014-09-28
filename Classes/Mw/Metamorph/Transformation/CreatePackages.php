@@ -44,7 +44,7 @@ class CreatePackages extends AbstractTransformation
                 NULL,
                 'typo3-flow-package'
             );
-            $out->writeln(vsprintf('  - Created package <i>%s</i>', [$package->getPackageKey()]));
+            $this->log('PKG:<comment>%s</comment>: <fg=green>CREATED</fg=green>', [$package->getPackageKey()]);
         }
     }
 
