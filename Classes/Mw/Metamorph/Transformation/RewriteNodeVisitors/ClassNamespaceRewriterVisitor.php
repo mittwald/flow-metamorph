@@ -61,7 +61,7 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor
         {
             $this->currentNamespaceNode = $node;
         }
-        elseif ($node instanceof Node\Stmt\Class_)
+        elseif ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Interface_)
         {
             $this->currentClassNode = $node;
             $oldName                = $node->namespacedName->toString();

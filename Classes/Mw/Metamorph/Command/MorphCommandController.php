@@ -2,7 +2,6 @@
 namespace Mw\Metamorph\Command;
 
 
-
 /*                                                                        *
  * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
  *                                                                        *
@@ -10,11 +9,18 @@ namespace Mw\Metamorph\Command;
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
 
-use Mw\Metamorph\Domain\Model\DefaultMorphCreationData;
+
+use Mw\Metamorph\Command\Prompt\MorphCreationDataPrompt;
+use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
+use Mw\Metamorph\Domain\Service\Dto\MorphCreationDto;
+use Mw\Metamorph\Domain\Service\MorphServiceInterface;
 use Mw\Metamorph\Exception\MorphNotFoundException;
-use Mw\Metamorph\Io\Prompt\MorphCreationDataPrompt;
-use Mw\Metamorph\Io\ResponseWrapper;
-use Mw\Metamorph\Io\SymfonyConsoleOutput;
+use Mw\Metamorph\Io\DecoratedOutput;
+use Mw\Metamorph\Logging\LoggingWrapper;
+use Symfony\Component\Console\Helper\FormatterHelper;
+use Symfony\Component\Console\Helper\HelperSet;
+use Symfony\Component\Console\Helper\QuestionHelper;
+use Symfony\Component\Console\Input\ArrayInput;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Cli\CommandController;
 
@@ -28,53 +34,94 @@ class MorphCommandController extends CommandController
 
 
     /**
-     * @var \Mw\Metamorph\Domain\Repository\MorphConfigurationRepository
+     * @var MorphConfigurationRepository
      * @Flow\Inject
      */
     protected $morphConfigurationRepository;
 
 
     /**
-     * @var \Mw\Metamorph\Domain\Service\MorphService
+     * @var MorphServiceInterface
      * @Flow\Inject
      */
     protected $morphService;
+
+
+    /**
+     * @var LoggingWrapper
+     * @Flow\Inject
+     */
+    protected $loggingWrapper;
+
+
+
+    private function initializeLogging()
+    {
+        $this->loggingWrapper->setOutput(new DecoratedOutput($this->output));
+    }
 
 
 
     /**
      * Creates a new site package with a morph configuration.
      *
-     * @param string $packageKey The package key to use for the morph package.
-     * @param bool $nonInteractive Set this flag to suppress interactive prompts during package creation.
+     * @param string $packageKey     The package key to use for the morph package.
+     * @param bool   $nonInteractive Set this flag to suppress interactive prompts during package creation.
      * @return void
      */
     public function createCommand($packageKey, $nonInteractive = FALSE)
     {
-        $output = new \Symfony\Component\Console\Output\ConsoleOutput();
+        $this->initializeLogging();
 
-        $dataProvider = $nonInteractive
-            ? new DefaultMorphCreationData()
-            : new MorphCreationDataPrompt(new SymfonyConsoleOutput($output));
+        $input  = new ArrayInput([]);
+        $output = new DecoratedOutput($this->output);
 
-        $this->morphService->create($packageKey, $dataProvider);
+        $data = new MorphCreationDto();
+
+        if (FALSE === $nonInteractive)
+        {
+            $helperSet = new HelperSet(array(new FormatterHelper()));
+
+            $helper = new QuestionHelper();
+            $helper->setHelperSet($helperSet);
+
+            $prompt = new MorphCreationDataPrompt($input, $output, $helper);
+            $prompt->setValuesOnCreateDto($data);
+        }
+
+        $this->morphService->create($packageKey, $data, $output);
     }
 
 
 
+    /**
+     * List available morphs.
+     *
+     * @return void
+     */
     public function listCommand()
     {
-        $commands = $this->morphConfigurationRepository->findAll();
+        $this->initializeLogging();
+        $morphs = $this->morphConfigurationRepository->findAll();
 
-        $this->outputLine('Found <b>%d</b> morph configurations:', [count($commands)]);
-        $this->outputLine();
-
-        foreach ($commands as $command)
+        if (count($morphs))
         {
-            $this->outputFormatted($command->getName(), [], 4);
+            $this->outputLine('Found <comment>%d</comment> morph configurations:', [count($morphs)]);
+            $this->outputLine();
+
+            foreach ($morphs as $morph)
+            {
+                $this->outputFormatted($morph->getName(), [], 4);
+            }
+
+            $this->outputLine();
+        }
+        else
+        {
+            $this->outputLine('Found <comment>no</comment> morph configurations.');
+            $this->outputLine('Use <comment>./flow morph:create</comment> to create a morph configuration.');
         }
 
-        $this->outputLine();
     }
 
 
@@ -83,12 +130,13 @@ class MorphCommandController extends CommandController
      * Morph a TYPO3 CMS application.
      *
      * @param string $morphConfigurationName The name of the morph configuration to execute.
-     * @param bool $reset Completely reset stored state before beginning.
+     * @param bool   $reset                  Completely reset stored state before beginning.
      * @throws \Mw\Metamorph\Exception\MorphNotFoundException
      * @return void
      */
     public function executeCommand($morphConfigurationName, $reset = FALSE)
     {
+        $this->initializeLogging();
         $morph = $this->morphConfigurationRepository->findByIdentifier($morphConfigurationName);
 
         if ($morph === NULL)
@@ -101,13 +149,10 @@ class MorphCommandController extends CommandController
 
         if (TRUE === $reset)
         {
-            $this->outputLine('Resetting state for morph <b>%s</b>.', [$morph->getName()]);
-            $this->morphService->reset($morph, new ResponseWrapper($this->response));
+            $this->morphService->reset($morph, $this->output);
         }
 
-        $this->outputLine('Executing morph <b>%s</b>.', [$morph->getName()]);
-
-        $this->morphService->execute($morph, new ResponseWrapper($this->response));
+        $this->morphService->execute($morph, new DecoratedOutput($this->output));
     }
 
 }

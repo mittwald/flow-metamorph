@@ -33,4 +33,16 @@ class UnionMatcher implements ExtensionMatcher
         }
         return FALSE;
     }
+
+
+
+    /**
+     * @return ExtensionMatcher[]
+     */
+    public function getMatchers()
+    {
+        return $this->matchers;
+    }
+
+
 }

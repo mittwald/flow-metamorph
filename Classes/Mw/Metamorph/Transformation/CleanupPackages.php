@@ -3,8 +3,8 @@ namespace Mw\Metamorph\Transformation;
 
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
-use Mw\Metamorph\Domain\Service\MorphState;
-use Mw\Metamorph\Io\OutputInterface;
+use Mw\Metamorph\Domain\Service\MorphExecutionState;
+use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 
 
@@ -21,27 +21,22 @@ class CleanupPackages extends AbstractTransformation
 
 
 
-    public function execute(MorphConfiguration $configuration, MorphState $state, OutputInterface $out)
+    public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
-        $packageMap = $state->readYamlFile('PackageMap', TRUE);
+        $packageMappingContainer = $configuration->getPackageMappingContainer();
+        $packageMappingContainer->assertReviewed();
 
-        $packageKeys = [];
-        foreach ($packageMap['extensions'] as $extensionConfiguration)
+        foreach ($packageMappingContainer->getPackageMappings() as $packageMapping)
         {
-            $packageKeys[] = $extensionConfiguration['packageKey'];
-        }
-        $packageKeys = array_unique($packageKeys);
-
-        foreach ($packageKeys as $packageKey)
-        {
+            $packageKey = $packageMapping->getPackageKey();
             if ($this->packageManager->isPackageAvailable($packageKey))
             {
                 $this->packageManager->deletePackage($packageKey);
-                $out->outputLine('  - PKG:<i>%s</i>: <u>DELETED</u>', [$packageKey]);
+                $this->log('PKG:<comment>%s</comment>: <fg=red>DELETED</fg=red>', [$packageKey]);
             }
             else
             {
-                $out->outputLine('  - PKG:<i>%s</i>: not present', [$packageKey]);
+                $this->log('PKG:<comment>%s</comment>: <fg=green>not present</fg=green>', [$packageKey]);
             }
         }
     }

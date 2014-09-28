@@ -2,17 +2,19 @@
 namespace Mw\Metamorph\Domain\Model\State;
 
 
+use Mw\Metamorph\Domain\Model\MorphConfiguration;
+
 class ClassMappingContainer implements \JsonSerializable
 {
 
 
 
+    use Reviewable;
+
+
+
     /** @var ClassMapping[] */
-    private $classMappings = [];
-
-
-    /** @var bool */
-    private $reviewed = TRUE;
+    protected $classMappings = [];
 
 
 
@@ -51,13 +53,6 @@ class ClassMappingContainer implements \JsonSerializable
             }
         }
         return NULL;
-    }
-
-
-
-    public function isReviewed()
-    {
-        return $this->reviewed;
     }
 
 

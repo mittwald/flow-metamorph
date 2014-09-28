@@ -13,22 +13,22 @@ class ClassMapping implements \JsonSerializable
     const ACTION_IGNORE = 'IGNORE';
 
 
-    private $sourceFile;
+    protected $sourceFile;
 
 
-    private $oldClassName;
+    protected $oldClassName;
 
 
-    private $newClassName;
+    protected $newClassName;
 
 
-    private $action = self::ACTION_MORPH;
+    protected $action = self::ACTION_MORPH;
 
 
-    private $package;
+    protected $package;
 
 
-    private $targetFile;
+    protected $targetFile;
 
 
 
