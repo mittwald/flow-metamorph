@@ -2,6 +2,8 @@
 namespace Mw\Metamorph\Persistence\Mapping\State;
 
 
+use Helmich\EventBroker\Annotations as Event;
+use Mw\Metamorph\Domain\Event\MorphConfigurationFileModifiedEvent;
 use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Symfony\Component\Yaml\Yaml;
 use TYPO3\Flow\Annotations as Flow;
@@ -69,7 +71,7 @@ trait YamlStorable
 
 
 
-    private function getWorkingFile($filename)
+    protected function getWorkingFile($filename)
     {
         return Files::concatenatePaths([$this->workingDirectory, $filename]);
     }
@@ -81,5 +83,12 @@ trait YamlStorable
         return array_key_exists($key, $array) ? $array[$key] : $default;
     }
 
+
+
+    /**
+     * @param MorphConfigurationFileModifiedEvent $event
+     * @Event\Event
+     */
+    protected function publishConfigurationFileModifiedEvent(MorphConfigurationFileModifiedEvent $event) { }
 
 }

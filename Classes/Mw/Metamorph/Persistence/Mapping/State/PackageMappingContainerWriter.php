@@ -10,6 +10,7 @@ namespace Mw\Metamorph\Persistence\Mapping\State;
  *                                                                        */
 
 
+use Mw\Metamorph\Domain\Event\MorphConfigurationFileModifiedEvent;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 
 
@@ -44,6 +45,13 @@ class PackageMappingContainerWriter
         if (count($packageMappings->getPackageMappings()))
         {
             $this->writeYamlFile('PackageMap', $data);
+            $this->publishConfigurationFileModifiedEvent(
+                new MorphConfigurationFileModifiedEvent(
+                    $morphConfiguration,
+                    $this->getWorkingFile('PackageMap.yaml'),
+                    'Updated package map.'
+                )
+            );
         }
     }
 }

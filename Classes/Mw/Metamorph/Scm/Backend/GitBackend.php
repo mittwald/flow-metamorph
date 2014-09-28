@@ -10,6 +10,7 @@ class GitBackend implements ScmBackendInterface
 {
 
 
+
     public function initialize($directory)
     {
         $repo = Admin::init($directory, FALSE);
@@ -25,14 +26,16 @@ class GitBackend implements ScmBackendInterface
 
 
 
-    public function commit($directory, $message)
+    public function commit($directory, $message, array $files = [])
     {
         $repo = new Repository($directory);
         $work = $repo->getWorkingCopy();
 
         $work->checkout('metamorph');
 
-        $repo->run('add', ['.']);
+        $files = count($files) ? $files : ['.'];
+
+        $repo->run('add', $files);
         $repo->run('commit', ['-m', $message]);
 
         $work->checkout('master');

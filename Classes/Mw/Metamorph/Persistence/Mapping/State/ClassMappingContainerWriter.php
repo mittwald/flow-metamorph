@@ -10,6 +10,7 @@ namespace Mw\Metamorph\Persistence\Mapping\State;
  *                                                                        */
 
 
+use Mw\Metamorph\Domain\Event\MorphConfigurationFileModifiedEvent;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 
 
@@ -49,6 +50,13 @@ class ClassMappingContainerWriter
         if (count($classMappings->getClassMappings()))
         {
             $this->writeYamlFile('ClassMap', $data);
+            $this->publishConfigurationFileModifiedEvent(
+                new MorphConfigurationFileModifiedEvent(
+                    $morphConfiguration,
+                    $this->getWorkingFile('ClassMap.yaml'),
+                    'Updated class map.'
+                )
+            );
         }
     }
 
