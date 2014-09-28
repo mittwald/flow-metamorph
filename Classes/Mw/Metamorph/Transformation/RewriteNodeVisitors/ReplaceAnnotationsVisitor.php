@@ -4,6 +4,7 @@ namespace Mw\Metamorph\Transformation\RewriteNodeVisitors;
 
 use PhpParser\Node;
 
+
 class ReplaceAnnotationsVisitor extends AbstractVisitor
 {
 
@@ -14,11 +15,7 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor
 
 
     /** @var array */
-    private $annotationMapping = [
-        '@inject'       => '@Flow\\Inject',
-        '@validate'     => '@Flow\\Validate',
-        '@dontvalidate' => '@Flow\\IgnoreValidation'
-    ];
+    private $annotationMapping;
 
 
     private $namespaceMappings = [
@@ -31,11 +28,27 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor
 
 
 
+    public function __construct()
+    {
+        // @formatter:off
+        $this->annotationMapping = [
+            '/@inject/'                        => '@Flow\\Inject',
+            '/@validate\s+\$?(.*)/'            => function (array $m) { return '@Flow\\Validate("' . ucfirst($m[1]) . '")'; },
+            '/@dontvalidate(\s+\$?(.+))?/'     => function (array $m) { return $m[1] ? '@Flow\\IgnoreValidation("' . trim($m[2]) . '")' : '@Flow\\IgnoreValidation'; },
+            '/@scope\s+(singleton|prototype)/' => function (array $m) { return '@Flow\\Scope("' . $m[1] . '")'; },
+            '/@dontverifyrequesthash/'         => '@Flow\\SkipCsrfProtection'
+        ];
+        // @formatter:on
+    }
+
+
+
     public function enterNode(Node $node)
     {
         if ($node instanceof Node\Stmt\Namespace_)
         {
-            $this->currentNamespace = $node;
+            $this->currentNamespace         = $node;
+            $this->requiredNamespaceImports = [];
         }
     }
 
@@ -51,17 +64,23 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor
         {
             foreach ($this->annotationMapping as $oldAnnotation => $newAnnotation)
             {
-                $annotationNamespace = explode('\\', ltrim($newAnnotation, '@'))[0];
-                $comment             = $node->getDocComment();
-
+                $comment = $node->getDocComment();
                 if ($comment && FALSE !== strpos($comment->getText(), $oldAnnotation))
                 {
-                    $this->requiredNamespaceImports[$annotationNamespace] = TRUE;
-
                     $text = $comment->getText();
-                    $text = str_replace($oldAnnotation, $newAnnotation, $text);
+                    $text = is_callable($newAnnotation)
+                        ? preg_replace_callback($oldAnnotation, $newAnnotation, $text)
+                        : preg_replace($oldAnnotation, $newAnnotation, $text);
 
                     $comment->setText($text);
+
+                    foreach ($this->namespaceMappings as $alias => $namespace)
+                    {
+                        if (FALSE !== strstr($text, '@' . $alias . '\\'))
+                        {
+                            $this->requiredNamespaceImports[$alias] = TRUE;
+                        }
+                    }
                 }
             }
         }
