@@ -1,9 +1,9 @@
 <?php
-namespace Mw\Metamorph\Scm;
+namespace Mw\Metamorph\Scm\Backend;
 
 
 
-interface ScmInterface
+interface ScmBackendInterface
 {
 
 

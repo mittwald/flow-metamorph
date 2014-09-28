@@ -1,9 +1,9 @@
 <?php
-namespace Mw\Metamorph\Scm;
+namespace Mw\Metamorph\Scm\Backend;
 
 
 
-class NoOp implements ScmInterface
+class NoOpBackend implements ScmInterface
 {
 
 
