@@ -2,26 +2,60 @@
 namespace Mw\Metamorph\Persistence\Mapping;
 
 
+/*                                                                        *
+ * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
+ *                                                                        *
+ * (C) 2014 Martin Helmich <m.helmich@mittwald.de>                        *
+ *          Mittwald CM Service GmbH & Co. KG                             *
+ *                                                                        */
+
+
 use Mw\Metamorph\Domain\Model\Extension\ExtensionMatcher;
 use Mw\Metamorph\Domain\Model\Extension\PatternExtensionMatcher;
 use Mw\Metamorph\Domain\Model\Extension\UnionMatcher;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
+use Mw\Metamorph\Persistence\Mapping\State\ClassMappingContainerWriter;
+use Mw\Metamorph\Persistence\Mapping\State\PackageMappingContainerWriter;
 use Symfony\Component\Yaml\Yaml;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\MetaData;
+use TYPO3\Flow\Package\PackageInterface;
+use TYPO3\Flow\Package\PackageManagerInterface;
 use TYPO3\Flow\Utility\Files;
 
 
+/**
+ * Writes morph configurations to disk.
+ *
+ * @package    Mw\Metamorph
+ * @subpackage Persistence\Mapping
+ *
+ * @Flow\Scope("singleton")
+ */
 class MorphConfigurationWriter
 {
 
 
 
     /**
-     * @var \TYPO3\Flow\Package\PackageManagerInterface
+     * @var PackageManagerInterface
      * @Flow\Inject
      */
     protected $packageManager;
+
+
+    /**
+     * @var PackageMappingContainerWriter
+     * @Flow\Inject
+     */
+    protected $packageMappingWriter;
+
+
+    /**
+     * @var ClassMappingContainerWriter
+     * @Flow\Inject
+     */
+    protected $classMappingWriter;
 
 
 
@@ -30,6 +64,28 @@ class MorphConfigurationWriter
         $metaData = new MetaData($morphConfiguration->getName());
         $package  = $this->packageManager->createPackage($morphConfiguration->getName(), $metaData);
 
+        $this->writeMorph($package, $morphConfiguration);
+    }
+
+
+
+    public function updateMorph(MorphConfiguration $morphConfiguration)
+    {
+        $package = $this->packageManager->getPackage($morphConfiguration->getName());
+        $this->writeMorph($package, $morphConfiguration);
+    }
+
+
+
+    public function removeMorph(MorphConfiguration $morphConfiguration)
+    {
+        $this->packageManager->deletePackage($morphConfiguration->getName());
+    }
+
+
+
+    private function writeMorph(PackageInterface $package, MorphConfiguration $morphConfiguration)
+    {
         $morphData = [
             'sourceDirectory'       => $morphConfiguration->getSourceDirectory(),
             'extensions'            => $this->exportExtensionMatcher($morphConfiguration->getExtensionMatcher()),
@@ -42,13 +98,9 @@ class MorphConfigurationWriter
 
         Files::createDirectoryRecursively(dirname($morphPath));
         file_put_contents($morphPath, Yaml::dump($morphData));
-    }
 
-
-
-    public function removeMorph(MorphConfiguration $morphConfiguration)
-    {
-        $this->packageManager->deletePackage($morphConfiguration->getName());
+        $this->packageMappingWriter->writeMorphPackageMapping($morphConfiguration);
+        $this->classMappingWriter->writeMorphClassMapping($morphConfiguration);
     }
 
 

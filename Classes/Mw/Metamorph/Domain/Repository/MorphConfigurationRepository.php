@@ -208,7 +208,12 @@ class MorphConfigurationRepository implements RepositoryInterface
      */
     public function update($object)
     {
-        // TODO: Implement update() method.
+        if (!$object instanceof MorphConfiguration)
+        {
+            throw new \InvalidArgumentException('$object must be an instance of MorphConfiguration!');
+        }
+
+        $this->configurationWriter->updateMorph($object);
     }
 
 

@@ -7,7 +7,9 @@ use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
+use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
+use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Transformation\ClassInventory\ClassFinderVisitor;
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
@@ -25,7 +27,7 @@ class ClassInventory extends AbstractTransformation
 
 
     /** @var ClassMappingContainer */
-    private $classMappings = NULL;
+    private $classMappingContainer = NULL;
 
 
     /**
@@ -41,6 +43,13 @@ class ClassInventory extends AbstractTransformation
     protected $objectManager;
 
 
+    /**
+     * @var MorphConfigurationRepository
+     * @Flow\Inject
+     */
+    protected $morphRepository;
+
+
 
     public function initializeObject()
     {
@@ -51,10 +60,12 @@ class ClassInventory extends AbstractTransformation
 
     public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
-        $packageMappings     = $state->getPackageMapping(TRUE);
-        $this->classMappings = $state->getClassMapping(FALSE);
+        $packageMappingContainer = $configuration->getPackageMappingContainer();
+        $packageMappingContainer->assertReviewed();
 
-        foreach ($packageMappings as $packageMapping)
+        $this->classMappingContainer = $configuration->getClassMappingContainer();
+
+        foreach ($packageMappingContainer->getPackageMappings() as $packageMapping)
         {
             if ($packageMapping->getAction() === PackageMapping::ACTION_MORPH)
             {
@@ -62,7 +73,7 @@ class ClassInventory extends AbstractTransformation
             }
         }
 
-        $state->updateClassMapping($this->classMappings);
+        $this->morphRepository->update($configuration);
     }
 
 
@@ -90,7 +101,7 @@ class ClassInventory extends AbstractTransformation
 
         foreach ($classList as $className => $filename)
         {
-            if (FALSE === $this->classMappings->hasClassMapping($className))
+            if (FALSE === $this->classMappingContainer->hasClassMapping($className))
             {
                 $classMapping = new ClassMapping(
                     $filename, $className, $this->guessMorphedClassName(
@@ -100,7 +111,7 @@ class ClassInventory extends AbstractTransformation
                     ), $packageMapping->getPackageKey()
                 );
 
-                $this->classMappings->addClassMapping($classMapping);
+                $this->classMappingContainer->addClassMapping($classMapping);
             }
         }
     }

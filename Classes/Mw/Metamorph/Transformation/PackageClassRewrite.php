@@ -49,7 +49,8 @@ class PackageClassRewrite extends AbstractTransformation
 
     public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
-        $classMappings = $state->getClassMapping();
+        $classMappingContainer = $configuration->getClassMappingContainer();
+        $classMappingContainer->assertReviewed();
 
         $this->traverser = new NodeTraverser();
         $this->traverser->addVisitor(new NameResolver());
@@ -63,13 +64,13 @@ class PackageClassRewrite extends AbstractTransformation
 
             /** @var \Mw\Metamorph\Transformation\RewriteNodeVisitors\AbstractVisitor $visitor */
             $visitor = $this->objectManager->get($visitorClass);
-            $visitor->setClassMap($classMappings);
+            $visitor->setClassMap($classMappingContainer);
 
             $this->traverser->addVisitor($visitor);
             $this->log('Adding node visitor <info>%s</info>.', [$visitorClass]);
         }
 
-        foreach ($classMappings->getClassMappings() as $classMapping)
+        foreach ($classMappingContainer->getClassMappings() as $classMapping)
         {
             $this->replaceExtbaseClassnamesInClass($classMapping, $out);
         }

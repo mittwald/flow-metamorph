@@ -26,25 +26,18 @@ class CreatePackages extends AbstractTransformation
 
     public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
-        $packageMap = $state->readYamlFile('PackageMap', TRUE);
+        $packageMappingContainer = $configuration->getPackageMappingContainer();
+        $packageMappingContainer->assertReviewed();
 
-        /** @var PackageMapping[] $packages */
-        $packages = [];
-
-        foreach ($packageMap['extensions'] as $extensionConfiguration)
-        {
-            $packages[] = PackageMapping::jsonUnserialize($extensionConfiguration);
-        }
-
-        foreach ($packages as $package)
+        foreach ($packageMappingContainer->getPackageMappings() as $packageMapping)
         {
             $this->packageManager->createPackage(
-                $package->getPackageKey(),
-                $this->createPackageMetaData($package),
+                $packageMapping->getPackageKey(),
+                $this->createPackageMetaData($packageMapping),
                 NULL,
                 'typo3-flow-package'
             );
-            $this->log('PKG:<comment>%s</comment>: <fg=green>CREATED</fg=green>', [$package->getPackageKey()]);
+            $this->log('PKG:<comment>%s</comment>: <fg=green>CREATED</fg=green>', [$packageMapping->getPackageKey()]);
         }
     }
 

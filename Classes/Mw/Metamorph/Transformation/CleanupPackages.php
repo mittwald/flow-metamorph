@@ -23,17 +23,12 @@ class CleanupPackages extends AbstractTransformation
 
     public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
-        $packageMap = $state->readYamlFile('PackageMap', TRUE);
+        $packageMappingContainer = $configuration->getPackageMappingContainer();
+        $packageMappingContainer->assertReviewed();
 
-        $packageKeys = [];
-        foreach ($packageMap['extensions'] as $extensionConfiguration)
+        foreach ($packageMappingContainer->getPackageMappings() as $packageMapping)
         {
-            $packageKeys[] = $extensionConfiguration['packageKey'];
-        }
-        $packageKeys = array_unique($packageKeys);
-
-        foreach ($packageKeys as $packageKey)
-        {
+            $packageKey = $packageMapping->getPackageKey();
             if ($this->packageManager->isPackageAvailable($packageKey))
             {
                 $this->packageManager->deletePackage($packageKey);

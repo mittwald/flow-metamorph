@@ -16,6 +16,8 @@ use Mw\Metamorph\Domain\Model\Extension\PatternExtensionMatcher;
 use Mw\Metamorph\Domain\Model\Extension\UnionMatcher;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Exception\InvalidConfigurationException;
+use Mw\Metamorph\Persistence\Mapping\State\ClassMappingContainerProxy;
+use Mw\Metamorph\Persistence\Mapping\State\PackageMappingContainerProxy;
 
 
 class MorphConfigurationProxy extends MorphConfiguration
@@ -42,6 +44,9 @@ class MorphConfigurationProxy extends MorphConfiguration
             FALSE,
             self::PIBASE_REFACTOR_CONSERVATIVE
         );
+
+        $this->packageMappingContainer = new PackageMappingContainerProxy($this);
+        $this->classMappingContainer   = new ClassMappingContainerProxy($this);
     }
 
 

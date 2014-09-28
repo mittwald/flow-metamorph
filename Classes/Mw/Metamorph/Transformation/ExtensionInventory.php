@@ -4,12 +4,22 @@ namespace Mw\Metamorph\Transformation;
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
+use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
 use Symfony\Component\Console\Output\OutputInterface;
+use TYPO3\Flow\Annotations as Flow;
 
 
 class ExtensionInventory extends AbstractTransformation
 {
+
+
+
+    /**
+     * @var MorphConfigurationRepository
+     * @Flow\Inject
+     */
+    protected $morphRepository;
 
 
 
@@ -19,10 +29,8 @@ class ExtensionInventory extends AbstractTransformation
         $directoryIterator = new \DirectoryIterator($rootDirectory);
         $matcher           = $configuration->getExtensionMatcher();
 
-        /** @var PackageMapping[] $extensions */
-        $extensions = [];
-
-        $packageMapping = $state->readYamlFile('PackageMap', FALSE);
+        $packageMappingContainer = $configuration->getPackageMappingContainer();
+        $foundExtensionKeys      = [];
 
         foreach ($directoryIterator as $directoryInfo)
         {
@@ -43,7 +51,8 @@ class ExtensionInventory extends AbstractTransformation
 
                 $this->enrichPackageDataWithEmConfData($mapping);
 
-                $extensions[$extensionKey] = $mapping;
+                $foundExtensionKeys[] = $extensionKey;
+                $packageMappingContainer->addPackageMapping($mapping);
             }
             else
             {
@@ -53,31 +62,15 @@ class ExtensionInventory extends AbstractTransformation
 
         // Remove extensions that are defined in the package map, but not present anymore
         // in the source directory.
-        if (isset($packageMapping['extensions']))
+        foreach ($packageMappingContainer->getPackageMappings() as $packageMapping)
         {
-            foreach ($packageMapping['extensions'] as $key => $value)
+            if (FALSE === in_array($packageMapping->getExtensionKey(), $foundExtensionKeys))
             {
-                if (!array_key_exists($key, $extensions))
-                {
-                    unset($packageMapping['extensions'][$key]);
-                }
+                $packageMappingContainer->removePackageMapping($packageMapping->getExtensionKey());
             }
         }
 
-        foreach ($extensions as $extension)
-        {
-            if (!isset($packageMapping['extensions']) || !array_key_exists(
-                    $extension->getExtensionKey(),
-                    $packageMapping['extensions']
-                )
-            )
-            {
-                $packageMapping['reviewed']                                  = FALSE;
-                $packageMapping['extensions'][$extension->getExtensionKey()] = $extension->jsonSerialize();
-            }
-        }
-
-        $state->writeYamlFile('PackageMap', $packageMapping);
+        $this->morphRepository->update($configuration);
     }
 
 

@@ -4,6 +4,8 @@ namespace Mw\Metamorph\Domain\Model;
 
 use Mw\Metamorph\Domain\Model\Extension\AllMatcher;
 use Mw\Metamorph\Domain\Model\Extension\ExtensionMatcher;
+use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
+use Mw\Metamorph\Domain\Model\State\PackageMappingContainer;
 
 
 class MorphConfiguration
@@ -18,9 +20,15 @@ class MorphConfiguration
     const PIBASE_REFACTOR_PROGRESSIVE = 'PROGRESSIVE';
 
 
+    /**
+     * @var string
+     */
     protected $name;
 
 
+    /**
+     * @var string
+     */
     protected $sourceDirectory;
 
 
@@ -44,12 +52,27 @@ class MorphConfiguration
     protected $pibaseRefactoringMode = self::PIBASE_REFACTOR_CONSERVATIVE;
 
 
+    /**
+     * @var ClassMappingContainer
+     */
+    protected $classMappingContainer = NULL;
+
+
+    /**
+     * @var PackageMappingContainer
+     */
+    protected $packageMappingContainer = NULL;
+
+
 
     public function __construct($name, $sourceDirectory)
     {
         $this->name             = $name;
         $this->sourceDirectory  = $sourceDirectory;
         $this->extensionMatcher = new AllMatcher();
+
+        $this->classMappingContainer   = new ClassMappingContainer();
+        $this->packageMappingContainer = new PackageMappingContainer();
     }
 
 
@@ -130,6 +153,26 @@ class MorphConfiguration
     public function getTableStructureMode()
     {
         return $this->tableStructureMode;
+    }
+
+
+
+    /**
+     * @return ClassMappingContainer
+     */
+    public function getClassMappingContainer()
+    {
+        return $this->classMappingContainer;
+    }
+
+
+
+    /**
+     * @return PackageMappingContainer
+     */
+    public function getPackageMappingContainer()
+    {
+        return $this->packageMappingContainer;
     }
 
 
