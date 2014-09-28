@@ -25,11 +25,11 @@ class MorphConfigurationProxy extends MorphConfiguration
 
     public function __construct($name, array $data)
     {
-        $this->name                  = $name;
-        $this->sourceDirectory       = $this->getPropertyFromData($data, 'sourceDirectory');
-        $this->extensionMatcher      = $this->buildExtensionMatcher($data);
+        $this->name             = $name;
+        $this->sourceDirectory  = $this->getPropertyFromData($data, 'sourceDirectory');
+        $this->extensionMatcher = $this->buildExtensionMatcher($data);
 
-        $this->tableStructureMode    = $this->getPropertyFromData(
+        $this->tableStructureMode = $this->getPropertyFromData(
             $data,
             'tableStructureMode',
             FALSE,
@@ -91,11 +91,13 @@ class MorphConfigurationProxy extends MorphConfiguration
             {
                 $extensionMatchers[] = new PatternExtensionMatcher($extensionConfiguration['pattern']);
             }
-
-            throw new InvalidConfigurationException(
-                'Invalid extension matcher configuration: ' . json_encode($extensionConfiguration),
-                1399996413
-            );
+            else
+            {
+                throw new InvalidConfigurationException(
+                    'Invalid extension matcher configuration: ' . json_encode($extensionConfiguration),
+                    1399996413
+                );
+            }
         }
 
         if (count($extensionMatchers) > 0)
