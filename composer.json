@@ -6,7 +6,8 @@
         "typo3/flow": "*",
         "nikic/php-parser": "dev-master",
         "symfony/console": "*",
-        "gitonomy/gitlib": "*"
+        "gitonomy/gitlib": "*",
+        "helmich/flow-eventbroker": "*"
     },
     "autoload": {
         "psr-0": {
