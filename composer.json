@@ -5,7 +5,8 @@
     "require": {
         "typo3/flow": "*",
         "nikic/php-parser": "dev-master",
-        "symfony/console": "*"
+        "symfony/console": "*",
+        "gitonomy/gitlib": "*"
     },
     "autoload": {
         "psr-0": {
