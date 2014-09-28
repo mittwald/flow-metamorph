@@ -85,7 +85,7 @@ class MorphConfigurationProxy extends MorphConfiguration
         $rootExtensionMatcher = new AllMatcher();
         $extensionMatchers    = [];
 
-        foreach ($data['extensions'] as $extensionConfiguration)
+        foreach ((array)$data['extensions'] as $extensionConfiguration)
         {
             if (array_key_exists('pattern', $extensionConfiguration))
             {
