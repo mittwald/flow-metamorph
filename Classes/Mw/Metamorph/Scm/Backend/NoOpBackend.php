@@ -3,7 +3,7 @@ namespace Mw\Metamorph\Scm\Backend;
 
 
 
-class NoOpBackend implements ScmInterface
+class NoOpBackend implements ScmBackendInterface
 {
 
 

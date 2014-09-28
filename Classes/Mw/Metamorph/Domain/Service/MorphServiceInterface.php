@@ -24,6 +24,14 @@ interface MorphServiceInterface
 
 
 
+    /**
+     * Creates a new morph package.
+     *
+     * @param string           $packageKey The package key to use.
+     * @param MorphCreationDto $data       Data necessary for package creation.
+     * @param OutputInterface  $out        Output stream.
+     * @return MorphConfiguration The created morph configuration.
+     */
     public function create($packageKey, MorphCreationDto $data, OutputInterface $out);
 
 

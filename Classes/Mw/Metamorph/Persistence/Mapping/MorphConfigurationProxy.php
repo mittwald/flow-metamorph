@@ -18,6 +18,7 @@ use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Exception\InvalidConfigurationException;
 use Mw\Metamorph\Persistence\Mapping\State\ClassMappingContainerProxy;
 use Mw\Metamorph\Persistence\Mapping\State\PackageMappingContainerProxy;
+use TYPO3\Flow\Package\PackageInterface;
 
 
 class MorphConfigurationProxy extends MorphConfiguration
@@ -25,10 +26,11 @@ class MorphConfigurationProxy extends MorphConfiguration
 
 
 
-    public function __construct($name, array $data)
+    public function __construct($name, array $data, PackageInterface $package)
     {
         $this->name             = $name;
         $this->sourceDirectory  = $this->getPropertyFromData($data, 'sourceDirectory');
+        $this->package          = $package;
         $this->extensionMatcher = $this->buildExtensionMatcher($data);
 
         $this->tableStructureMode = $this->getPropertyFromData(

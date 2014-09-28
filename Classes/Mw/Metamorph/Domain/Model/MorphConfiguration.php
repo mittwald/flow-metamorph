@@ -6,6 +6,7 @@ use Mw\Metamorph\Domain\Model\Extension\AllMatcher;
 use Mw\Metamorph\Domain\Model\Extension\ExtensionMatcher;
 use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use Mw\Metamorph\Domain\Model\State\PackageMappingContainer;
+use TYPO3\Flow\Package\PackageInterface;
 
 
 class MorphConfiguration
@@ -33,7 +34,13 @@ class MorphConfiguration
 
 
     /**
-     * @var \Mw\Metamorph\Domain\Model\Extension\ExtensionMatcher
+     * @var PackageInterface
+     */
+    protected $package;
+
+
+    /**
+     * @var ExtensionMatcher
      */
     protected $extensionMatcher;
 
@@ -173,6 +180,26 @@ class MorphConfiguration
     public function getPackageMappingContainer()
     {
         return $this->packageMappingContainer;
+    }
+
+
+
+    /**
+     * @param PackageInterface $package
+     */
+    public function setPackage(PackageInterface $package)
+    {
+        $this->package = $package;
+    }
+
+
+
+    /**
+     * @return PackageInterface
+     */
+    public function getPackage()
+    {
+        return $this->package;
     }
 
 

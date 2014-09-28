@@ -28,12 +28,6 @@ class MorphCreationConcern
 
 
 
-//    /**
-//     * @var \TYPO3\Flow\Package\PackageManagerInterface
-//     * @Flow\Inject
-//     */
-//    protected $packageManager;
-
     /**
      * @var MorphConfigurationRepository
      * @Flow\Inject
@@ -60,6 +54,7 @@ class MorphCreationConcern
         }
 
         $this->morphRepository->add($morphConfiguration);
+        return $morphConfiguration;
     }
 
 

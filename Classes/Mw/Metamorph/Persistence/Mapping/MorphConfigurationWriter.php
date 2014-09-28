@@ -63,6 +63,7 @@ class MorphConfigurationWriter
     {
         $metaData = new MetaData($morphConfiguration->getName());
         $package  = $this->packageManager->createPackage($morphConfiguration->getName(), $metaData);
+        $morphConfiguration->setPackage($package);
 
         $this->writeMorph($package, $morphConfiguration);
     }

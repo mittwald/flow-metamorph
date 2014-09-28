@@ -10,6 +10,8 @@ namespace Mw\Metamorph\Domain\Service;
  *                                                                        */
 
 
+use Helmich\EventBroker\Annotations as Event;
+use Mw\Metamorph\Domain\Event\MorphConfigurationCreatedEvent;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Service\Concern\MorphCreationConcern;
 use Mw\Metamorph\Domain\Service\Concern\MorphExecutionConcern;
@@ -63,7 +65,8 @@ class MorphService implements MorphServiceInterface
 
     public function create($packageKey, MorphCreationDto $data, OutputInterface $out)
     {
-        $this->creationConcern->create($packageKey, $data, $out);
+        $morph = $this->creationConcern->create($packageKey, $data, $out);
+        $this->publishMorphConfigurationCreated(new MorphConfigurationCreatedEvent($morph, $data));
     }
 
 
@@ -71,6 +74,16 @@ class MorphService implements MorphServiceInterface
     public function execute(MorphConfiguration $configuration, OutputInterface $out)
     {
         $this->executionConcern->execute($configuration, new DecoratedOutput($out));
+    }
+
+
+
+    /**
+     * @param MorphConfigurationCreatedEvent $event
+     * @Event\Event
+     */
+    protected function publishMorphConfigurationCreated(MorphConfigurationCreatedEvent $event)
+    {
     }
 
 }
