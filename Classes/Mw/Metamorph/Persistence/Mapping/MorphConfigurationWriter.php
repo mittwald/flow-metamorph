@@ -7,9 +7,9 @@ use Mw\Metamorph\Domain\Model\Extension\PatternExtensionMatcher;
 use Mw\Metamorph\Domain\Model\Extension\UnionMatcher;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Symfony\Component\Yaml\Yaml;
+use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\MetaData;
 use TYPO3\Flow\Utility\Files;
-use TYPO3\Flow\Annotations as Flow;
 
 
 class MorphConfigurationWriter
@@ -42,6 +42,13 @@ class MorphConfigurationWriter
 
         Files::createDirectoryRecursively(dirname($morphPath));
         file_put_contents($morphPath, Yaml::dump($morphData));
+    }
+
+
+
+    public function removeMorph(MorphConfiguration $morphConfiguration)
+    {
+        $this->packageManager->deletePackage($morphConfiguration->getName());
     }
 
 

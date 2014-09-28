@@ -53,18 +53,6 @@ class MorphConfigurationRepository implements RepositoryInterface
 
 
 
-    public function initializeObject()
-    {
-//        $this->configurationPath = FLOW_PATH_ROOT . '/Build/Metamorph';
-//
-//        if (!is_dir($this->configurationPath))
-//        {
-//            Files::createDirectoryRecursively($this->configurationPath);
-//        }
-    }
-
-
-
     /**
      * Adds an object to this repository.
      *
@@ -95,7 +83,12 @@ class MorphConfigurationRepository implements RepositoryInterface
      */
     public function remove($object)
     {
-        throw new \BadMethodCallException('Unsupported method.');
+        if (!$object instanceof MorphConfiguration)
+        {
+            throw new \InvalidArgumentException('$object must be an instance of MorphConfiguration!');
+        }
+
+        $this->configurationWriter->removeMorph($object);
     }
 
 
@@ -169,7 +162,7 @@ class MorphConfigurationRepository implements RepositoryInterface
      */
     public function countAll()
     {
-        // TODO: Implement countAll() method.
+        return count($this->findAll());
     }
 
 
