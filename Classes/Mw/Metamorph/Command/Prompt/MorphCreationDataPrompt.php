@@ -51,6 +51,7 @@ class MorphCreationDataPrompt
         $data->setExtensionPatterns($this->getExtensionPatterns());
         $data->setTableStructureMode($this->getTableStructureMode());
         $data->setPibaseRefactoringMode($this->getPibaseRefactoringMode());
+        $data->setVersionControlSystem($this->getVersionControlSystem());
     }
 
 
@@ -162,7 +163,13 @@ class MorphCreationDataPrompt
             'Do you want metamorph to track changes to your package using a version control system?',
             4
         );
-        $this->promptChoice('Version control system', ['git', 'none']);
+        return $this->promptChoice(
+            'Version control system',
+            [
+                'GIT'  => 'Git',
+                'NONE' => 'No versioning'
+            ]
+        );
     }
 
 

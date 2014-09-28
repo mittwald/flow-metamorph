@@ -106,11 +106,11 @@ class MorphConfigurationRepository implements RepositoryInterface
         return array_map(
             function (Package $package)
             {
-                $filename      = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Morph.yml']);
-                $identifier    = $package->getPackageKey();
-                $configuration = Yaml::parse(file_get_contents($filename));
+                $filename   = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Morph.yml']);
+                $identifier = $package->getPackageKey();
+                $data       = Yaml::parse(file_get_contents($filename));
 
-                return new MorphConfigurationProxy($identifier, $configuration);
+                return new MorphConfigurationProxy($identifier, $data, $package);
             },
             $packages
         );
@@ -135,8 +135,8 @@ class MorphConfigurationRepository implements RepositoryInterface
             return NULL;
         }
 
-        $configuration = Yaml::parse(file_get_contents($filename));
-        return new MorphConfigurationProxy($identifier, $configuration);
+        $data = Yaml::parse(file_get_contents($filename));
+        return new MorphConfigurationProxy($identifier, $data, $package);
     }
 
 

@@ -41,6 +41,13 @@ class MorphCreationDto
     private $pibaseRefactoringMode;
 
 
+    /**
+     * Versioning system to use for new morph package.
+     * @var string
+     */
+    private $versioning;
+
+
 
     /**
      * @return array
@@ -118,6 +125,26 @@ class MorphCreationDto
     public function setTableStructureMode($tableStructureMode)
     {
         $this->tableStructureMode = $tableStructureMode;
+    }
+
+
+
+    /**
+     * @return string
+     */
+    public function getVersionControlSystem()
+    {
+        return $this->versioning;
+    }
+
+
+
+    /**
+     * @param string $versioning
+     */
+    public function setVersionControlSystem($versioning)
+    {
+        $this->versioning = $versioning;
     }
 
 
