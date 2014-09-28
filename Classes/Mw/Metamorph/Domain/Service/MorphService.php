@@ -11,10 +11,10 @@ namespace Mw\Metamorph\Domain\Service;
 
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
-use Mw\Metamorph\Domain\Model\MorphCreationData;
 use Mw\Metamorph\Domain\Service\Concern\MorphCreationConcern;
 use Mw\Metamorph\Domain\Service\Concern\MorphExecutionConcern;
 use Mw\Metamorph\Domain\Service\Concern\MorphResetConcern;
+use Mw\Metamorph\Domain\Service\Dto\MorphCreationDto;
 use Mw\Metamorph\Io\DecoratedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
@@ -61,7 +61,7 @@ class MorphService implements MorphServiceInterface
 
 
 
-    public function create($packageKey, MorphCreationData $data, OutputInterface $out)
+    public function create($packageKey, MorphCreationDto $data, OutputInterface $out)
     {
         $this->creationConcern->create($packageKey, $data, $out);
     }

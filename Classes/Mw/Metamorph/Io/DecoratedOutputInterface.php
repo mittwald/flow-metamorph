@@ -10,6 +10,6 @@ interface DecoratedOutputInterface extends OutputInterface
 
 
 
-    public function writeFormatted($text);
+    public function writeFormatted($text, $indent=0);
 
 }

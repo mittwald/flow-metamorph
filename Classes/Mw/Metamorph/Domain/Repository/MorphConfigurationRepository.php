@@ -3,8 +3,13 @@ namespace Mw\Metamorph\Domain\Repository;
 
 
 
+use Mw\Metamorph\Domain\Model\MorphConfiguration;
+use Mw\Metamorph\Persistence\Mapping\MorphConfigurationProxy;
+use Mw\Metamorph\Persistence\Mapping\MorphConfigurationWriter;
+use Mw\Metamorph\Persistence\Mapping\PersisteableInterface;
 use Symfony\Component\Yaml\Yaml;
 use TYPO3\Flow\Annotations as Flow;
+use TYPO3\Flow\Package\Package;
 use TYPO3\Flow\Persistence\RepositoryInterface;
 use TYPO3\Flow\Utility\Files;
 
@@ -21,13 +26,6 @@ class MorphConfigurationRepository implements RepositoryInterface
 
 
     /**
-     * @var \Mw\Metamorph\Domain\Factory\MorphConfigurationFactory
-     * @Flow\Inject
-     */
-    protected $morphConfigurationFactory;
-
-
-    /**
      * @var \TYPO3\Flow\Package\PackageManagerInterface
      * @Flow\Inject
      */
@@ -35,9 +33,10 @@ class MorphConfigurationRepository implements RepositoryInterface
 
 
     /**
-     * @var string
+     * @var MorphConfigurationWriter
+     * @Flow\Inject
      */
-    private $configurationPath;
+    protected $configurationWriter;
 
 
 
@@ -56,12 +55,12 @@ class MorphConfigurationRepository implements RepositoryInterface
 
     public function initializeObject()
     {
-        $this->configurationPath = FLOW_PATH_ROOT . '/Build/Metamorph';
-
-        if (!is_dir($this->configurationPath))
-        {
-            Files::createDirectoryRecursively($this->configurationPath);
-        }
+//        $this->configurationPath = FLOW_PATH_ROOT . '/Build/Metamorph';
+//
+//        if (!is_dir($this->configurationPath))
+//        {
+//            Files::createDirectoryRecursively($this->configurationPath);
+//        }
     }
 
 
@@ -76,7 +75,12 @@ class MorphConfigurationRepository implements RepositoryInterface
      */
     public function add($object)
     {
-        throw new \BadMethodCallException('Unsupported method.');
+        if (!$object instanceof MorphConfiguration)
+        {
+            throw new \InvalidArgumentException('$object must be an instance of MorphConfiguration!');
+        }
+
+        $this->configurationWriter->createMorph($object);
     }
 
 
@@ -106,17 +110,14 @@ class MorphConfigurationRepository implements RepositoryInterface
     {
         $packages = $this->getAllMorphPackages();
 
-        /** @var \Mw\Metamorph\Domain\Factory\MorphConfigurationFactory $factory */
-        $factory = $this->morphConfigurationFactory;
-
         return array_map(
-            function (\TYPO3\Flow\Package\Package $package) use ($factory)
+            function (Package $package)
             {
                 $filename      = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Morph.yml']);
-                $name          = $package->getPackageKey();
+                $identifier    = $package->getPackageKey();
                 $configuration = Yaml::parse(file_get_contents($filename));
 
-                return $factory->createFromConfigurationArray($name, $configuration);
+                return new MorphConfigurationProxy($identifier, $configuration);
             },
             $packages
         );
@@ -142,7 +143,7 @@ class MorphConfigurationRepository implements RepositoryInterface
         }
 
         $configuration = Yaml::parse(file_get_contents($filename));
-        return $this->morphConfigurationFactory->createFromConfigurationArray($identifier, $configuration);
+        return new MorphConfigurationProxy($identifier, $configuration);
     }
 
 
@@ -241,7 +242,7 @@ class MorphConfigurationRepository implements RepositoryInterface
 
     private function getAllMorphPackages()
     {
-        /** @var \TYPO3\Flow\Package\Package[] $packages */
+        /** @var Package[] $packages */
         $packages      = $this->packageManager->getActivePackages();
         $foundPackages = [];
 

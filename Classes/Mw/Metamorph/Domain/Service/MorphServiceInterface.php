@@ -11,7 +11,7 @@ namespace Mw\Metamorph\Domain\Service;
 
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
-use Mw\Metamorph\Domain\Model\MorphCreationData;
+use Mw\Metamorph\Domain\Service\Dto\MorphCreationDto;
 use Symfony\Component\Console\Output\OutputInterface;
 
 
@@ -24,7 +24,7 @@ interface MorphServiceInterface
 
 
 
-    public function create($packageKey, MorphCreationData $data, OutputInterface $out);
+    public function create($packageKey, MorphCreationDto $data, OutputInterface $out);
 
 
 

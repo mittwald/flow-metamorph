@@ -9,10 +9,14 @@ namespace Mw\Metamorph\Command;
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
 
-use Mw\Metamorph\Domain\Model\DefaultMorphCreationData;
+use Mw\Metamorph\Command\Prompt\MorphCreationDataPrompt;
+use Mw\Metamorph\Domain\Service\Dto\MorphCreationDto;
 use Mw\Metamorph\Exception\MorphNotFoundException;
 use Mw\Metamorph\Io\DecoratedOutput;
-use Mw\Metamorph\Io\Prompt\MorphCreationDataPrompt;
+use Symfony\Component\Console\Helper\FormatterHelper;
+use Symfony\Component\Console\Helper\HelperSet;
+use Symfony\Component\Console\Helper\QuestionHelper;
+use Symfony\Component\Console\Input\ArrayInput;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Cli\CommandController;
 
@@ -49,12 +53,23 @@ class MorphCommandController extends CommandController
      */
     public function createCommand($packageKey, $nonInteractive = FALSE)
     {
-        $output       = new DecoratedOutput($this->output);
-        $dataProvider = $nonInteractive
-            ? new DefaultMorphCreationData()
-            : new MorphCreationDataPrompt($output);
+        $input  = new ArrayInput([]);
+        $output = new DecoratedOutput($this->output);
 
-        $this->morphService->create($packageKey, $dataProvider, $output);
+        $data = new MorphCreationDto();
+
+        if (FALSE === $nonInteractive)
+        {
+            $helperSet = new HelperSet(array(new FormatterHelper()));
+
+            $helper = new QuestionHelper();
+            $helper->setHelperSet($helperSet);
+
+            $prompt = new MorphCreationDataPrompt($input, $output, $helper);
+            $prompt->setValuesOnCreateDto($data);
+        }
+
+        $this->morphService->create($packageKey, $data, $output);
     }
 
 
