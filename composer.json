@@ -5,7 +5,7 @@
     "require": {
         "typo3/flow": "*",
         "nikic/php-parser": "dev-master",
-        "symfony/console": "*",
+        "symfony/console": ">= 2.5",
         "gitonomy/gitlib": "*",
         "helmich/flow-eventbroker": "*"
     },
