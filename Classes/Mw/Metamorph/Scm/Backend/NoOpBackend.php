@@ -16,4 +16,8 @@ class NoOpBackend implements ScmBackendInterface
 
 
 
+    public function isModified($directory) { return FALSE; }
+
+
+
 }

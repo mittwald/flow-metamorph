@@ -28,18 +28,33 @@ class GitBackend implements ScmBackendInterface
 
     public function commit($directory, $message, array $files = [])
     {
-        $repo = new Repository($directory);
-        $work = $repo->getWorkingCopy();
+        if ($this->isModified($directory))
+        {
+            $repo = new Repository($directory);
+            $work = $repo->getWorkingCopy();
 
-        $work->checkout('metamorph');
+            $work->checkout('metamorph');
 
-        $files = count($files) ? $files : ['.'];
+            $files = count($files) ? $files : ['.'];
 
-        $repo->run('add', $files);
-        $repo->run('commit', ['-m', $message]);
+            $repo->run('add', $files);
+            $repo->run('commit', ['-m', $message]);
 
-        $work->checkout('master');
+            $work->checkout('master');
 
-        $repo->run('merge', ['metamorph']);
+            $repo->run('merge', ['metamorph']);
+        }
     }
+
+
+
+    public function isModified($directory)
+    {
+        $repo = new Repository($directory);
+        $diff = $repo->getWorkingCopy()->getDiffPending();
+
+        return count($diff->getFiles()) > 0;
+    }
+
+
 }
