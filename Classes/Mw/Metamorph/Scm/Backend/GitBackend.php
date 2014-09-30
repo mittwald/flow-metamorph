@@ -11,6 +11,13 @@ class GitBackend implements ScmBackendInterface
 
 
 
+    /**
+     * @var Repository[]
+     */
+    private $repositories = [];
+
+
+
     public function initialize($directory)
     {
         $repo = Admin::init($directory, FALSE);
@@ -30,7 +37,7 @@ class GitBackend implements ScmBackendInterface
     {
         if ($this->isModified($directory))
         {
-            $repo = new Repository($directory);
+            $repo = $this->getRepository($directory);
             $work = $repo->getWorkingCopy();
 
             $work->checkout('metamorph');
@@ -50,11 +57,26 @@ class GitBackend implements ScmBackendInterface
 
     public function isModified($directory)
     {
-        $repo = new Repository($directory);
-        $diff = $repo->getWorkingCopy()->getDiffPending();
+        $work = $this->getRepository($directory)->getWorkingCopy();
+        $diff = $work->getDiffPending();
 
         return count($diff->getFiles()) > 0;
     }
 
+
+
+    /**
+     * @param string $directory
+     * @return Repository
+     */
+    private function getRepository($directory)
+    {
+        if (FALSE === array_key_exists($directory, $this->repositories))
+        {
+            $this->repositories[$directory] = new Repository($directory);
+        }
+
+        return $this->repositories[$directory];
+    }
 
 }
