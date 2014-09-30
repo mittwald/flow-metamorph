@@ -11,33 +11,34 @@ namespace Mw\Metamorph\Domain\Event;
 
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
-use Mw\Metamorph\Domain\Service\Dto\MorphCreationDto;
 
 
-class MorphConfigurationCreatedEvent extends AbstractMorphConfigurationEvent
+abstract class AbstractMorphConfigurationEvent
 {
 
 
 
-    /** @var MorphCreationDto */
-    private $options;
+    /** @var MorphConfiguration */
+    private $morphConfiguration;
 
 
 
-    public function __construct(MorphConfiguration $morphConfiguration, MorphCreationDto $options)
+    /**
+     * @param MorphConfiguration $morphConfiguration
+     */
+    public function __construct(MorphConfiguration $morphConfiguration)
     {
-        parent::__construct($morphConfiguration);
-        $this->options = $options;
+        $this->morphConfiguration = $morphConfiguration;
     }
 
 
 
     /**
-     * @return MorphCreationDto
+     * @return MorphConfiguration
      */
-    public function getOptions()
+    public function getMorphConfiguration()
     {
-        return $this->options;
+        return $this->morphConfiguration;
     }
 
 

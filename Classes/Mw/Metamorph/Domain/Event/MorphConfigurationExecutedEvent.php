@@ -10,36 +10,8 @@ namespace Mw\Metamorph\Domain\Event;
  *                                                                        */
 
 
-use Mw\Metamorph\Domain\Model\MorphConfiguration;
-
-
-class MorphConfigurationExecutedEvent
+class MorphConfigurationExecutedEvent extends AbstractMorphConfigurationEvent
 {
-
-
-
-    /** @var MorphConfiguration */
-    private $morphConfiguration;
-
-
-
-    /**
-     * @param MorphConfiguration $morphConfiguration
-     */
-    public function __construct(MorphConfiguration $morphConfiguration)
-    {
-        $this->morphConfiguration = $morphConfiguration;
-    }
-
-
-
-    /**
-     * @return MorphConfiguration
-     */
-    public function getMorphConfiguration()
-    {
-        return $this->morphConfiguration;
-    }
 
 
 
