@@ -16,4 +16,7 @@ interface ScmBackendInterface
 
 
 
+    public function isModified($directory);
+
+
 }

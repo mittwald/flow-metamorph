@@ -13,6 +13,7 @@ namespace Mw\Metamorph\Domain\Service;
 use Helmich\EventBroker\Annotations as Event;
 use Mw\Metamorph\Domain\Event\MorphConfigurationCreatedEvent;
 use Mw\Metamorph\Domain\Event\MorphConfigurationExecutedEvent;
+use Mw\Metamorph\Domain\Event\MorphConfigurationExecutionStartedEvent;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Service\Concern\MorphCreationConcern;
 use Mw\Metamorph\Domain\Service\Concern\MorphExecutionConcern;
@@ -67,15 +68,16 @@ class MorphService implements MorphServiceInterface
     public function create($packageKey, MorphCreationDto $data, OutputInterface $out)
     {
         $morph = $this->creationConcern->create($packageKey, $data, $out);
-        $this->publishMorphConfigurationCreated(new MorphConfigurationCreatedEvent($morph, $data));
+        $this->publishCreated(new MorphConfigurationCreatedEvent($morph, $data));
     }
 
 
 
     public function execute(MorphConfiguration $configuration, OutputInterface $out)
     {
+        $this->publishExecutionStart(new MorphConfigurationExecutionStartedEvent($configuration));
         $this->executionConcern->execute($configuration, new DecoratedOutput($out));
-        $this->publishMorphConfigurationExecuted(new MorphConfigurationExecutedEvent($configuration));
+        $this->publishExecuted(new MorphConfigurationExecutedEvent($configuration));
     }
 
 
@@ -84,7 +86,7 @@ class MorphService implements MorphServiceInterface
      * @param MorphConfigurationCreatedEvent $event
      * @Event\Event
      */
-    protected function publishMorphConfigurationCreated(MorphConfigurationCreatedEvent $event) { }
+    protected function publishCreated(MorphConfigurationCreatedEvent $event) { }
 
 
 
@@ -92,6 +94,14 @@ class MorphService implements MorphServiceInterface
      * @param MorphConfigurationExecutedEvent $event
      * @Event\Event
      */
-    protected function publishMorphConfigurationExecuted(MorphConfigurationExecutedEvent $event) { }
+    protected function publishExecuted(MorphConfigurationExecutedEvent $event) { }
+
+
+
+    /**
+     * @param MorphConfigurationExecutionStartedEvent $event
+     * @Event\Event
+     */
+    protected function publishExecutionStart(MorphConfigurationExecutionStartedEvent $event) { }
 
 }

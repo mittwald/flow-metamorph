@@ -78,7 +78,7 @@ class TransformationLoggingAspect
      * @throws \Exception
      * @return mixed
      *
-     * @Flow\Around("within(Mw\Metamorph\Transformation\Transformation) && method(.*->execute())")
+     * @Flow\Around("within(Mw\Metamorph\Domain\Service\MorphServiceInterface) && method(.*->execute())")
      */
     public function humanInterventionLoggingAdvice(JoinPointInterface $joinPoint)
     {
@@ -107,7 +107,7 @@ class TransformationLoggingAspect
      * @param JoinPointInterface $joinPoint
      * @return mixed
      *
-     * @Flow\After("within(Mw\Metamorph\Transformation\Transformation) && method(.*->log())")
+     * @Flow\AfterReturning("within(Mw\Metamorph\Transformation\Transformation) && method(.*->log())")
      */
     public function transformationLoggingAdvice(JoinPointInterface $joinPoint)
     {

@@ -68,14 +68,7 @@ class MorphExecutionConcern
             $transformation = $this->objectManager->get($name);
             $transformation->setSettings(isset($item['settings']) ? $item['settings'] : []);
 
-            try
-            {
-                $transformation->execute($configuration, $state, $out);
-            }
-            catch (HumanInterventionRequiredException $exception)
-            {
-                return;
-            }
+            $transformation->execute($configuration, $state, $out);
         }
     }
 
