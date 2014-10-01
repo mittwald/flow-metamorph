@@ -14,6 +14,7 @@ use Mw\Metamorph\Command\Prompt\MorphCreationDataPrompt;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\Dto\MorphCreationDto;
 use Mw\Metamorph\Domain\Service\MorphServiceInterface;
+use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Exception\MorphNotFoundException;
 use Mw\Metamorph\Io\DecoratedOutput;
 use Mw\Metamorph\Logging\LoggingWrapper;
@@ -152,7 +153,19 @@ class MorphCommandController extends CommandController
             $this->morphService->reset($morph, $this->output);
         }
 
-        $this->morphService->execute($morph, new DecoratedOutput($this->output));
+        try
+        {
+            $this->morphService->execute($morph, new DecoratedOutput($this->output));
+        }
+        catch (HumanInterventionRequiredException $e)
+        {
+        }
+        catch (\Exception $e)
+        {
+            $this->output->writeln('<error>  UNCAUGHT EXCEPTION  </error>');
+            $this->output->writeln('  ' . get_class($e) . ': ' . $e->getMessage());
+            $this->sendAndExit(1);
+        }
     }
 
 }
