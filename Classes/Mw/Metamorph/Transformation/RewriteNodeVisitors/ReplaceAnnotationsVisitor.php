@@ -2,6 +2,8 @@
 namespace Mw\Metamorph\Transformation\RewriteNodeVisitors;
 
 
+use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
+use Mw\Metamorph\Transformation\Helper\Annotation\OptionParser;
 use PhpParser\Node;
 
 
@@ -33,10 +35,46 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor
         // @formatter:off
         $this->annotationMapping = [
             '/@inject/'                        => '@Flow\\Inject',
-            '/@validate\s+\$?(.*)/'            => function (array $m) { return '@Flow\\Validate("' . ucfirst($m[1]) . '")'; },
-            '/@dontvalidate(\s+\$?(.+))?/'     => function (array $m) { return $m[1] ? '@Flow\\IgnoreValidation("' . trim($m[2]) . '")' : '@Flow\\IgnoreValidation'; },
-            '/@scope\s+(singleton|prototype)/' => function (array $m) { return '@Flow\\Scope("' . $m[1] . '")'; },
-            '/@dontverifyrequesthash/'         => '@Flow\\SkipCsrfProtection'
+
+            '/@validate[ ]+(?:\$?(?<var>[a-zA-Z0-9_]+)[ ]+)?(?<type>[A-Za-z_\\\\]+)(?:\((?<options>.*)\))?/' => function(array $m)
+            {
+                $renderer = new AnnotationRenderer('Flow', 'Validate');
+                $renderer->addParameter('type', $m['type']);
+
+                if (isset($m['var']) && strlen($m['var']) > 0)
+                {
+                    $renderer->addParameter('argumentName', $m['var']);
+                }
+
+                if (isset($m['options']))
+                {
+                    $renderer->addParameter('options', (new OptionParser($m['options']))->getValues());
+                }
+
+                return $renderer->render();
+            },
+
+            '/@dontvalidate(?:\s+\$?(?<var>.+))?/' => function(array $m)
+            {
+                $renderer = new AnnotationRenderer('Flow', 'IgnoreValidation');
+
+                if (isset($m['var']))
+                {
+                    $renderer->addParameter('argumentName', $m['var']);
+                }
+
+                return $renderer->render();
+            },
+
+            '/@scope\s+(?<scope>singleton|prototype)/' => function (array $m)
+            {
+                return (new AnnotationRenderer('Flow', 'Scope'))
+                    ->setArgument($m['scope'])
+                    ->render();
+            },
+
+            '/@dontverifyrequesthash/' => '@Flow\\SkipCsrfProtection',
+            '/@lazy/' => '@Flow\\Lazy'
         ];
         // @formatter:on
     }
@@ -65,7 +103,7 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor
             foreach ($this->annotationMapping as $oldAnnotation => $newAnnotation)
             {
                 $comment = $node->getDocComment();
-                if ($comment && FALSE !== strpos($comment->getText(), $oldAnnotation))
+                if ($comment && FALSE !== preg_match($oldAnnotation, $comment->getText()))
                 {
                     $text = $comment->getText();
                     $text = is_callable($newAnnotation)
