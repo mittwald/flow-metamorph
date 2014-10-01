@@ -10,7 +10,7 @@ namespace Mw\Metamorph\Domain\Event;
  *                                                                        */
 
 
-class MorphConfigurationExecutedEvent extends AbstractMorphConfigurationEvent
+class MorphConfigurationExecutionStartedEvent extends AbstractMorphConfigurationEvent
 {
 
 
