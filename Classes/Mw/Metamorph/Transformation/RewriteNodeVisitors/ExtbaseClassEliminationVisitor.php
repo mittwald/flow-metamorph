@@ -5,6 +5,7 @@ namespace Mw\Metamorph\Transformation\RewriteNodeVisitors;
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
 use Mw\Metamorph\Transformation\Helper\Annotation\DocCommentModifier;
 use Mw\Metamorph\Transformation\Helper\Namespaces\ImportHelper;
+use PhpParser\Comment\Doc;
 use PhpParser\Node;
 use TYPO3\Flow\Annotations as Flow;
 
@@ -14,10 +15,11 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
 
 
 
-    /**
-     * @var \PhpParser\Node\Stmt\Namespace_[]
-     */
-    private $namespaceNodes = [];
+    /** @var Node\Stmt\Namespace_ */
+    private $currentNamespace = NULL;
+
+
+    private $neededNamespaceImports = [];
 
 
     /**
@@ -35,29 +37,12 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
 
 
 
-    public function afterTraverse(array $nodes)
-    {
-        foreach ($nodes as $key => $node)
-        {
-            if ($node instanceof Node\Stmt\Namespace_)
-            {
-                $nodes[$key] = $this->importHelper->importNamespaceIntoOtherNamespace(
-                    $node,
-                    'TYPO3\\Flow\\Annotations',
-                    'Flow'
-                );
-            }
-        }
-        return $nodes;
-    }
-
-
-
     public function enterNode(Node $node)
     {
         if ($node instanceof Node\Stmt\Namespace_)
         {
-            $this->namespaceNodes[] = $node;
+            $this->currentNamespace       = $node;
+            $this->neededNamespaceImports = [];
         }
         if ($node instanceof Node\Stmt\Class_)
         {
@@ -76,8 +61,18 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
 
             if (NULL !== $annotation)
             {
+                $comment = $node->getDocComment();
+                if (NULL === $comment)
+                {
+                    $comments   = $node->getAttribute('comments', []);
+                    $comments[] = $comment = new Doc("/**\n */");
+
+                    $node->setAttribute('comments', $comments);
+                }
+
+                $this->neededNamespaceImports['Flow'] = 'TYPO3\\Flow\\Annotations';
                 $this->commentModifier->addAnnotationToDocComment(
-                    $node->getDocComment(),
+                    $comment,
                     new AnnotationRenderer('Flow', 'Entity')
                 );
             }
@@ -108,6 +103,14 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
 
     public function leaveNode(Node $node)
     {
+        if ($node instanceof Node\Stmt\Namespace_ && count($this->neededNamespaceImports))
+        {
+            foreach ($this->neededNamespaceImports as $alias => $namespace)
+            {
+                $node = $this->importHelper->importNamespaceIntoOtherNamespace($node, $namespace, $alias);
+            }
+            return $node;
+        }
         if ($node instanceof Node\Stmt\If_)
         {
             $cond = $node->cond;
