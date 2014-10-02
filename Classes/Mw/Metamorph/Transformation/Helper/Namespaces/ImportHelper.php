@@ -61,7 +61,14 @@ class ImportHelper
 
         $stmts = $namespaceNode->stmts;
 
-        array_splice($stmts, $lastImportIndex + 1, 0, [$outerUse]);
+        if ($lastImportIndex)
+        {
+            array_splice($stmts, $lastImportIndex + 1, 0, [$outerUse]);
+        }
+        else
+        {
+            $stmts = array_merge([$outerUse], $stmts);
+        }
 
         $namespaceNode->stmts = $stmts;
         return $namespaceNode;
