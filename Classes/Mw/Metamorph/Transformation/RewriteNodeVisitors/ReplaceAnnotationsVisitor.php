@@ -55,6 +55,7 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor
                 return $renderer->render();
             },
 
+            '/@dontvalidatehmac/' => '@Flow\\SkipCsrfProtection',
             '/@dontvalidate(?:\s+\$?(?<var>.+))?/' => function(array $m)
             {
                 $renderer = new AnnotationRenderer('Flow', 'IgnoreValidation');
