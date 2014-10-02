@@ -129,6 +129,7 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor
                 }
             }
         }
+        return NULL;
     }
 
 
