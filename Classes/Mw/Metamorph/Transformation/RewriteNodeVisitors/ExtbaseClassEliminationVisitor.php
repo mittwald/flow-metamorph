@@ -2,6 +2,7 @@
 namespace Mw\Metamorph\Transformation\RewriteNodeVisitors;
 
 
+use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer;
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
 use Mw\Metamorph\Transformation\Helper\Annotation\DocCommentModifier;
 use Mw\Metamorph\Transformation\Helper\Namespaces\ImportHelper;
@@ -34,6 +35,13 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
      * @Flow\Inject
      */
     protected $commentModifier;
+
+
+    /**
+     * @var ClassDefinitionContainer
+     * @Flow\Inject
+     */
+    protected $classDefinitionContainer;
 
 
 
@@ -71,10 +79,7 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
                 }
 
                 $this->neededNamespaceImports['Flow'] = 'TYPO3\\Flow\\Annotations';
-                $this->commentModifier->addAnnotationToDocComment(
-                    $comment,
-                    new AnnotationRenderer('Flow', 'Entity')
-                );
+                $this->commentModifier->addAnnotationToDocComment($comment, $annotation);
             }
         }
     }
@@ -83,9 +88,10 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
 
     private function classIsEntity(Node\Stmt\Class_ $node)
     {
-        return $node->extends && (
-            $node->extends->toString() === 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity' ||
-            $node->extends->toString() === 'Tx_Extbase_DomainObject_AbstractEntity'
+        $definition = $this->classDefinitionContainer->get($node->namespacedName->toString());
+        return !$node->isAbstract() && (
+            $definition->doesInherit('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity') ||
+            $definition->doesInherit('Tx_Extbase_DomainObject_AbstractEntity')
         );
     }
 
@@ -93,9 +99,10 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
 
     private function classIsValueObject(Node\Stmt\Class_ $node)
     {
-        return $node->extends && (
-            $node->extends->toString() === 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject' ||
-            $node->extends->toString() === 'Tx_Extbase_DomainObject_AbstractValueObject'
+        $definition = $this->classDefinitionContainer->get($node->namespacedName->toString());
+        return !$node->isAbstract() && (
+            $definition->doesInherit('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject') ||
+            $definition->doesInherit('Tx_Extbase_DomainObject_AbstractValueObject')
         );
     }
 
