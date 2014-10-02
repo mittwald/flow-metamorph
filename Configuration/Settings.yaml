@@ -9,6 +9,9 @@ Mw:
         position: 20
         settings:
           visitors: []
+      resourceInventory:
+        name: ResourceInventory
+        position: after classInventory
       cleanupPackages:
         name: CleanupPackages
         position: 30
