@@ -67,12 +67,10 @@ class ClassDefinition
 
     public function doesInherit($fullyQualifiedName)
     {
-        echo "DOES " . $this->getFullyQualifiedName() . " INHERIT $fullyQualifiedName?\n";
         if ($this->getParentClass() !== NULL)
         {
             if ($fullyQualifiedName == $this->getParentClass()->getFullyQualifiedName())
             {
-                echo "YES!\n";
                 return TRUE;
             }
             else
