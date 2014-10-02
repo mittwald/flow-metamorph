@@ -34,7 +34,6 @@ class ExtbaseClassReplacementVisitor extends AbstractVisitor
             {
                 if (strpos($text, $old) !== FALSE)
                 {
-                    $this->increaseStatCounter($old);
                     $text = str_replace($old, $new, $text);
                 }
             }
@@ -49,33 +48,23 @@ class ExtbaseClassReplacementVisitor extends AbstractVisitor
         {
             if ($node->class instanceof Node\Name && ($node->class == 'TYPO3\CMS\Extbase\Persistence\ObjectStorage' || $node->class == 'Tx_Extbase_Persistence_ObjectStorage'))
             {
-                $this->increaseStatCounter($node->class->toString());
                 $node->class = new Node\Name\FullyQualified('Doctrine\\Common\\Collections\\ArrayCollection');
             }
         }
-
 
         if ($node instanceof Node\Name)
         {
             $name = $node->toString();
             if (array_key_exists($name, $this->replacements))
             {
-                $this->increaseStatCounter($name);
                 return new Node\Name\FullyQualified($this->replacements[$name]);
             }
         }
+
+        return NULL;
     }
 
 
-
-    private function increaseStatCounter($name)
-    {
-//        if (!isset($this->statistics[$name]))
-//        {
-//            $this->statistics[$name] = 0;
-//        }
-//        $this->statistics[$name]++;
-    }
 
 
 
