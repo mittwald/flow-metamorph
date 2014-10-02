@@ -49,7 +49,6 @@ class AnalyzerVisitor extends NodeVisitorAbstract
             {
                 list($class, $namespace) = $this->splitNameIntoClassAndNamespace($node->extends);
                 $classDef->setParentClass(new ClassDefinitionDeferred($class, $namespace));
-                echo "INHERIT: " . $classDef->getFullyQualifiedName() . ' --> ' . $namespace . '\\' . $class . "\n";
             }
 
             if ($node->implements)
