@@ -44,8 +44,6 @@ class ImportHelper
                     'alias' => $use->alias
                 ];
 
-                var_dump($use->alias, $use->name->toString(), $importNamespace);
-
                 if ($alias == $use->alias && $use->name->toString() == $importNamespace)
                 {
                     $found = TRUE;
