@@ -2,8 +2,11 @@
 namespace Mw\Metamorph\Transformation\RewriteNodeVisitors;
 
 
-use PhpParser\Comment\Doc;
+use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
+use Mw\Metamorph\Transformation\Helper\Annotation\DocCommentModifier;
+use Mw\Metamorph\Transformation\Helper\Namespaces\ImportHelper;
 use PhpParser\Node;
+use TYPO3\Flow\Annotations as Flow;
 
 
 class ExtbaseClassEliminationVisitor extends AbstractVisitor
@@ -17,17 +20,32 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
     private $namespaceNodes = [];
 
 
+    /**
+     * @var ImportHelper
+     * @Flow\Inject
+     */
+    protected $importHelper;
+
+
+    /**
+     * @var DocCommentModifier
+     * @Flow\Inject
+     */
+    protected $commentModifier;
+
+
 
     public function afterTraverse(array $nodes)
     {
-        $useuse = new Node\Stmt\UseUse(new Node\Name\FullyQualified('TYPO3\\Flow\\Annotations'), 'Flow');
-        $use    = new Node\Stmt\Use_([$useuse]);
-
-        foreach ($nodes as $node)
+        foreach ($nodes as $key => $node)
         {
             if ($node instanceof Node\Stmt\Namespace_)
             {
-                $node->stmts = array_merge([$use], $node->stmts);
+                $nodes[$key] = $this->importHelper->importNamespaceIntoOtherNamespace(
+                    $node,
+                    'TYPO3\\Flow\\Annotations',
+                    'Flow'
+                );
             }
         }
         return $nodes;
@@ -43,55 +61,47 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
         }
         if ($node instanceof Node\Stmt\Class_)
         {
-            if ($node->extends && ($node->extends->toString(
-                    ) === 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity' || $node->extends->toString(
-                    ) === 'Tx_Extbase_DomainObject_AbstractEntity')
-            )
-            {
-                $this->increaseStatCounter($node->extends->toString());
-                $node->extends = NULL;
+            $annotation = NULL;
 
-                $this->addAnnotation($node->getDocComment(), '@Flow\\Entity');
+            if ($this->classIsEntity($node))
+            {
+                $node->extends = NULL;
+                $annotation    = new AnnotationRenderer('Flow', 'Entity');
             }
-            if ($node->extends && ($node->extends->toString(
-                    ) === 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject' || $node->extends->toString(
-                    ) === 'Tx_Extbase_DomainObject_AbstractValueObject')
-            )
+            else if ($this->classIsValueObject($node))
             {
-                $this->increaseStatCounter($node->extends->toString());
                 $node->extends = NULL;
+                $annotation    = new AnnotationRenderer('Flow', 'ValueObject');
+            }
 
-                $this->addAnnotation($node->getDocComment(), '@Flow\\ValueObject');
+            if (NULL !== $annotation)
+            {
+                $this->commentModifier->addAnnotationToDocComment(
+                    $node->getDocComment(),
+                    new AnnotationRenderer('Flow', 'Entity')
+                );
             }
         }
     }
 
 
 
-    private function increaseStatCounter($name)
+    private function classIsEntity(Node\Stmt\Class_ $node)
     {
-//        if (!isset($this->statistics[$name]))
-//        {
-//            $this->statistics[$name] = 0;
-//        }
-//        $this->statistics[$name]++;
+        return $node->extends && (
+            $node->extends->toString() === 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity' ||
+            $node->extends->toString() === 'Tx_Extbase_DomainObject_AbstractEntity'
+        );
     }
 
 
 
-    private function addAnnotation(Doc $comment, $annotation)
+    private function classIsValueObject(Node\Stmt\Class_ $node)
     {
-        $text = $comment->getReformattedText();
-
-        $lines = explode("\n", $text);
-        $count = count($lines);
-
-        $lines[$count - 1] = ' * ' . $annotation;
-        $lines[$count]     = ' */';
-
-        $text = implode("\n", $lines);
-
-        $comment->setText($text);
+        return $node->extends && (
+            $node->extends->toString() === 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject' ||
+            $node->extends->toString() === 'Tx_Extbase_DomainObject_AbstractValueObject'
+        );
     }
 
 
@@ -105,11 +115,11 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
             {
                 if ($cond->class == 'TYPO3\\CMS\\Extbase\\Persistence\\LazyLoadingProxy')
                 {
-                    $this->increaseStatCounter($cond->class->toString());
                     return FALSE;
                 }
             }
         }
+        return NULL;
     }
 
 }

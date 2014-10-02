@@ -4,6 +4,7 @@ namespace Mw\Metamorph\Transformation\RewriteNodeVisitors;
 
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
 use Mw\Metamorph\Transformation\Helper\Annotation\OptionParser;
+use Mw\Metamorph\Transformation\Helper\Namespaces\ImportHelper;
 use PhpParser\Node;
 
 
@@ -96,7 +97,13 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor
     {
         if ($node instanceof Node\Stmt\Namespace_)
         {
-
+            $helper = new ImportHelper();
+            foreach($this->requiredNamespaceImports as $alias => $_)
+            {
+                $namespace = $this->namespaceMappings[$alias];
+                $node = $helper->importNamespaceIntoOtherNamespace($node, $namespace, $alias);
+            }
+            return $node;
         }
         else
         {
