@@ -24,6 +24,14 @@ Mw:
         settings:
           visitors:
             - ClassNamespaceRewriterVisitor
+      analyzeClasses:
+        name: AnalyzeClasses
+        position: 70
+      refactorClasses:
+        name: PackageClassRewrite
+        position: 80
+        settings:
+          visitors:
             - ExtbaseClassReplacementVisitor
             - ExtbaseClassEliminationVisitor
             - ReplaceMakeInstanceCallsVisitor
