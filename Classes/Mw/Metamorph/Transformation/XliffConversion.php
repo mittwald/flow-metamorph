@@ -31,10 +31,18 @@ class XliffConversion extends AbstractTransformation
         $resourceMappingContainer->assertReviewed();
 
         $locallangFiles = $this->findLocallangXmlFiles($resourceMappingContainer);
+        $xliffFileCount = 0;
+
         foreach ($locallangFiles as $sourceFile => $data)
         {
+            $xliffFileCount += count($data['languages']);
             $this->processLocallangFile($sourceFile, $data['languages'], $data['mapping']);
         }
+
+        $this->log(
+            'Converted <comment>' . count($locallangFiles) . '</comment> locallang files into <comment>' .
+            $xliffFileCount . '</comment> XLIFF files.'
+        );
     }
 
 
@@ -68,7 +76,7 @@ class XliffConversion extends AbstractTransformation
 
             $targetPath = Files::concatenatePaths([$targetDir, $targetFile]);
 
-            $converted = $processor->transformToDoc($document);
+            $converted               = $processor->transformToDoc($document);
             $converted->formatOutput = TRUE;
             $converted->save($targetPath);
         }
