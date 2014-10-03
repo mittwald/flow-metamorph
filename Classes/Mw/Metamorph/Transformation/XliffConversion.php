@@ -68,7 +68,9 @@ class XliffConversion extends AbstractTransformation
 
             $targetPath = Files::concatenatePaths([$targetDir, $targetFile]);
 
-            file_put_contents($targetPath, $processor->transformToXml($document));
+            $converted = $processor->transformToDoc($document);
+            $converted->formatOutput = TRUE;
+            $converted->save($targetPath);
         }
     }
 
