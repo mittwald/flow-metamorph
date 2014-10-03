@@ -46,9 +46,21 @@ class PackageMappingContainer
 
     public function getPackageMapping($extensionKey)
     {
+        return $this->getPackageMappingByFilter(
+            function (PackageMapping $mapping) use ($extensionKey)
+            {
+                return $mapping->getExtensionKey() === $extensionKey;
+            }
+        );
+    }
+
+
+
+    public function getPackageMappingByFilter($callable)
+    {
         foreach ($this->packageMappings as $packageMapping)
         {
-            if ($packageMapping->getExtensionKey() === $extensionKey)
+            if (TRUE === call_user_func($callable, $packageMapping))
             {
                 return $packageMapping;
             }

@@ -21,6 +21,9 @@ Mw:
       createClasses:
         name: CreateClasses
         position: 50
+      createResources:
+        name: CreateResources
+        position: 55
       rewritePackageClasses:
         name: PackageClassRewrite
         position: 60
