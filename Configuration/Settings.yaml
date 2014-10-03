@@ -45,6 +45,9 @@ Mw:
       transformLocallang:
         name: XliffConversion
         position: 90
+      migrateDatabase:
+        name: MigrateDatabaseStructure
+        position: 100
     staticReplacements:
       TYPO3\CMS\Extbase\Mvc\Controller\ActionController: TYPO3\Flow\Mvc\Controller\ActionController
       TYPO3\CMS\Core\Utility\GeneralUtility: Mw\Metamorph\TYPO3\Utility\GeneralUtility
