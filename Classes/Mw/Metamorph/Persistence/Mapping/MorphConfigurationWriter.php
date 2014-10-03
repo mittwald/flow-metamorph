@@ -16,6 +16,7 @@ use Mw\Metamorph\Domain\Model\Extension\UnionMatcher;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Persistence\Mapping\State\ClassMappingContainerWriter;
 use Mw\Metamorph\Persistence\Mapping\State\PackageMappingContainerWriter;
+use Mw\Metamorph\Persistence\Mapping\State\ResourceMappingContainerWriter;
 use Symfony\Component\Yaml\Yaml;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\MetaData;
@@ -56,6 +57,13 @@ class MorphConfigurationWriter
      * @Flow\Inject
      */
     protected $classMappingWriter;
+
+
+    /**
+     * @var ResourceMappingContainerWriter
+     * @Flow\Inject
+     */
+    protected $resourceMappingWriter;
 
 
 
@@ -102,6 +110,7 @@ class MorphConfigurationWriter
 
         $this->packageMappingWriter->writeMorphPackageMapping($morphConfiguration);
         $this->classMappingWriter->writeMorphClassMapping($morphConfiguration);
+        $this->resourceMappingWriter->writeMorphResourceMapping($morphConfiguration);
     }
 
 

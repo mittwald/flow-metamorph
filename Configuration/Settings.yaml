@@ -9,6 +9,9 @@ Mw:
         position: 20
         settings:
           visitors: []
+      resourceInventory:
+        name: ResourceInventory
+        position: after classInventory
       cleanupPackages:
         name: CleanupPackages
         position: 30
@@ -18,6 +21,9 @@ Mw:
       createClasses:
         name: CreateClasses
         position: 50
+      createResources:
+        name: CreateResources
+        position: 55
       rewritePackageClasses:
         name: PackageClassRewrite
         position: 60
@@ -51,6 +57,12 @@ Mw:
       Tx_Extbase_Persistence_QueryInterface: TYPO3\Flow\Persistence\QueryInterface
       Tx_Extbase_Persistence_Repository: TYPO3\Flow\Persistence\Repository
       t3lib_div: Mw\Metamorph\TYPO3\Utility\GeneralUtility
+    resourceExtensions:
+      templates: {targetPath: Private/Templates, extensions: [html, htm]}
+      languageFiles: {targetPath: Private/Language, extensions: [xml, xlf]}
+      images: {targetPath: Public/Images, extensions: [jpeg, jpg, gif, tif, svg, eps, png]}
+      javascript: {targetPath: Public/JavaScript, extensions: [js, coffee, ts]}
+      css: {targetPath: Public/Stylesheets, extensions: [css, sass, less, scss]}
 
 TYPO3:
   Flow:

@@ -2,9 +2,7 @@
 namespace Mw\Metamorph\Domain\Model\State;
 
 
-use Mw\Metamorph\Domain\Model\MorphConfiguration;
-
-class ClassMappingContainer implements \JsonSerializable
+class ClassMappingContainer
 {
 
 
@@ -53,42 +51,6 @@ class ClassMappingContainer implements \JsonSerializable
             }
         }
         return NULL;
-    }
-
-
-
-    static public function jsonUnserialize(array $data)
-    {
-        $classes = isset($data['classes']) ? $data['classes'] : [];
-
-        $container                = new ClassMappingContainer();
-        $container->reviewed      = isset($data['reviewed']) ? $data['reviewed'] : FALSE;
-        $container->classMappings = array_map(
-            function ($oldClassName) use ($classes)
-            {
-                return ClassMapping::jsonUnserialize($classes[$oldClassName], $oldClassName);
-            },
-            array_keys($classes)
-        );
-
-        return $container;
-    }
-
-
-
-    public function jsonSerialize()
-    {
-        $serializedMappings = [];
-
-        foreach ($this->classMappings as $classMapping)
-        {
-            $serializedMappings[$classMapping->getOldClassName()] = $classMapping->jsonSerialize();
-        }
-
-        return [
-            'reviewed' => $this->reviewed,
-            'classes'  => $serializedMappings
-        ];
     }
 
 
