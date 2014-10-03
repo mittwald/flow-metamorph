@@ -27,10 +27,10 @@ class ResourceMappingContainerWriter
     {
         $this->initializeWorkingDirectory($morphConfiguration->getName());
 
-        $classMappings = $morphConfiguration->getResourceMappingContainer();
-        $data          = ['reviewed' => $classMappings->isReviewed(), 'resources' => []];
+        $resourceMappings = $morphConfiguration->getResourceMappingContainer();
+        $data             = ['reviewed' => $resourceMappings->isReviewed(), 'resources' => []];
 
-        foreach ($classMappings->getResourceMappings() as $resourceMapping)
+        foreach ($resourceMappings->getResourceMappings() as $resourceMapping)
         {
             $mapped = [
                 'target'  => $resourceMapping->getTargetFile(),
@@ -45,7 +45,7 @@ class ResourceMappingContainerWriter
             $data['resources'][$resourceMapping->getSourceFile()] = $mapped;
         }
 
-        if (count($classMappings->getResourceMappings()))
+        if (count($resourceMappings->getResourceMappings()))
         {
             $this->writeYamlFile('ResourceMap', $data);
             $this->publishConfigurationFileModifiedEvent(

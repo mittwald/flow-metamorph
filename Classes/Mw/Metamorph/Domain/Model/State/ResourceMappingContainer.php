@@ -13,7 +13,7 @@ class ResourceMappingContainer
     /**
      * @var ResourceMapping[]
      */
-    protected $resourceMappings;
+    protected $resourceMappings = [];
 
 
 
