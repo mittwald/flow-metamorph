@@ -2,7 +2,7 @@
 namespace Mw\Metamorph\Domain\Model\State;
 
 
-class PackageMapping implements \JsonSerializable
+class PackageMapping
 {
 
 
@@ -149,30 +149,4 @@ class PackageMapping implements \JsonSerializable
 
 
 
-    public function jsonSerialize()
-    {
-        return [
-            'path'        => $this->filePath,
-            'action'      => $this->action,
-            'packageKey'  => $this->packageKey,
-            'description' => $this->description,
-            'version'     => $this->version,
-            'authors'     => $this->authors
-        ];
-    }
-
-
-
-    static public function jsonUnserialize(array $data, $extensionKey = NULL)
-    {
-        // Note to self: DO NOT write "new self" here. Flow's proxy generation will kick you in the balls for that.
-        $mapping = new PackageMapping($data['path'], $extensionKey);
-
-        $mapping->packageKey  = $data['packageKey'];
-        $mapping->action      = $data['action'];
-        $mapping->description = $data['description'];
-        $mapping->version     = $data['version'];
-        $mapping->authors     = $data['authors'];
-        return $mapping;
-    }
 }

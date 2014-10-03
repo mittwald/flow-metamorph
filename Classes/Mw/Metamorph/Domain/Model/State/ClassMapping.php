@@ -2,7 +2,7 @@
 namespace Mw\Metamorph\Domain\Model\State;
 
 
-class ClassMapping implements \JsonSerializable
+class ClassMapping
 {
 
 
@@ -162,35 +162,4 @@ class ClassMapping implements \JsonSerializable
 
 
 
-    public function jsonSerialize()
-    {
-        $data = [
-            'source'       => $this->sourceFile,
-            'action'       => $this->action,
-            'newClassname' => $this->newClassName,
-            'package'      => $this->package
-        ];
-
-        if ($this->targetFile)
-        {
-            $data['target'] = $this->targetFile;
-        }
-
-        return $data;
-    }
-
-
-
-    static public function jsonUnserialize(array $data, $oldClassName)
-    {
-        $mapping         = new ClassMapping($data['source'], $oldClassName, $data['newClassname'], $data['package']);
-        $mapping->action = $data['action'];
-
-        if (isset($data['target']))
-        {
-            $mapping->targetFile = $data['target'];
-        }
-
-        return $mapping;
-    }
 }

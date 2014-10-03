@@ -6,6 +6,7 @@ use Mw\Metamorph\Domain\Model\Extension\AllMatcher;
 use Mw\Metamorph\Domain\Model\Extension\ExtensionMatcher;
 use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use Mw\Metamorph\Domain\Model\State\PackageMappingContainer;
+use Mw\Metamorph\Domain\Model\State\ResourceMappingContainer;
 use TYPO3\Flow\Package\PackageInterface;
 
 
@@ -71,6 +72,12 @@ class MorphConfiguration
     protected $packageMappingContainer = NULL;
 
 
+    /**
+     * @var ResourceMappingContainer
+     */
+    protected $resourceMappingContainer = NULL;
+
+
 
     public function __construct($name, $sourceDirectory)
     {
@@ -78,8 +85,9 @@ class MorphConfiguration
         $this->sourceDirectory  = $sourceDirectory;
         $this->extensionMatcher = new AllMatcher();
 
-        $this->classMappingContainer   = new ClassMappingContainer();
-        $this->packageMappingContainer = new PackageMappingContainer();
+        $this->classMappingContainer    = new ClassMappingContainer();
+        $this->packageMappingContainer  = new PackageMappingContainer();
+        $this->resourceMappingContainer = new ResourceMappingContainer();
     }
 
 
@@ -180,6 +188,16 @@ class MorphConfiguration
     public function getPackageMappingContainer()
     {
         return $this->packageMappingContainer;
+    }
+
+
+
+    /**
+     * @return ResourceMappingContainer
+     */
+    public function getResourceMappingContainer()
+    {
+        return $this->resourceMappingContainer;
     }
 
 

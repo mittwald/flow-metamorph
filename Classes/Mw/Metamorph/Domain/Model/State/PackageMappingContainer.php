@@ -32,7 +32,7 @@ class PackageMappingContainer
         {
             $this->reviewed          = FALSE;
             $this->packageMappings[] = $packageMapping;
-        } else "PACKAGE MAPPING ALREADY KNOWN!";
+        }
     }
 
 

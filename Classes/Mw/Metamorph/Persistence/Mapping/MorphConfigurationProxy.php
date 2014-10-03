@@ -18,6 +18,7 @@ use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Exception\InvalidConfigurationException;
 use Mw\Metamorph\Persistence\Mapping\State\ClassMappingContainerProxy;
 use Mw\Metamorph\Persistence\Mapping\State\PackageMappingContainerProxy;
+use Mw\Metamorph\Persistence\Mapping\State\ResourceMappingContainerProxy;
 use TYPO3\Flow\Package\PackageInterface;
 
 
@@ -47,8 +48,9 @@ class MorphConfigurationProxy extends MorphConfiguration
             self::PIBASE_REFACTOR_CONSERVATIVE
         );
 
-        $this->packageMappingContainer = new PackageMappingContainerProxy($this);
-        $this->classMappingContainer   = new ClassMappingContainerProxy($this);
+        $this->packageMappingContainer  = new PackageMappingContainerProxy($this);
+        $this->classMappingContainer    = new ClassMappingContainerProxy($this);
+        $this->resourceMappingContainer = new ResourceMappingContainerProxy($this);
     }
 
 
