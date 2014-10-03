@@ -54,6 +54,12 @@ Mw:
       Tx_Extbase_Persistence_QueryInterface: TYPO3\Flow\Persistence\QueryInterface
       Tx_Extbase_Persistence_Repository: TYPO3\Flow\Persistence\Repository
       t3lib_div: Mw\Metamorph\TYPO3\Utility\GeneralUtility
+    resourceExtensions:
+      templates: {targetPath: Private/Templates, extensions: [html, htm]}
+      languageFiles: {targetPath: Private/Language, extensions: [xml, xlf]}
+      images: {targetPath: Public/Images, extensions: [jpeg, jpg, gif, tif, svg, eps, png]}
+      javascript: {targetPath: Public/JavaScript, extensions: [js, coffee, ts]}
+      css: {targetPath: Public/Stylesheets, extensions: [css, sass, less, scss]}
 
 TYPO3:
   Flow:
