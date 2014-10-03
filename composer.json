@@ -7,7 +7,8 @@
         "nikic/php-parser": "dev-master",
         "symfony/console": ">= 2.5",
         "gitonomy/gitlib": "*",
-        "helmich/flow-eventbroker": "*"
+        "helmich/flow-eventbroker": "*",
+        "ext-xsl": "*"
     },
     "autoload": {
         "psr-0": {
