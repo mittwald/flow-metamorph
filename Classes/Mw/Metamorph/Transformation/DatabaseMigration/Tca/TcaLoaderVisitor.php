@@ -44,6 +44,34 @@ class TcaLoaderVisitor extends NodeVisitorAbstract
         {
             return TRUE;
         }
+
+        if ($left instanceof Node\Expr\ArrayDimFetch)
+        {
+            list($var, $dim) = $this->getVarAndKeysFromArrayFetch($left);
+
+            /** @var Node\Expr\Variable $var */
+            if ($var->name === 'TCA')
+            {
+                print_r($node);
+                return TRUE;
+            }
+        }
+    }
+
+
+
+    private function getVarAndKeysFromArrayFetch(Node\Expr\ArrayDimFetch $node)
+    {
+        $left = $node;
+        while (!$left instanceof Node\Expr\Variable)
+        {
+            $left = $left->var;
+        }
+
+        $right = $node;
+        while (!$right instanceof String)
+
+        return [$left, NULL];
     }
 
 

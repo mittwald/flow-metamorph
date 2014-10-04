@@ -18,7 +18,6 @@ class MigrateDatabaseStructure extends AbstractTransformation
         /** @var MigrationStrategyInterface $migrator */
         $migrator = NULL;
 
-        var_dump($configuration->getTableStructureMode());
         switch ($configuration->getTableStructureMode())
         {
             case MorphConfiguration::TABLE_STRUCTURE_MIGRATE:
@@ -31,7 +30,6 @@ class MigrateDatabaseStructure extends AbstractTransformation
                 return;
         }
 
-        echo "EXECUTE " . get_class($migrator) . "\n";
-//        $migrator->execute($configuration);
+        $migrator->execute($configuration);
     }
 }
