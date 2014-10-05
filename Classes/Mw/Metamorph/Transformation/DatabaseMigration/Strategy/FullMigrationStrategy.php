@@ -105,7 +105,7 @@ class FullMigrationStrategy implements MigrationStrategyInterface
             $traverser->addVisitor(new NameResolver());
             $traverser->addVisitor(new FullMigrationVisitor($this->tca));
 
-            $traverser->traverse($stmts);
+            $stmts = $traverser->traverse($stmts);
 
             $content = $this->printer->prettyPrintFile($stmts);
             file_put_contents($file, $content);

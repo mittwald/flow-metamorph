@@ -2,6 +2,8 @@
 namespace Mw\Metamorph\Transformation\DatabaseMigration\Tca;
 
 
+use Helmich\Scalars\Types\AbstractScalar;
+
 class Tca implements \ArrayAccess
 {
 
@@ -16,14 +18,14 @@ class Tca implements \ArrayAccess
 
     public function offsetExists($offset)
     {
-        return array_key_exists($offset, $this->tableConfigurationData);
+        return array_key_exists($this->offsetToPrimitive($offset), $this->tableConfigurationData);
     }
 
 
 
     public function &offsetGet($offset)
     {
-        $a =& $this->tableConfigurationData[$offset];
+        $a =& $this->tableConfigurationData[$this->offsetToPrimitive($offset)];
         return $a;
     }
 
@@ -31,13 +33,24 @@ class Tca implements \ArrayAccess
 
     public function offsetSet($offset, $value)
     {
-        $this->tableConfigurationData[$offset] = $value;
+        $this->tableConfigurationData[$this->offsetToPrimitive($offset)] = $value;
     }
 
 
 
     public function offsetUnset($offset)
     {
-        unset($this->tableConfigurationData[$offset]);
+        unset($this->tableConfigurationData[$this->offsetToPrimitive($offset)]);
+    }
+
+
+
+    private function offsetToPrimitive($offset)
+    {
+        if ($offset instanceof AbstractScalar)
+        {
+            $offset = $offset->toPrimitive();
+        }
+        return $offset;
     }
 }

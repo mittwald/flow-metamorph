@@ -144,7 +144,7 @@ class ClassDefinition
     /**
      * @param ClassMapping $classMapping
      */
-    public function setClassMapping($classMapping)
+    public function setClassMapping(ClassMapping $classMapping)
     {
         $this->classMapping = $classMapping;
     }

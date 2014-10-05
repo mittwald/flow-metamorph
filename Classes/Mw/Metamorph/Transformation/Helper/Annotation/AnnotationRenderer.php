@@ -87,10 +87,22 @@ class AnnotationRenderer
         }
         else if (is_array($value))
         {
-            $expressions = [];
-            foreach ($value as $key => $subvalue)
+            $isSequential = array_keys($value) === range(0, count($value) - 1);
+            $expressions  = [];
+
+            if ($isSequential)
             {
-                $expressions[] = $this->renderParameterValue($key) . ' = ' . $this->renderParameterValue($subvalue);
+                foreach ($value as $key => $subvalue)
+                {
+                    $expressions[] = $this->renderParameterValue($subvalue);
+                }
+            }
+            else
+            {
+                foreach ($value as $key => $subvalue)
+                {
+                    $expressions[] = $this->renderParameterValue($key) . ' = ' . $this->renderParameterValue($subvalue);
+                }
             }
             return '{' . implode(', ', $expressions) . '}';
         }

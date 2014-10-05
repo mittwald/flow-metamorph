@@ -34,7 +34,7 @@ class ClassMappingContainer
     {
         if (FALSE === $this->hasClassMapping($classMapping->getOldClassName()))
         {
-            $this->reviewed        = FALSE;
+            $this->reviewed = FALSE;
             $this->classMappings[] = $classMapping;
         }
     }
@@ -43,9 +43,33 @@ class ClassMappingContainer
 
     public function getClassMapping($oldClassName)
     {
+        return $this->getClassMappingByFilter(
+            function (ClassMapping $mapping) use ($oldClassName)
+            {
+                return $mapping->getOldClassName() === $oldClassName;
+            }
+        );
+    }
+
+
+
+    public function getClassMappingByNewClassName($newClassName)
+    {
+        return $this->getClassMappingByFilter(
+            function (ClassMapping $mapping) use ($newClassName)
+            {
+                return $mapping->getNewClassName() === $newClassName;
+            }
+        );
+    }
+
+
+
+    public function getClassMappingByFilter(callable $filter)
+    {
         foreach ($this->classMappings as $classMapping)
         {
-            if ($classMapping->getOldClassName() === $oldClassName)
+            if (call_user_func($filter, $classMapping))
             {
                 return $classMapping;
             }

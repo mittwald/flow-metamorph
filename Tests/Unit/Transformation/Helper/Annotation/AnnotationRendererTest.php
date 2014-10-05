@@ -55,6 +55,15 @@ class AnnotationRendererTest extends UnitTestCase
 
 
 
+    public function testAnnotationIsRenderedWithListParameter()
+    {
+        $annotation = new AnnotationRenderer('ORM', 'OneToMany');
+        $annotation->addParameter('cascade', ['remove']);
+        $this->assertEquals('@ORM\\OneToMany(cascade={"remove"})', $annotation->render());
+    }
+
+
+
     public function testArgumentIsPassedUnnamed()
     {
         $annotation = new AnnotationRenderer('Flow', 'Scope');
