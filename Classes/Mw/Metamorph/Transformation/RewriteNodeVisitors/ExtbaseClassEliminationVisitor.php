@@ -2,6 +2,7 @@
 namespace Mw\Metamorph\Transformation\RewriteNodeVisitors;
 
 
+use Mw\Metamorph\Domain\Model\Definition\ClassDefinition;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer;
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
 use Mw\Metamorph\Transformation\Helper\Annotation\DocCommentModifier;
@@ -18,6 +19,12 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
 
     /** @var Node\Stmt\Namespace_ */
     private $currentNamespace = NULL;
+
+
+    /**
+     * @var ClassDefinition
+     */
+    private $currentClass;
 
 
     private $neededNamespaceImports = [];
@@ -61,14 +68,17 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
 
             $classDefinition->setFact('isEntity', $isEntity);
             $classDefinition->setFact('isValueObject', $isValueObject);
+            $classDefinition->setFact('isEntitySuperclass', $this->classIsEntitySuperclass($node));
+            $classDefinition->setFact('isValueObjectSuperclass', $this->classIsValueObjectSuperclass($node));
 
             if ($isEntity || $isValueObject)
             {
-                if ($this->classIsDirectEntityDescendant($node))
-                {
-                    $node->extends = NULL;
-                }
                 $annotation = new AnnotationRenderer('Flow', $isEntity ? 'Entity' : 'ValueObject');
+            }
+
+            if ($this->classIsDirectEntityOrValueObjectDescendant($node))
+            {
+                $node->extends = NULL;
             }
 
             if (NULL !== $annotation)
@@ -85,12 +95,14 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
                 $this->neededNamespaceImports['Flow'] = 'TYPO3\\Flow\\Annotations';
                 $this->commentModifier->addAnnotationToDocComment($comment, $annotation);
             }
+
+            $this->currentClass = $classDefinition;
         }
     }
 
 
 
-    private function classIsDirectEntityDescendant(Node\Stmt\Class_ $node)
+    private function classIsDirectEntityOrValueObjectDescendant(Node\Stmt\Class_ $node)
     {
         $definition = $this->classDefinitionContainer->get($node->namespacedName->toString());
         $parentName = $definition->getParentClass() ? $definition->getParentClass()->getFullyQualifiedName() : '';
@@ -105,22 +117,34 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
 
     private function classIsEntity(Node\Stmt\Class_ $node)
     {
-        $definition = $this->classDefinitionContainer->get($node->namespacedName->toString());
-        return !$node->isAbstract() && (
-            $definition->doesInherit('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity') ||
-            $definition->doesInherit('Tx_Extbase_DomainObject_AbstractEntity')
-        );
+        return !$node->isAbstract() && $this->classIsEntitySuperclass($node);
     }
 
 
 
     private function classIsValueObject(Node\Stmt\Class_ $node)
     {
+        return !$node->isAbstract() && $this->classIsValueObjectSuperclass($node);
+    }
+
+
+
+    private function classIsValueObjectSuperclass(Node\Stmt\Class_ $node)
+    {
         $definition = $this->classDefinitionContainer->get($node->namespacedName->toString());
-        return !$node->isAbstract() && (
+        return
             $definition->doesInherit('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject') ||
-            $definition->doesInherit('Tx_Extbase_DomainObject_AbstractValueObject')
-        );
+            $definition->doesInherit('Tx_Extbase_DomainObject_AbstractValueObject');
+    }
+
+
+
+    private function classIsEntitySuperclass(Node\Stmt\Class_ $node)
+    {
+        $definition = $this->classDefinitionContainer->get($node->namespacedName->toString());
+        return
+            $definition->doesInherit('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity') ||
+            $definition->doesInherit('Tx_Extbase_DomainObject_AbstractEntity');
     }
 
 
@@ -135,7 +159,7 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
             }
             return $node;
         }
-        if ($node instanceof Node\Stmt\If_)
+        else if ($node instanceof Node\Stmt\If_)
         {
             $cond = $node->cond;
             if ($cond instanceof Node\Expr\Instanceof_)
@@ -144,6 +168,13 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
                 {
                     return FALSE;
                 }
+            }
+        }
+        else if ($node instanceof Node\Stmt\ClassMethod)
+        {
+            if ($this->currentClass->getFact('isValueObjectSuperclass') && substr($node->name, 0, 3) === 'set')
+            {
+                return FALSE;
             }
         }
         return NULL;
