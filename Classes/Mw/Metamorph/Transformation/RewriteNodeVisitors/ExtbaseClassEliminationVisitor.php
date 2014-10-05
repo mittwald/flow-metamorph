@@ -54,17 +54,17 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
         }
         if ($node instanceof Node\Stmt\Class_)
         {
-            $annotation = NULL;
+            $annotation    = NULL;
+            $isEntity      = $this->classIsEntity($node);
+            $isValueObject = $this->classIsValueObject($node);
 
-            if ($this->classIsEntity($node))
+            if ($isEntity || $isValueObject)
             {
-                $node->extends = NULL;
-                $annotation    = new AnnotationRenderer('Flow', 'Entity');
-            }
-            else if ($this->classIsValueObject($node))
-            {
-                $node->extends = NULL;
-                $annotation    = new AnnotationRenderer('Flow', 'ValueObject');
+                if ($this->classIsDirectEntityDescendant($node))
+                {
+                    $node->extends = NULL;
+                }
+                $annotation = new AnnotationRenderer('Flow', $isEntity ? 'Entity' : 'ValueObject');
             }
 
             if (NULL !== $annotation)
@@ -82,6 +82,19 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
                 $this->commentModifier->addAnnotationToDocComment($comment, $annotation);
             }
         }
+    }
+
+
+
+    private function classIsDirectEntityDescendant(Node\Stmt\Class_ $node)
+    {
+        $definition = $this->classDefinitionContainer->get($node->namespacedName->toString());
+        $parentName = $definition->getParentClass() ? $definition->getParentClass()->getFullyQualifiedName() : '';
+        return
+            $parentName === 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity' ||
+            $parentName === 'Tx_Extbase_DomainObject_AbstractEntity' ||
+            $parentName === 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject' ||
+            $parentName === 'Tx_Extbase_DomainObject_AbstractValueObject';
     }
 
 
