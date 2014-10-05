@@ -13,29 +13,31 @@ class Tca implements \ArrayAccess
     private $tableConfigurationData = [];
 
 
+
     public function offsetExists($offset)
     {
-        // TODO: Implement offsetExists() method.
+        return array_key_exists($offset, $this->tableConfigurationData);
     }
 
 
 
-    public function offsetGet($offset)
+    public function &offsetGet($offset)
     {
-        // TODO: Implement offsetGet() method.
+        $a =& $this->tableConfigurationData[$offset];
+        return $a;
     }
 
 
 
     public function offsetSet($offset, $value)
     {
-        // TODO: Implement offsetSet() method.
+        $this->tableConfigurationData[$offset] = $value;
     }
 
 
 
     public function offsetUnset($offset)
     {
-        // TODO: Implement offsetUnset() method.
+        unset($this->tableConfigurationData[$offset]);
     }
 }

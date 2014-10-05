@@ -2,8 +2,18 @@
 namespace Mw\Metamorph\Transformation\DatabaseMigration\Tca;
 
 
+use Helmich\PhpEvaluator\Evaluator\ConstantStore;
+use Helmich\PhpEvaluator\Evaluator\Evaluator;
+use Helmich\PhpEvaluator\Evaluator\FunctionStore;
+use Helmich\PhpEvaluator\Evaluator\VariableStore;
+use Mw\Metamorph\Domain\Model\State\PackageMapping;
+use PhpParser\Lexer;
 use PhpParser\Node;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitorAbstract;
+use PhpParser\Parser;
+use TYPO3\Flow\Annotations as Flow;
 
 
 class TcaLoaderVisitor extends NodeVisitorAbstract
@@ -14,10 +24,66 @@ class TcaLoaderVisitor extends NodeVisitorAbstract
     private $tca;
 
 
+    /**
+     * @var PackageMapping
+     */
+    private $packageMapping;
 
-    public function __construct(Tca $tca)
+
+    /**
+     * @var Parser
+     */
+    private $parser;
+
+
+    /**
+     * @var string
+     */
+    private $currentFile = NULL;
+
+
+    /**
+     * @var Evaluator
+     * @Flow\Inject
+     */
+    protected $evaluator;
+
+
+
+    public function __construct(Tca $tca, PackageMapping $packageMapping, $currentFile = NULL)
     {
-        $this->tca = $tca;
+        $this->tca            = $tca;
+        $this->packageMapping = $packageMapping;
+        $this->currentFile    = $currentFile;
+        $this->parser         = new Parser(new Lexer());
+    }
+
+
+
+    public function initializeObject()
+    {
+        $extPathFunc = function ($extKey)
+        {
+            return $this->packageMapping->getFilePath() . '/';
+        };
+
+        $functions = new FunctionStore();
+        $functions->setFallbackFunction(function ($name, $arguments) { });
+
+        $functions['TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath'] = $extPathFunc;
+        $functions['t3lib_extMgm::extPath']                                      = $extPathFunc;
+
+        $variables            = new VariableStore(
+            [
+                '_EXTKEY' => $this->packageMapping->getExtensionKey(),
+                'TCA'     => $this->tca
+            ]
+        );
+        $variables['GLOBALS'] = $variables;
+
+        $this->evaluator->setGlobalScope($variables);
+        $this->evaluator->setConstantStore(new ConstantStore());
+        $this->evaluator->setFunctionStore($functions);
     }
 
 
@@ -26,7 +92,35 @@ class TcaLoaderVisitor extends NodeVisitorAbstract
     {
         if ($this->isTcaAssignment($node))
         {
-            echo "FOUND TCA ASSIGNMENT!\n";
+            /** @var Node\Expr\Assign $node */
+            $val = $this->evaluator->evaluateExpression($node->expr);
+            $var = $node->var;
+
+            $target =& $this->tca;
+
+            if ($var instanceof Node\Expr\ArrayDimFetch)
+            {
+                list($var, $dimensions) = $this->getVarAndKeysFromArrayFetch($var);
+                foreach ($dimensions as $dimension)
+                {
+                    $target =& $target[$dimension];
+                }
+            }
+
+            $target = $val;
+
+            if (isset($val['ctrl']['dynamicConfigFile']) && $val['ctrl']['dynamicConfigFile'] !== $this->currentFile)
+            {
+                $tcaFile = $val['ctrl']['dynamicConfigFile'];
+                $content = file_get_contents($tcaFile);
+                $stmts   = $this->parser->parse($content);
+
+                $traverser = new NodeTraverser();
+                $traverser->addVisitor(new NameResolver());
+                $traverser->addVisitor(new TcaLoaderVisitor($this->tca, $this->packageMapping, $tcaFile));
+
+                $traverser->traverse($stmts);
+            }
         }
     }
 
@@ -47,15 +141,16 @@ class TcaLoaderVisitor extends NodeVisitorAbstract
 
         if ($left instanceof Node\Expr\ArrayDimFetch)
         {
-            list($var, $dim) = $this->getVarAndKeysFromArrayFetch($left);
+            list($var, $_) = $this->getVarAndKeysFromArrayFetch($left);
 
             /** @var Node\Expr\Variable $var */
             if ($var->name === 'TCA')
             {
-                print_r($node);
                 return TRUE;
             }
         }
+
+        return FALSE;
     }
 
 
@@ -63,15 +158,15 @@ class TcaLoaderVisitor extends NodeVisitorAbstract
     private function getVarAndKeysFromArrayFetch(Node\Expr\ArrayDimFetch $node)
     {
         $left = $node;
+        $keys = [];
+
         while (!$left instanceof Node\Expr\Variable)
         {
-            $left = $left->var;
+            $keys[] = $this->evaluator->evaluateExpression($left->dim);
+            $left   = $left->var;
         }
 
-        $right = $node;
-        while (!$right instanceof String)
-
-        return [$left, NULL];
+        return [$left, $keys];
     }
 
 

@@ -41,7 +41,7 @@ class TcaLoader
 
         $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
-        $traverser->addVisitor(new TcaLoaderVisitor($tca));
+        $traverser->addVisitor(new TcaLoaderVisitor($tca, $packageMapping, $extTables));
 
         $traverser->traverse($stmts);
     }

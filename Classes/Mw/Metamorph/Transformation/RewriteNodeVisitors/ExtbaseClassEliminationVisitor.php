@@ -55,16 +55,21 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
         if ($node instanceof Node\Stmt\Class_)
         {
             $annotation = NULL;
+            $classDefinition = $this->classDefinitionContainer->get($node->namespacedName->toString());
 
             if ($this->classIsEntity($node))
             {
                 $node->extends = NULL;
                 $annotation    = new AnnotationRenderer('Flow', 'Entity');
+
+                $classDefinition->setFact('isEntity', TRUE);
             }
             else if ($this->classIsValueObject($node))
             {
                 $node->extends = NULL;
                 $annotation    = new AnnotationRenderer('Flow', 'ValueObject');
+
+                $classDefinition->setFact('isValueObject', TRUE);
             }
 
             if (NULL !== $annotation)

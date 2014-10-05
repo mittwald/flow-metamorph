@@ -2,6 +2,8 @@
 namespace Mw\Metamorph\Domain\Model\Definition;
 
 
+use Mw\Metamorph\Domain\Model\State\ClassMapping;
+
 class ClassDefinition
 {
 
@@ -19,6 +21,14 @@ class ClassDefinition
 
     /** @var ClassDefinition[] */
     private $interfaces = [];
+
+
+    /** @var array */
+    private $facts = [];
+
+
+    /** @var ClassMapping */
+    private $classMapping;
 
 
 
@@ -85,7 +95,7 @@ class ClassDefinition
 
     public function doesImplement($fullyQualifiedName)
     {
-        foreach ($this->interfaces as $interface)
+        foreach ($this->getInterfaces() as $interface)
         {
             if ($fullyQualifiedName === $interface->getFullyQualifiedName())
             {
@@ -97,12 +107,48 @@ class ClassDefinition
             }
         }
 
-        if (NULL !== $this->parentClass && $this->parentClass->doesImplement($fullyQualifiedName))
+        if (NULL !== $this->getParentClass() && $this->getParentClass()->doesImplement($fullyQualifiedName))
         {
             return TRUE;
         }
 
         return FALSE;
     }
+
+
+
+    public function getFact($name)
+    {
+        return array_key_exists($name, $this->facts) ? $this->facts[$name] : NULL;
+    }
+
+
+
+    public function setFact($name, $fact)
+    {
+        $this->facts[$name] = $fact;
+    }
+
+
+
+    /**
+     * @return ClassMapping
+     */
+    public function getClassMapping()
+    {
+        return $this->classMapping;
+    }
+
+
+
+    /**
+     * @param ClassMapping $classMapping
+     */
+    public function setClassMapping($classMapping)
+    {
+        $this->classMapping = $classMapping;
+    }
+
+
 
 }

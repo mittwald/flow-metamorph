@@ -5,6 +5,8 @@ namespace Mw\Metamorph\Transformation\Analyzer;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinition;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionDeferred;
+use Mw\Metamorph\Domain\Model\State\ClassMapping;
+use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
 use TYPO3\Flow\Annotations as Flow;
@@ -34,16 +36,32 @@ class AnalyzerVisitor extends NodeVisitorAbstract
     private $currentClassDefinition = NULL;
 
 
+    /**
+     * @var ClassMappingContainer
+     */
+    private $mappingContainer;
+
+
+
+    public function __construct(ClassMappingContainer $container)
+    {
+        $this->mappingContainer = $container;
+    }
+
+
 
     public function enterNode(Node $node)
     {
         if ($node instanceof Node\Stmt\Namespace_)
         {
-            $this->currentNamespace = $node->name;
+            $this->currentNamespace = $node->name->toString();
         }
         elseif ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Interface_)
         {
+            $mapping = $this->mappingContainer->getClassMapping($this->currentNamespace . '\\' . $node->name);
+
             $classDef = new ClassDefinition($node->name, $this->currentNamespace);
+            $classDef->setClassMapping($mapping);
 
             if (NULL !== $node->extends && [] !== $node->extends)
             {

@@ -37,4 +37,37 @@ class ClassDefinitionContainer
         }
         return NULL;
     }
+
+
+
+    /**
+     * @param string $name
+     * @param mixed  $value
+     * @return ClassDefinition[]
+     */
+    public function findByFact($name, $value)
+    {
+        return $this->findByFilter(
+            function (ClassDefinition $class) use ($name, $value) { return $class->getFact($name) == $value; }
+        );
+    }
+
+
+
+    /**
+     * @param callable $filter
+     * @return ClassDefinition[]
+     */
+    public function findByFilter(callable $filter)
+    {
+        $classes = [];
+        foreach ($this->classDefinitions as $classDefinition)
+        {
+            if (call_user_func($filter, $classDefinition))
+            {
+                $classes[] = $classDefinition;
+            }
+        }
+        return $classes;
+    }
 }
