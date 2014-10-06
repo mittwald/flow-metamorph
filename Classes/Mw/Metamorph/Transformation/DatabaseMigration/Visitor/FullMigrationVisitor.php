@@ -290,6 +290,23 @@ class FullMigrationVisitor extends NodeVisitorAbstract
 
 
 
+    private function isTcaColumnManyToManyRelation(array $configuration)
+    {
+        switch ($configuration['type'])
+        {
+            case 'select':
+            case 'group':
+                if (isset($configuration['MM']))
+                {
+                    return TRUE;
+                }
+                break;
+        }
+        return FALSE;
+    }
+
+
+
     private function propertyToColumnName(String $propertyName)
     {
         return $propertyName->regexReplace(',([A-Z]),', '_$1')->toLower()->strip('_');
@@ -325,7 +342,11 @@ class FullMigrationVisitor extends NodeVisitorAbstract
      */
     private function getAnnotationRendererForPropertyConfiguration($propertyConfig)
     {
-        if ($this->isTcaColumnManyToOneRelation($propertyConfig))
+        if ($this->isTcaColumnManyToManyRelation($propertyConfig))
+        {
+            return new AnnotationRenderer('ORM', 'ManyToMany');
+        }
+        else if ($this->isTcaColumnManyToOneRelation($propertyConfig))
         {
             return new AnnotationRenderer('ORM', 'ManyToOne');
         }
