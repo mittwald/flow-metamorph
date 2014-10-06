@@ -1,7 +1,8 @@
 {
-    "name": "mw/metamorph",
+    "name": "mittwald-typo3/flow-metamorph",
     "type": "typo3-flow-package",
-    "description": "Add description here",
+    "description": "Convert TYPO3 CMS extensions to TYPO3 Flow packages",
+    "license": "MIT",
     "require": {
         "typo3/flow": "*",
         "nikic/php-parser": "dev-master",
