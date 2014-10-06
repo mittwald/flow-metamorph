@@ -13,7 +13,6 @@ use PhpParser\Comment\Doc;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
 use TYPO3\Flow\Annotations as Flow;
-use TYPO3\Flow\Security\AccountRepository;
 
 
 class FullMigrationVisitor extends NodeVisitorAbstract
@@ -154,41 +153,18 @@ class FullMigrationVisitor extends NodeVisitorAbstract
 
             foreach ($node->props as $realProperty)
             {
-                $columnName     = $this->propertyToColumnName(new String($realProperty->name));
-                $propertyConfig = NULL;
+                $columnName = $this->propertyToColumnName(new String($realProperty->name));
 
-                if (isset($this->currentTca['columns']["$columnName"]))
-                {
-                    $propertyConfig = $this->currentTca['columns']["$columnName"];
-                }
-                else
+                if (!isset($this->currentTca['columns']["$columnName"]))
                 {
                     return NULL;
                 }
 
-                $annotation = NULL;
-                if ($propertyConfig['config']['type'] === 'select')
-                {
-                    if (!isset($propertyConfig['config']['maxitems']) || $propertyConfig['config']['maxitems'] === 1)
-                    {
-                        $annotation = new AnnotationRenderer('ORM', 'ManyToOne');
-                    }
-                    elseif (isset($propertyConfig['config']['MM']))
-                    {
-                        $annotation = new AnnotationRenderer('ORM', 'ManyToMany');
-                    }
-                }
-                else if ($propertyConfig['config']['type'] === 'inline')
-                {
-                    if (isset($propertyConfig['config']['maxitems']) && $propertyConfig['config']['maxitems'] === 1)
-                    {
-                        $annotation = new AnnotationRenderer('ORM', 'OneToOne');
-                    }
-                    else
-                    {
-                        $annotation = new AnnotationRenderer('ORM', 'OneToMany');
-                    }
+                $propertyConfig = $this->currentTca['columns']["$columnName"];
+                $annotation     = $this->getAnnotationRendererForPropertyConfiguration($propertyConfig);
 
+                if (NULL !== $annotation)
+                {
                     if (isset($propertyConfig['config']['foreign_field']))
                     {
                         $property = $this->columnNameToProperty(new String($propertyConfig['config']['foreign_field']));
@@ -200,10 +176,7 @@ class FullMigrationVisitor extends NodeVisitorAbstract
                         $this->commentHelper->removeAnnotationFromDocComment($comment, '@cascade');
                         $annotation->addParameter('cascade', ['remove']);
                     }
-                }
 
-                if (NULL !== $annotation)
-                {
                     $this->commentHelper->addAnnotationToDocComment($comment, $annotation);
                     $this->requiredImports['ORM'] = 'Doctrine\\ORM\\Mapping';
                 }
@@ -216,6 +189,76 @@ class FullMigrationVisitor extends NodeVisitorAbstract
         }
 
         return NULL;
+    }
+
+
+
+    private function isTcaColumnManyToOneRelation(array $column)
+    {
+        $configuration = $column['config'];
+        if ($configuration['type'] === 'select')
+        {
+            if (!isset($configuration['maxitems']) || $configuration['maxitems'] == 1)
+            {
+                return TRUE;
+            }
+        }
+        elseif ($configuration['type'] === 'group' && $configuration['internal_type'] === 'db')
+        {
+            if (isset($configuration['maxitems']) && $configuration['maxitems'] == 1)
+            {
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
+
+
+
+    private function isTcaColumnOneToManyRelation(array $column)
+    {
+        $configuration = $column['config'];
+        switch ($configuration['type'])
+        {
+            case 'select':
+                if (isset($configuration['maxitems']) && $configuration['maxitems'] > 1)
+                {
+                    return TRUE;
+                }
+                break;
+
+            case 'group':
+                if ($configuration['internal_type'] === 'db' && (!isset($configuration['maxitems']) || $configuration['maxitems'] > 1))
+                {
+                    return TRUE;
+                }
+                break;
+
+            case 'inline':
+                if (!isset($configuration['maxitems']) || $configuration['maxitems'] > 1)
+                {
+                    return TRUE;
+                }
+                break;
+        }
+        return FALSE;
+    }
+
+
+
+    private function isTcaColumnOneToOneRelation(array $column)
+    {
+        $configuration = $column['config'];
+        switch ($configuration['type'])
+        {
+            case 'inline':
+                if (isset($configuration['maxitems']) && $configuration['maxitems'] == 1)
+                {
+                    return TRUE;
+                }
+                break;
+        }
+        return FALSE;
     }
 
 
@@ -245,6 +288,29 @@ class FullMigrationVisitor extends NodeVisitorAbstract
             $oldClassName->toLower()->replace('\\', '_'),
             $oldClassName->toLower()->split('\\')->set(0, 'tx')->join('_')
         ];
+    }
+
+
+
+    /**
+     * @param $propertyConfig
+     * @return AnnotationRenderer
+     */
+    private function getAnnotationRendererForPropertyConfiguration($propertyConfig)
+    {
+        if ($this->isTcaColumnManyToOneRelation($propertyConfig))
+        {
+            return new AnnotationRenderer('ORM', 'ManyToOne');
+        }
+        else if ($this->isTcaColumnOneToManyRelation($propertyConfig))
+        {
+            return new AnnotationRenderer('ORM', 'OneToMany');
+        }
+        else if ($this->isTcaColumnOneToOneRelation($propertyConfig))
+        {
+            return new AnnotationRenderer('ORM', 'OneToOne');
+        }
+        return NULL;
     }
 
 
