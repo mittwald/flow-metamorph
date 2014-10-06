@@ -1,6 +1,9 @@
 Metamorph - TYPO3 CMS to TYPO3 Flow converter
 =============================================
 
+**CAUTION**: This package is currently unter heavy development and by no means
+stable! APIs and behaviour can change at any point without notice.
+
 Author
 ------
 
