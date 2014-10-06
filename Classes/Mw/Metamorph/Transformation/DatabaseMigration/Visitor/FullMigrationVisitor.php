@@ -165,6 +165,25 @@ class FullMigrationVisitor extends NodeVisitorAbstract
 
                 if (NULL !== $annotation)
                 {
+                    if (isset($propertyConfig['config']['foreign_table']))
+                    {
+                        $foreign = $propertyConfig['config']['foreign_table'];
+                        $inverse = NULL;
+
+                        foreach ((array)$this->tca[$foreign]['columns'] as $foreignColumnName => $config)
+                        {
+                            if (isset($config['config']['foreign_field']))
+                            {
+                                $inverse = $foreignColumnName;
+                            }
+                        }
+
+                        if (NULL !== $inverse)
+                        {
+                            $annotation->addParameter('inversedBy', $inverse);
+                        }
+                    }
+
                     if (isset($propertyConfig['config']['foreign_field']))
                     {
                         $property = $this->columnNameToProperty(new String($propertyConfig['config']['foreign_field']));
