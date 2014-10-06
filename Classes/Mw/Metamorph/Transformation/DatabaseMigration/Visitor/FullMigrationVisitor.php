@@ -60,6 +60,10 @@ class FullMigrationVisitor extends NodeVisitorAbstract
     private $currentTca;
 
 
+    /** @var string */
+    private $currentTable;
+
+
     /**
      * @var Node\Stmt\Namespace_
      */
@@ -108,7 +112,8 @@ class FullMigrationVisitor extends NodeVisitorAbstract
             {
                 if (isset($this->tca[$name]))
                 {
-                    $this->currentTca = $this->tca[$name];
+                    $this->currentTca   = $this->tca[$name];
+                    $this->currentTable = $name;
                 }
             }
         }
@@ -131,6 +136,7 @@ class FullMigrationVisitor extends NodeVisitorAbstract
         {
             $this->currentClass = NULL;
             $this->currentTca   = NULL;
+            $this->currentTable = NULL;
         }
         elseif ($node instanceof Node\Stmt\Property)
         {
@@ -160,21 +166,26 @@ class FullMigrationVisitor extends NodeVisitorAbstract
                     return NULL;
                 }
 
-                $propertyConfig = $this->currentTca['columns']["$columnName"];
+                $propertyConfig = $this->currentTca['columns']["$columnName"]['config'];
                 $annotation     = $this->getAnnotationRendererForPropertyConfiguration($propertyConfig);
 
                 if (NULL !== $annotation)
                 {
-                    if (isset($propertyConfig['config']['foreign_table']))
+                    if ($this->isTcaColumnManyToOneRelation($propertyConfig) && isset($propertyConfig['foreign_table']))
                     {
-                        $foreign = $propertyConfig['config']['foreign_table'];
-                        $inverse = NULL;
+                        $foreignTable = $propertyConfig['foreign_table'];
+                        $inverse      = NULL;
 
-                        foreach ((array)$this->tca[$foreign]['columns'] as $foreignColumnName => $config)
+                        foreach ((array)$this->tca[$foreignTable]['columns'] as $foreignColumnName => $config)
                         {
-                            if (isset($config['config']['foreign_field']))
+                            if (
+                                isset($config['config']['foreign_field']) &&
+                                $config['config']['foreign_field'] == $columnName &&
+                                $config['config']['foreign_table'] == $this->currentTable
+                            )
                             {
                                 $inverse = $foreignColumnName;
+                                break;
                             }
                         }
 
@@ -184,9 +195,9 @@ class FullMigrationVisitor extends NodeVisitorAbstract
                         }
                     }
 
-                    if (isset($propertyConfig['config']['foreign_field']))
+                    if ($this->isTcaColumnOneToManyRelation($propertyConfig) && isset($propertyConfig['foreign_field']))
                     {
-                        $property = $this->columnNameToProperty(new String($propertyConfig['config']['foreign_field']));
+                        $property = $this->columnNameToProperty(new String($propertyConfig['foreign_field']));
                         $annotation->addParameter('mappedBy', "$property");
                     }
 
@@ -212,9 +223,8 @@ class FullMigrationVisitor extends NodeVisitorAbstract
 
 
 
-    private function isTcaColumnManyToOneRelation(array $column)
+    private function isTcaColumnManyToOneRelation(array $configuration)
     {
-        $configuration = $column['config'];
         if ($configuration['type'] === 'select')
         {
             if (!isset($configuration['maxitems']) || $configuration['maxitems'] == 1)
@@ -234,9 +244,8 @@ class FullMigrationVisitor extends NodeVisitorAbstract
 
 
 
-    private function isTcaColumnOneToManyRelation(array $column)
+    private function isTcaColumnOneToManyRelation(array $configuration)
     {
-        $configuration = $column['config'];
         switch ($configuration['type'])
         {
             case 'select':
@@ -265,9 +274,8 @@ class FullMigrationVisitor extends NodeVisitorAbstract
 
 
 
-    private function isTcaColumnOneToOneRelation(array $column)
+    private function isTcaColumnOneToOneRelation(array $configuration)
     {
-        $configuration = $column['config'];
         switch ($configuration['type'])
         {
             case 'inline':
