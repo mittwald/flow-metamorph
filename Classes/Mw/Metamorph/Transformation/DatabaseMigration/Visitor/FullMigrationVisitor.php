@@ -149,7 +149,7 @@ class FullMigrationVisitor extends NodeVisitorAbstract
             $this->currentTca   = NULL;
             $this->currentTable = NULL;
         }
-        elseif ($node instanceof Node\Stmt\Property)
+        elseif ($node instanceof Node\Stmt\Property && $this->currentTable !== NULL)
         {
             if (NULL === $this->currentTca)
             {
