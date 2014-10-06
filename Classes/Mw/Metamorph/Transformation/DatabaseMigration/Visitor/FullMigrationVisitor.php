@@ -292,7 +292,7 @@ class FullMigrationVisitor extends NodeVisitorAbstract
 
     private function propertyToColumnName(String $propertyName)
     {
-        return $propertyName->regexReplace(',[A-Z],', '_$1')->toLower()->strip('_');
+        return $propertyName->regexReplace(',([A-Z]),', '_$1')->toLower()->strip('_');
     }
 
 
