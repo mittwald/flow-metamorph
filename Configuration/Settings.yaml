@@ -49,6 +49,9 @@ Mw:
       migrateDatabase:
         name: MigrateDatabaseStructure
         position: 100
+      createDoctrineMigrations:
+        name: CreateDoctrineMigrations
+        position: 110
     staticReplacements:
       TYPO3\CMS\Extbase\Mvc\Controller\ActionController: TYPO3\Flow\Mvc\Controller\ActionController
       TYPO3\CMS\Core\Utility\GeneralUtility: Mw\Metamorph\TYPO3\Utility\GeneralUtility
