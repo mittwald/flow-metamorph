@@ -62,7 +62,6 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
         if ($node instanceof Node\Stmt\Class_)
         {
             $classDefinition = $this->classDefinitionContainer->get($node->namespacedName->toString());
-            $annotation      = NULL;
             $isEntity        = $this->classIsEntity($node);
             $isValueObject   = $this->classIsValueObject($node);
 
@@ -71,33 +70,10 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
             $classDefinition->setFact('isEntitySuperclass', $this->classIsEntitySuperclass($node));
             $classDefinition->setFact('isValueObjectSuperclass', $this->classIsValueObjectSuperclass($node));
 
-            if ($isEntity || $isValueObject)
-            {
-                $annotation = new AnnotationRenderer('Flow', $isEntity ? 'Entity' : 'ValueObject');
-            }
-
-            if ($this->classIsDirectEntityOrValueObjectDescendant($node))
-            {
-                $node->extends = NULL;
-            }
-
-            if (NULL !== $annotation)
-            {
-                $comment = $node->getDocComment();
-                if (NULL === $comment)
-                {
-                    $comments   = $node->getAttribute('comments', []);
-                    $comments[] = $comment = new Doc("/**\n */");
-
-                    $node->setAttribute('comments', $comments);
-                }
-
-                $this->neededNamespaceImports['Flow'] = 'TYPO3\\Flow\\Annotations';
-                $this->commentModifier->addAnnotationToDocComment($comment, $annotation);
-            }
-
             $this->currentClass = $classDefinition;
         }
+
+        return NULL;
     }
 
 
@@ -117,14 +93,14 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
 
     private function classIsEntity(Node\Stmt\Class_ $node)
     {
-        return !$node->isAbstract() && $this->classIsEntitySuperclass($node);
+        return /*!$node->isAbstract() &&*/ $this->classIsEntitySuperclass($node);
     }
 
 
 
     private function classIsValueObject(Node\Stmt\Class_ $node)
     {
-        return !$node->isAbstract() && $this->classIsValueObjectSuperclass($node);
+        return /*!$node->isAbstract() &&*/ $this->classIsValueObjectSuperclass($node);
     }
 
 
@@ -172,12 +148,72 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
         }
         else if ($node instanceof Node\Stmt\ClassMethod)
         {
-            if ($this->currentClass->getFact('isValueObjectSuperclass') && substr($node->name, 0, 3) === 'set')
+//            if ($this->currentClass->getFact('isValueObjectSuperclass') && substr($node->name, 0, 3) === 'set')
+//            {
+//                return FALSE;
+//            }
+        }
+        else if ($node instanceof Node\Stmt\Class_)
+        {
+            $classDefinition = $this->currentClass;
+            $annotation      = NULL;
+            $isEntity        = $classDefinition->getFact('isEntity');
+            $isValueObject   = $classDefinition->getFact('isValueObject');
+
+            if ($isEntity || $isValueObject)
             {
-                return FALSE;
+//                $annotation = new AnnotationRenderer('Flow', $isEntity ? 'Entity' : 'ValueObject');
+                $annotation = new AnnotationRenderer('Flow', 'Entity');
             }
+
+            if ($this->classIsDirectEntityOrValueObjectDescendant($node))
+            {
+                $node->extends = NULL;
+            }
+
+            if (NULL !== $annotation)
+            {
+                $comment = $this->getCommentForNode($node);
+
+                $this->neededNamespaceImports['Flow'] = 'TYPO3\\Flow\\Annotations';
+                $this->commentModifier->addAnnotationToDocComment($comment, $annotation);
+            }
+
+            if (($isEntity || $isValueObject) && $classDefinition->getFact('isAbstract'))
+            {
+                $comment = $this->getCommentForNode($node);
+
+                $annotation = new AnnotationRenderer('ORM', 'InheritanceType');
+                $annotation->setArgument('JOINED');
+
+                $this->neededNamespaceImports['ORM'] = 'Doctrine\\ORM\\Mapping';
+                $this->commentModifier->addAnnotationToDocComment($comment, $annotation);
+            }
+
+            $this->currentClass = NULL;
+            return $node;
         }
         return NULL;
+    }
+
+
+
+    /**
+     * @param Node $node
+     * @return null|Doc
+     */
+    private function getCommentForNode(Node $node)
+    {
+        $comment = $node->getDocComment();
+        if (NULL === $comment)
+        {
+            $comments   = $node->getAttribute('comments', []);
+            $comments[] = $comment = new Doc("/**\n */");
+
+            $node->setAttribute('comments', $comments);
+            return $comment;
+        }
+        return $comment;
     }
 
 }
