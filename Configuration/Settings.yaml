@@ -41,6 +41,7 @@ Mw:
             - ExtbaseClassReplacementVisitor
             - ExtbaseClassEliminationVisitor
             - ReplaceMakeInstanceCallsVisitor
+            - RewriteSingletonsVisitor
             - ReplaceAnnotationsVisitor
       transformLocallang:
         name: XliffConversion
