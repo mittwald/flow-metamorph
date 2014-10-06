@@ -79,6 +79,12 @@ class AnalyzerVisitor extends NodeVisitorAbstract
                 }
             }
 
+            if ($node instanceof Node\Stmt\Class_)
+            {
+                $classDef->setFact('isAbstract', $node->isAbstract());
+                $classDef->setFact('isFinal', $node->isFinal());
+            }
+
             $this->currentClassDefinition = $classDef;
         }
     }
