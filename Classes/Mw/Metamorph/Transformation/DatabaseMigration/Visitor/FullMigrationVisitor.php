@@ -116,6 +116,17 @@ class FullMigrationVisitor extends NodeVisitorAbstract
                     $this->currentTable = $name;
                 }
             }
+
+            if ($this->currentTable === NULL && $this->currentClass->getFact('isAbstract') === FALSE)
+            {
+                $comment = $node->getDocComment();
+                if (NULL != $comment)
+                {
+                    $this->commentHelper->removeAnnotationFromDocComment($comment, '@Flow\\Entity');
+                    $this->commentHelper->removeAnnotationFromDocComment($comment, '@Flow\\ValueObject');
+                }
+                return $node;
+            }
         }
 
     }
