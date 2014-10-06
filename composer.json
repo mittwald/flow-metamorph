@@ -8,6 +8,7 @@
         "nikic/php-parser": "dev-master",
         "symfony/console": ">= 2.5",
         "gitonomy/gitlib": "*",
+        "mittwald-typo3/flow-t3compat": "*",
         "helmich/flow-eventbroker": "*",
         "helmich/php-evaluator": "dev-master",
         "helmich/php-scalarclasses": "dev-master",
