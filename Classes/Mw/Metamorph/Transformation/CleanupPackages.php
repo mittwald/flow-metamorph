@@ -31,7 +31,7 @@ class CleanupPackages extends AbstractTransformation
             $packageKey = $packageMapping->getPackageKey();
             if ($this->packageManager->isPackageAvailable($packageKey))
             {
-                $this->log('PKG:<comment>%s</comment>: <fg=blue>present</fg=blue>', [$packageKey]);
+                $this->log('PKG:<comment>%s</comment>: <fg=cyan>present</fg=cyan>', [$packageKey]);
             }
             else
             {

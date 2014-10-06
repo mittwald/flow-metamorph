@@ -47,7 +47,7 @@ class CreatePackages extends AbstractTransformation
             else
             {
                 $this->log(
-                    'PKG:<comment>%s</comment>: <fg=blue>EXISTS</fg=blue>',
+                    'PKG:<comment>%s</comment>: <fg=cyan>EXISTS</fg=cyan>',
                     [$packageMapping->getPackageKey()]
                 );
             }
