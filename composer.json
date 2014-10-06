@@ -1,5 +1,5 @@
 {
-    "name": "mittwald-typo3/metamorph",
+    "name": "mittwald-typo3/flow-metamorph",
     "type": "typo3-flow-package",
     "description": "Convert TYPO3 CMS extensions to TYPO3 Flow packages",
     "license": "MIT",
