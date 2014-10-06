@@ -8,6 +8,8 @@
         "symfony/console": ">= 2.5",
         "gitonomy/gitlib": "*",
         "helmich/flow-eventbroker": "*",
+        "helmich/php-evaluator": "dev-master",
+        "helmich/php-scalarclasses": "dev-master",
         "ext-xsl": "*"
     },
     "autoload": {
