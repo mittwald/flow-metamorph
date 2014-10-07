@@ -35,7 +35,7 @@ class CreateDoctrineMigrations extends AbstractTransformation
         }
         else
         {
-            $this->log('Validation <warn>failed</warn>');
+            $this->log('Validation <error>failed</error>');
             $dump = \TYPO3\Flow\var_dump($validationResults, NULL, TRUE);
 
             throw new HumanInterventionRequiredException(
