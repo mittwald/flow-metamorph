@@ -3,6 +3,7 @@ namespace Mw\Metamorph\Transformation\RewriteNodeVisitors;
 
 
 use PhpParser\Node;
+use TYPO3\Flow\Annotations as Flow;
 
 
 class ReplaceMakeInstanceCallsVisitor extends AbstractVisitor
@@ -12,6 +13,22 @@ class ReplaceMakeInstanceCallsVisitor extends AbstractVisitor
 
     private $imports = [];
 
+
+    /**
+     * @var \Mw\Metamorph\Transformation\Helper\Namespaces\ImportHelper
+     * @Flow\Inject
+     */
+    protected $importHelper;
+
+
+
+    public function enterNode(Node $node)
+    {
+        if ($node instanceof Node\Stmt\Namespace_)
+        {
+            $this->imports = [];
+        }
+    }
 
 
     public function leaveNode(Node $node)
@@ -35,14 +52,12 @@ class ReplaceMakeInstanceCallsVisitor extends AbstractVisitor
         }
         elseif ($node instanceof Node\Stmt\Namespace_)
         {
-            $uses = [];
             foreach ($this->imports as $import)
             {
-                $useuse = new Node\Stmt\UseUse($import);
-                $uses[] = new Node\Stmt\Use_([$useuse]);
+                $node = $this->importHelper->importNamespaceIntoOtherNamespace($node, $import);
             }
 
-            $node->stmts = array_merge($uses, $node->stmts);
+            return $node;
         }
         return NULL;
     }
