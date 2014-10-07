@@ -58,6 +58,7 @@ Mw:
       TYPO3\CMS\Extbase\Domain\Model\FrontendUserGroup: Mw\T3Compat\Domain\Model\FrontendUserGroup
       TYPO3\CMS\Extbase\Domain\Repository\FrontendUserRepository: Mw\T3Compat\Domain\Repository\FrontendUserRepository
       TYPO3\CMS\Extbase\Domain\Repository\FrontendUserGroupRepository: Mw\T3Compat\Domain\Repository\FrontendUserGroupRepository
+      TYPO3\CMS\Extbase\Validation\Validator\AbstractValidator: TYPO3\Flow\Validation\Validator\AbstractValidator
       Tx_Extbase_Mvc_Controller_ActionController: TYPO3\Flow\Mvc\Controller\ActionController
       Tx_Fluid_Core_ViewHelper_AbstractViewHelper: TYPO3\Fluid\Core\ViewHelper\AbstractViewHelper
       Tx_Fluid_ViewHelpers_IfViewHelper: TYPO3\Fluid\ViewHelpers\IfViewHelper
@@ -68,6 +69,7 @@ Mw:
       Tx_Extbase_Domain_Model_FrontendUserGroup: Mw\T3Compat\Domain\Model\FrontendUserGroup
       Tx_Extbase_Domain_Repository_FrontendUserRepository: Mw\T3Compat\Domain\Repository\FrontendUserRepository
       Tx_Extbase_Domain_Repository_FrontendUserGroupRepository: Mw\T3Compat\Domain\Repository\FrontendUserGroupRepository
+      Tx_Extbase_Validation_Validator_AbstractValidator: TYPO3\Flow\Validation\Validator\AbstractValidator
       t3lib_div: Mw\Metamorph\TYPO3\Utility\GeneralUtility
     resourceExtensions:
       templates: {targetPath: Private/Templates, extensions: [html, htm]}
