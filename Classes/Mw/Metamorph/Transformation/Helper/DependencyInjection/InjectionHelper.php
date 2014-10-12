@@ -11,10 +11,10 @@ namespace Mw\Metamorph\Transformation\Helper\DependencyInjection;
 
 
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
+use PhpParser\BuilderFactory;
 use PhpParser\Comment\Doc;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\Node\Stmt\PropertyProperty;
 
 
 /**
@@ -25,6 +25,20 @@ use PhpParser\Node\Stmt\PropertyProperty;
  */
 class InjectionHelper
 {
+
+
+
+    /**
+     * @var BuilderFactory
+     */
+    protected $factory;
+
+
+
+    public function __construct()
+    {
+        $this->factory = new BuilderFactory();
+    }
 
 
 
@@ -42,6 +56,7 @@ class InjectionHelper
         $dependency = '\\' . ltrim($dependency, '\\');
         $found      = $this->isDependencyAlreadyPresentInClass($classNode, $dependency, $name, $lastPropertyIndex);
 
+        // Return immediately if dependency is already present.
         if (TRUE === $found)
         {
             return $classNode;
@@ -55,19 +70,21 @@ class InjectionHelper
 
         $comment = new Doc("/**\n * @var $dependency\n * " . $annotation->render() . "\n */");
 
-        $innerProperty = new PropertyProperty($name);
-        $outerProperty = new Property(Class_::MODIFIER_PROTECTED, [$innerProperty]);
-        $outerProperty->setAttribute('comments', [$comment]);
+        $property = $this->factory
+            ->property($name)
+            ->makeProtected()
+            ->getNode();
+
+        $property->setAttribute('comments', [$comment]);
 
         $stmts = $classNode->stmts;
-
         if (NULL === $lastPropertyIndex)
         {
-            $stmts = array_merge([$outerProperty], $classNode->stmts);
+            $stmts = array_merge([$property], $classNode->stmts);
         }
         else
         {
-            array_splice($stmts, $lastPropertyIndex + 1, 0, [$outerProperty]);
+            array_splice($stmts, $lastPropertyIndex + 1, 0, [$property]);
         }
 
         $classNode->stmts = $stmts;
