@@ -1,6 +1,15 @@
 <?php
 namespace Mw\Metamorph\Transformation\RewriteNodeVisitors;
 
+
+/*                                                                        *
+ * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
+ *                                                                        *
+ * (C) 2014 Martin Helmich <m.helmich@mittwald.de>                        *
+ *          Mittwald CM Service GmbH & Co. KG                             *
+ *                                                                        */
+
+
 use Helmich\Scalars\Types\String;
 use PhpParser\Node;
 use TYPO3\Flow\Annotations as Flow;
@@ -20,15 +29,27 @@ class InjectUtilitiesVisitor extends AbstractVisitor
 
 
 
+    /**
+     * @var Node\Stmt\Namespace_
+     */
     private $currentNamespace;
 
 
+    /**
+     * @var Node\Stmt\Class_
+     */
     private $currentClass;
 
 
+    /**
+     * @var array
+     */
     private $requiredImports;
 
 
+    /**
+     * @var array
+     */
     private $requiredInjections;
 
 
