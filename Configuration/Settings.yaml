@@ -43,6 +43,7 @@ Mw:
             - ReplaceMakeInstanceCallsVisitor
             - RewriteSingletonsVisitor
             - ReplaceAnnotationsVisitor
+            - InjectUtilitiesVisitor
       transformLocallang:
         name: XliffConversion
         position: 90

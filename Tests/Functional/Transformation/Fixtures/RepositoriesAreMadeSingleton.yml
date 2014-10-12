@@ -1,0 +1,18 @@
+---
+input: |
+  <?php
+  namespace My\Ext\Domain\Repository;
+  class TestRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
+  }
+
+output: |
+  <?php
+  namespace My\Ext\Domain\Repository;
+
+  use TYPO3\Flow\Annotations as Flow;
+
+  /**
+   * @Flow\Scope("singleton")
+   */
+  class TestRepository extends \TYPO3\Flow\Persistence\Repository {
+  }
