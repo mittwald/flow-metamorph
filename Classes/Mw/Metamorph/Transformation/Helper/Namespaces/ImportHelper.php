@@ -10,6 +10,7 @@ namespace Mw\Metamorph\Transformation\Helper\Namespaces;
  *                                                                        */
 
 
+use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Use_;
@@ -56,7 +57,7 @@ class ImportHelper
             return $namespaceNode;
         }
 
-        $innerUse = new UseUse(new FullyQualified($importNamespace), $alias);
+        $innerUse = new UseUse(new Name($importNamespace), $alias);
         $outerUse = new Use_([$innerUse]);
 
         $stmts = $namespaceNode->stmts;
