@@ -79,7 +79,7 @@ class RewriteSingletonsVisitor extends AbstractVisitor
             $name       = $node->namespacedName->toString();
             $definition = $this->classDefinitionContainer->get($name);
 
-            if ($this->isSingleton($definition))
+            if ($definition && $this->isSingleton($definition))
             {
                 $implementsList = $node->implements;
                 foreach ($implementsList as $key => $implements)

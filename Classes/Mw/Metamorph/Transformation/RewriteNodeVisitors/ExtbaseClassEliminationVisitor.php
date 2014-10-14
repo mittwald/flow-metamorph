@@ -108,9 +108,10 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
     private function classIsValueObjectSuperclass(Node\Stmt\Class_ $node)
     {
         $definition = $this->classDefinitionContainer->get($node->namespacedName->toString());
-        return
+        return $definition && (
             $definition->doesInherit('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject') ||
-            $definition->doesInherit('Tx_Extbase_DomainObject_AbstractValueObject');
+            $definition->doesInherit('Tx_Extbase_DomainObject_AbstractValueObject')
+        );
     }
 
 
@@ -118,9 +119,10 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor
     private function classIsEntitySuperclass(Node\Stmt\Class_ $node)
     {
         $definition = $this->classDefinitionContainer->get($node->namespacedName->toString());
-        return
+        return $definition && (
             $definition->doesInherit('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity') ||
-            $definition->doesInherit('Tx_Extbase_DomainObject_AbstractEntity');
+            $definition->doesInherit('Tx_Extbase_DomainObject_AbstractEntity')
+        );
     }
 
 

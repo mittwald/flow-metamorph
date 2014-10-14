@@ -1,0 +1,27 @@
+---
+input: |
+  <?php
+  namespace Foo;
+
+  class MyTestClass {
+    public function foo() {
+      $result = \TYPO3\CMS\Core\Utility\GeneralUtility::intExplode('1, 2, 3');
+    }
+  }
+output: |
+  <?php
+  namespace Foo;
+
+  use \TYPO3\Flow\Annotations as Flow;
+  class MyTestClass {
+
+    /**
+     * @var \Mw\T3Compat\Utility\GeneralUtility
+     * @Flow\Inject
+     */
+    protected $generalUtility;
+
+    public function foo() {
+      $result = $this->generalUtility->intExplode('1, 2, 3');
+    }
+  }
