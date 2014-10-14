@@ -5,7 +5,8 @@ namespace Mw\Metamorph\Transformation;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Mw\Metamorph\Transformation\Task\TaskInterface;
+use Mw\Metamorph\Transformation\Task\Queue;
+use Mw\Metamorph\Transformation\Task\TaskQueue;
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
@@ -53,7 +54,7 @@ class PackageClassRewrite extends AbstractTransformation
         $classMappingContainer = $configuration->getClassMappingContainer();
         $classMappingContainer->assertReviewed();
 
-        $taskQueue = new \SplPriorityQueue();
+        $taskQueue = new TaskQueue();
 
         $this->traverser = new NodeTraverser();
         $this->traverser->addVisitor(new NameResolver());
@@ -79,15 +80,7 @@ class PackageClassRewrite extends AbstractTransformation
             $this->refactorClass($classMapping, $out);
         }
 
-        while (!$taskQueue->isEmpty())
-        {
-            $task = $taskQueue->extract();
-            if ($task instanceof TaskInterface)
-            {
-                $this->log('Executing deferred task <info>%s</info>', [$task->toString()]);
-                $task->execute($configuration);
-            }
-        }
+        $taskQueue->executeAll($configuration, function ($m) { $this->log($m); });
     }
 
 

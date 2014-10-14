@@ -9,6 +9,7 @@ use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Transformation\DatabaseMigration\Tca\Tca;
 use Mw\Metamorph\Transformation\DatabaseMigration\Tca\TcaLoader;
 use Mw\Metamorph\Transformation\DatabaseMigration\Visitor\FullMigrationVisitor;
+use Mw\Metamorph\Transformation\Task\TaskQueue;
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
@@ -56,7 +57,7 @@ class FullMigrationStrategy implements MigrationStrategyInterface
 
 
     /**
-     * @var \SplPriorityQueue
+     * @var TaskQueue
      */
     private $taskQueue;
 
@@ -80,7 +81,7 @@ class FullMigrationStrategy implements MigrationStrategyInterface
 
 
 
-    public function setDeferredTaskQueue(\SplPriorityQueue $queue)
+    public function setDeferredTaskQueue(TaskQueue $queue)
     {
         $this->taskQueue = $queue;
     }

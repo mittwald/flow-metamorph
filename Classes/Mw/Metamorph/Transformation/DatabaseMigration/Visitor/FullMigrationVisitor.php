@@ -11,6 +11,7 @@ use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
 use Mw\Metamorph\Transformation\Helper\Annotation\DocCommentModifier;
 use Mw\Metamorph\Transformation\Task\Builder\AddImportToClassTaskBuilder;
 use Mw\Metamorph\Transformation\Task\Builder\AddPropertyToClassTaskBuilder;
+use Mw\Metamorph\Transformation\Task\TaskQueue;
 use PhpParser\Comment\Doc;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
@@ -26,7 +27,6 @@ class FullMigrationVisitor extends NodeVisitorAbstract
      * @var Tca
      */
     private $tca;
-
 
 
     /**
@@ -60,13 +60,13 @@ class FullMigrationVisitor extends NodeVisitorAbstract
 
 
     /**
-     * @var \SplPriorityQueue
+     * @var TaskQueue
      */
     private $taskQueue;
 
 
 
-    public function __construct(Tca $tca, \SplPriorityQueue $taskQueue)
+    public function __construct(Tca $tca, TaskQueue $taskQueue)
     {
         $this->tca       = $tca;
         $this->taskQueue = $taskQueue;
@@ -223,24 +223,22 @@ class FullMigrationVisitor extends NodeVisitorAbstract
                             $inverseAnnotation = new AnnotationRenderer('ORM', 'ManyToOne');
                             $inverseAnnotation->addParameter('inversedBy', $realProperty->name);
 
-                            $this->taskQueue->insert(
+                            $this->taskQueue->enqueue(
                                 (new AddPropertyToClassTaskBuilder())
                                     ->setTargetClassName($targetClass->getFullyQualifiedName())
                                     ->setPropertyName("$property")
                                     ->setPropertyType('\\' . $this->currentClass->getFullyQualifiedName())
                                     ->setProtected()
                                     ->addAnnotation($inverseAnnotation->render())
-                                    ->buildTask(),
-                                0
+                                    ->buildTask()
                             );
 
-                            $this->taskQueue->insert(
+                            $this->taskQueue->enqueue(
                                 (new AddImportToClassTaskBuilder())
                                     ->setTargetClassName($targetClass->getFullyQualifiedName())
                                     ->setImportNamespace('Doctrine\\ORM\\Mapping')
                                     ->setNamespaceAlias('ORM')
-                                    ->buildTask(),
-                                0
+                                    ->buildTask()
                             );
                         }
                     }
@@ -252,13 +250,12 @@ class FullMigrationVisitor extends NodeVisitorAbstract
                     }
 
                     $this->commentHelper->addAnnotationToDocComment($comment, $annotation);
-                    $this->taskQueue->insert(
+                    $this->taskQueue->enqueue(
                         (new AddImportToClassTaskBuilder())
                             ->setTargetClassName($this->currentClass->getFullyQualifiedName())
                             ->setImportNamespace('Doctrine\\ORM\\Mapping')
                             ->setNamespaceAlias('ORM')
-                            ->buildTask(),
-                        0
+                            ->buildTask()
                     );
                 }
 

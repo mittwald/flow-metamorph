@@ -4,7 +4,7 @@ namespace Mw\Metamorph\Transformation\RewriteNodeVisitors;
 
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
 use Mw\Metamorph\Transformation\Helper\Annotation\OptionParser;
-use Mw\Metamorph\Transformation\Helper\Namespaces\ImportHelper;
+use Mw\Metamorph\Transformation\Task\Builder\AddImportToClassTaskBuilder;
 use PhpParser\Node;
 
 
@@ -13,8 +13,8 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor
 
 
 
-    /** @var Node\Stmt\Namespace_ */
-    private $currentNamespace;
+    /** @var Node\Stmt\Class_ */
+    private $currentClass;
 
 
     /** @var array */
@@ -25,9 +25,6 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor
         'Flow' => 'TYPO3\\Flow\\Annotations',
         'ORM'  => 'Doctrine\\ORM\\Mapping'
     ];
-
-
-    private $requiredNamespaceImports = [];
 
 
 
@@ -85,10 +82,9 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor
 
     public function enterNode(Node $node)
     {
-        if ($node instanceof Node\Stmt\Namespace_)
+        if ($node instanceof Node\Stmt\Class_)
         {
-            $this->currentNamespace         = $node;
-            $this->requiredNamespaceImports = [];
+            $this->currentClass = $node;
         }
     }
 
@@ -96,41 +92,33 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor
 
     public function leaveNode(Node $node)
     {
-        if ($node instanceof Node\Stmt\Namespace_)
+        foreach ($this->annotationMapping as $oldAnnotation => $newAnnotation)
         {
-            $helper = new ImportHelper();
-            foreach($this->requiredNamespaceImports as $alias => $_)
+            $comment = $node->getDocComment();
+            if ($comment && FALSE !== preg_match($oldAnnotation, $comment->getText()))
             {
-                $namespace = $this->namespaceMappings[$alias];
-                $node = $helper->importNamespaceIntoOtherNamespace($node, $namespace, $alias);
-            }
-            return $node;
-        }
-        else
-        {
-            foreach ($this->annotationMapping as $oldAnnotation => $newAnnotation)
-            {
-                $comment = $node->getDocComment();
-                if ($comment && FALSE !== preg_match($oldAnnotation, $comment->getText()))
+                $text = $comment->getText();
+                $text = is_callable($newAnnotation)
+                    ? preg_replace_callback($oldAnnotation, $newAnnotation, $text)
+                    : preg_replace($oldAnnotation, $newAnnotation, $text);
+
+                $comment->setText($text);
+
+                foreach ($this->namespaceMappings as $alias => $namespace)
                 {
-                    $text = $comment->getText();
-                    $text = is_callable($newAnnotation)
-                        ? preg_replace_callback($oldAnnotation, $newAnnotation, $text)
-                        : preg_replace($oldAnnotation, $newAnnotation, $text);
-
-                    $comment->setText($text);
-
-                    foreach ($this->namespaceMappings as $alias => $namespace)
+                    if (FALSE !== strstr($text, '@' . $alias . '\\'))
                     {
-                        if (FALSE !== strstr($text, '@' . $alias . '\\'))
-                        {
-                            $this->requiredNamespaceImports[$alias] = TRUE;
-                        }
+                        $this->taskQueue->enqueue(
+                            (new AddImportToClassTaskBuilder())
+                                ->setTargetClassName($this->currentClass->namespacedName->toString())
+                                ->setImportNamespace($namespace)
+                                ->setNamespaceAlias($alias)
+                                ->buildTask()
+                        );
                     }
                 }
             }
         }
-        return NULL;
     }
 
 

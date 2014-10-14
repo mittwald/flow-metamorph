@@ -11,6 +11,7 @@ namespace Mw\Metamorph\Transformation\RewriteNodeVisitors;
 
 
 use Helmich\Scalars\Types\String;
+use Mw\Metamorph\Transformation\Task\Builder\AddImportToClassTaskBuilder;
 use PhpParser\Node;
 use TYPO3\Flow\Annotations as Flow;
 
@@ -41,10 +42,10 @@ class InjectUtilitiesVisitor extends AbstractVisitor
     private $currentClass;
 
 
-    /**
-     * @var array
-     */
-    private $requiredImports;
+//    /**
+//     * @var array
+//     */
+//    private $requiredImports;
 
 
     /**
@@ -53,11 +54,11 @@ class InjectUtilitiesVisitor extends AbstractVisitor
     private $requiredInjections;
 
 
-    /**
-     * @var \Mw\Metamorph\Transformation\Helper\Namespaces\ImportHelper
-     * @Flow\Inject
-     */
-    protected $importHelper;
+//    /**
+//     * @var \Mw\Metamorph\Transformation\Helper\Namespaces\ImportHelper
+//     * @Flow\Inject
+//     */
+//    protected $importHelper;
 
 
     /**
@@ -73,7 +74,7 @@ class InjectUtilitiesVisitor extends AbstractVisitor
         if ($node instanceof Node\Stmt\Namespace_)
         {
             $this->currentNamespace = $node;
-            $this->requiredImports  = [];
+//            $this->requiredImports  = [];
         }
         else if ($node instanceof Node\Stmt\Class_)
         {
@@ -88,22 +89,30 @@ class InjectUtilitiesVisitor extends AbstractVisitor
     {
         if ($node instanceof Node\Stmt\Namespace_)
         {
-            foreach ($this->requiredImports as $alias => $namespace)
-            {
-                $node = $this->importHelper->importNamespaceIntoOtherNamespace($node, $namespace, $alias);
-            }
+//            foreach ($this->requiredImports as $alias => $namespace)
+//            {
+//                $node = $this->importHelper->importNamespaceIntoOtherNamespace($node, $namespace, $alias);
+//            }
 
             $this->currentNamespace = NULL;
-            $this->requiredImports  = [];
-
-            return $node;
+//            $this->requiredImports  = [];
+//
+//            return $node;
         }
         else if ($node instanceof Node\Stmt\Class_)
         {
             foreach ($this->requiredInjections as $name => $class)
             {
                 $node = $this->injectHelper->injectDependencyIntoClass($node, $class, $name);
-                $this->requiredImports['Flow'] = 'TYPO3\\Flow\\Annotations';
+
+//                $this->requiredImports['Flow'] = 'TYPO3\\Flow\\Annotations';
+                $this->taskQueue->enqueue(
+                    (new AddImportToClassTaskBuilder())
+                        ->setTargetClassName($this->currentClass->namespacedName->toString())
+                        ->setImportNamespace('TYPO3\\Flow\\Annotations')
+                        ->setNamespaceAlias('Flow')
+                        ->buildTask()
+                );
             }
 
             $this->currentClass       = NULL;

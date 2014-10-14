@@ -78,7 +78,7 @@ class AddPropertyToClassTask implements TaskInterface
 
 
 
-    public function execute(MorphConfiguration $configuration, \SplPriorityQueue $queue)
+    public function execute(MorphConfiguration $configuration, TaskQueue $queue)
     {
         /** @var Node\Stmt\Property $propertyNode */
         $propertyNode = $this->factory
@@ -172,4 +172,12 @@ class AddPropertyToClassTask implements TaskInterface
         $commentNode = new Doc($comment);
         return $commentNode;
     }
+
+
+
+    public function getHash()
+    {
+        return sha1($this->targetClassName . '.' . $this->propertyName);
+    }
+
 }

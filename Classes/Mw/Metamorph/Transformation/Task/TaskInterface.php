@@ -10,10 +10,14 @@ interface TaskInterface
 
 
 
-    public function execute(MorphConfiguration $configuration, \SplPriorityQueue $queue);
+    public function execute(MorphConfiguration $configuration, TaskQueue $queue);
 
 
 
     public function toString();
+
+
+
+    public function getHash();
 
 }

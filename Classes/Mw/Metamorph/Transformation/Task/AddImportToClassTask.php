@@ -39,7 +39,7 @@ class AddImportToClassTask implements TaskInterface
 
 
 
-    function __construct($class, $namespace, $alias = NULL)
+    public function __construct($class, $namespace, $alias = NULL)
     {
         $this->class     = $class;
         $this->namespace = $namespace;
@@ -48,7 +48,7 @@ class AddImportToClassTask implements TaskInterface
 
 
 
-    public function execute(MorphConfiguration $configuration, \SplPriorityQueue $queue)
+    public function execute(MorphConfiguration $configuration, TaskQueue $queue)
     {
         $foundClass    = FALSE;
         $namespaceNode = NULL;
@@ -103,6 +103,13 @@ class AddImportToClassTask implements TaskInterface
             $this->namespace,
             $this->alias
         );
+    }
+
+
+
+    public function getHash()
+    {
+        return sha1($this->class . '::' . $this->namespace . '::' . $this->alias);
     }
 
 

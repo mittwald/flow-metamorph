@@ -3,6 +3,7 @@ namespace Mw\Metamorph\Transformation\DatabaseMigration\Strategy;
 
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
+use Mw\Metamorph\Transformation\Task\TaskQueue;
 
 
 interface MigrationStrategyInterface
@@ -14,6 +15,6 @@ interface MigrationStrategyInterface
 
 
 
-    public function setDeferredTaskQueue(\SplPriorityQueue $queue);
+    public function setDeferredTaskQueue(TaskQueue $queue);
 
 }
