@@ -5,6 +5,7 @@ namespace Mw\Metamorph\Transformation;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
+use Mw\Metamorph\Transformation\Task\TaskInterface;
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
@@ -52,6 +53,8 @@ class PackageClassRewrite extends AbstractTransformation
         $classMappingContainer = $configuration->getClassMappingContainer();
         $classMappingContainer->assertReviewed();
 
+        $taskQueue = new \SplPriorityQueue();
+
         $this->traverser = new NodeTraverser();
         $this->traverser->addVisitor(new NameResolver());
 
@@ -65,6 +68,7 @@ class PackageClassRewrite extends AbstractTransformation
             /** @var \Mw\Metamorph\Transformation\RewriteNodeVisitors\AbstractVisitor $visitor */
             $visitor = $this->objectManager->get($visitorClass);
             $visitor->setClassMap($classMappingContainer);
+            $visitor->setDeferredTaskQueue($taskQueue);
 
             $this->traverser->addVisitor($visitor);
             $this->log('Adding node visitor <info>%s</info>.', [$visitorClass]);
@@ -72,13 +76,23 @@ class PackageClassRewrite extends AbstractTransformation
 
         foreach ($classMappingContainer->getClassMappings() as $classMapping)
         {
-            $this->replaceExtbaseClassnamesInClass($classMapping, $out);
+            $this->refactorClass($classMapping, $out);
+        }
+
+        while (!$taskQueue->isEmpty())
+        {
+            $task = $taskQueue->extract();
+            if ($task instanceof TaskInterface)
+            {
+                $this->log('Executing deferred task <info>%s</info>', [$task->toString()]);
+                $task->execute($configuration);
+            }
         }
     }
 
 
 
-    private function replaceExtbaseClassnamesInClass(ClassMapping $classMapping, OutputInterface $out)
+    private function refactorClass(ClassMapping $classMapping, OutputInterface $out)
     {
         $filecontent = file_get_contents($classMapping->getTargetFile());
         $syntaxTree  = $this->parser->parse($filecontent);

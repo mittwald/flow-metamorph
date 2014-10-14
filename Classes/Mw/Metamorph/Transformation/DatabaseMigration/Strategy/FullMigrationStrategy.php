@@ -55,6 +55,12 @@ class FullMigrationStrategy implements MigrationStrategyInterface
     private $printer;
 
 
+    /**
+     * @var \SplPriorityQueue
+     */
+    private $taskQueue;
+
+
 
     public function __construct()
     {
@@ -70,6 +76,13 @@ class FullMigrationStrategy implements MigrationStrategyInterface
 
         $this->loadTca($configuration);
         $this->processClasses($configuration);
+    }
+
+
+
+    public function setDeferredTaskQueue(\SplPriorityQueue $queue)
+    {
+        $this->taskQueue = $queue;
     }
 
 
@@ -103,7 +116,7 @@ class FullMigrationStrategy implements MigrationStrategyInterface
 
             $traverser = new NodeTraverser();
             $traverser->addVisitor(new NameResolver());
-            $traverser->addVisitor(new FullMigrationVisitor($this->tca));
+            $traverser->addVisitor(new FullMigrationVisitor($this->tca, $this->taskQueue));
 
             $stmts = $traverser->traverse($stmts);
 

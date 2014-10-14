@@ -94,7 +94,7 @@ class AnalyzerVisitor extends NodeVisitorAbstract
             {
                 $property = new PropertyDefinition(
                     $subProp->name,
-                    $subProp->getDocComment()->getReformattedText()
+                    $subProp->getDocComment() ? $subProp->getDocComment()->getReformattedText() : NULL
                 );
 
                 $this->currentClassDefinition->addProperty($property);

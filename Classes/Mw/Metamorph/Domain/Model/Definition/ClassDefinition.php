@@ -172,7 +172,7 @@ class ClassDefinition
      */
     public function hasProperty($name)
     {
-        return array_key_exists($name, $this->properties);
+        return array_key_exists("$name", $this->properties);
     }
 
 

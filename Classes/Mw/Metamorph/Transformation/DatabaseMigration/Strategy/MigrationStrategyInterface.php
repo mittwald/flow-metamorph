@@ -14,4 +14,6 @@ interface MigrationStrategyInterface
 
 
 
+    public function setDeferredTaskQueue(\SplPriorityQueue $queue);
+
 }

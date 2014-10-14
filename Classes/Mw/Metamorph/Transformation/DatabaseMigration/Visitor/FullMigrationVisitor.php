@@ -2,13 +2,15 @@
 namespace Mw\Metamorph\Transformation\DatabaseMigration\Visitor;
 
 
+use Helmich\Scalars\Types\ArrayList;
 use Helmich\Scalars\Types\String;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinition;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer;
 use Mw\Metamorph\Transformation\DatabaseMigration\Tca\Tca;
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
 use Mw\Metamorph\Transformation\Helper\Annotation\DocCommentModifier;
-use Mw\Metamorph\Transformation\Helper\Namespaces\ImportHelper;
+use Mw\Metamorph\Transformation\Task\Builder\AddImportToClassTaskBuilder;
+use Mw\Metamorph\Transformation\Task\Builder\AddPropertyToClassTaskBuilder;
 use PhpParser\Comment\Doc;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
@@ -42,13 +44,6 @@ class FullMigrationVisitor extends NodeVisitorAbstract
 
 
     /**
-     * @var ImportHelper
-     * @Flow\Inject
-     */
-    protected $namespaceHelper;
-
-
-    /**
      * @var ClassDefinition
      */
     private $currentClass;
@@ -65,33 +60,23 @@ class FullMigrationVisitor extends NodeVisitorAbstract
 
 
     /**
-     * @var Node\Stmt\Namespace_
+     * @var \SplPriorityQueue
      */
-    private $currentNamespace;
-
-
-    /**
-     * @var array
-     */
-    private $requiredImports;
+    private $taskQueue;
 
 
 
-    public function __construct(Tca $tca)
+    public function __construct(Tca $tca, \SplPriorityQueue $taskQueue)
     {
-        $this->tca = $tca;
+        $this->tca       = $tca;
+        $this->taskQueue = $taskQueue;
     }
 
 
 
     public function enterNode(Node $node)
     {
-        if ($node instanceof Node\Stmt\Namespace_)
-        {
-            $this->currentNamespace = $node;
-            $this->requiredImports  = [];
-        }
-        else if ($node instanceof Node\Stmt\Class_)
+        if ($node instanceof Node\Stmt\Class_)
         {
             $newClassName    = $node->namespacedName->toString();
             $classDefinition = $this->classDefinitionContainer->get($newClassName);
@@ -102,20 +87,15 @@ class FullMigrationVisitor extends NodeVisitorAbstract
                 throw new \Exception('No class mapping found for class ' . $newClassName);
             }
 
-            $possibleNames = $this->getPossibleTableNamesForClass(
+            $this->currentTca = [];
+            $this->getTcaForClass(
                 new String($newClassName),
-                new String($classMapping->getOldClassName())
+                new String($classMapping->getOldClassName()),
+                $this->currentTca,
+                $this->currentTable
             );
 
             $this->currentClass = $classDefinition;
-            foreach ($possibleNames as $name)
-            {
-                if (isset($this->tca[$name]))
-                {
-                    $this->currentTca   = $this->tca[$name];
-                    $this->currentTable = $name;
-                }
-            }
 
             if ($this->currentTable === NULL && $this->currentClass->getFact('isAbstract') === FALSE)
             {
@@ -129,21 +109,47 @@ class FullMigrationVisitor extends NodeVisitorAbstract
             }
         }
 
+        return NULL;
+    }
+
+
+
+    private function getTcaForClass(String $newClassName, String $oldClassName, array &$tca, &$tableName)
+    {
+        $possibleNames = $this->getPossibleTableNamesForClass($newClassName, $oldClassName);
+        foreach ($possibleNames as $name)
+        {
+            if (isset($this->tca[$name]))
+            {
+                $tca       = $this->tca[$name];
+                $tableName = $name;
+            }
+        }
+    }
+
+
+
+    private function getClassForTable($tableName)
+    {
+        $filterFunction = function (ClassDefinition $definition) use ($tableName)
+        {
+            $possibleTableNames = $this->getPossibleTableNamesForClass(
+                new String($definition->getFullyQualifiedName()),
+                new String($definition->getClassMapping()->getOldClassName())
+            );
+
+            return $possibleTableNames->contains($tableName);
+        };
+
+        $classDefinitions = $this->classDefinitionContainer->findByFilter($filterFunction);
+        return (count($classDefinitions) > 0) ? $classDefinitions[0] : NULL;
     }
 
 
 
     public function leaveNode(Node $node)
     {
-        if ($node instanceof Node\Stmt\Namespace_ && count($this->requiredImports) > 0)
-        {
-            foreach ($this->requiredImports as $alias => $namespace)
-            {
-                $node = $this->namespaceHelper->importNamespaceIntoOtherNamespace($node, $namespace, $alias);
-            }
-            return $node;
-        }
-        elseif ($node instanceof Node\Stmt\Class_)
+        if ($node instanceof Node\Stmt\Class_)
         {
             $this->currentClass = NULL;
             $this->currentTca   = NULL;
@@ -210,6 +216,33 @@ class FullMigrationVisitor extends NodeVisitorAbstract
                     {
                         $property = $this->columnNameToProperty(new String($propertyConfig['foreign_field']));
                         $annotation->addParameter('mappedBy', "$property");
+
+                        $targetClass = $this->getClassForTable($propertyConfig['foreign_table']);
+                        if (!$targetClass->hasProperty($property))
+                        {
+                            $inverseAnnotation = new AnnotationRenderer('ORM', 'ManyToOne');
+                            $inverseAnnotation->addParameter('inversedBy', $realProperty->name);
+
+                            $this->taskQueue->insert(
+                                (new AddPropertyToClassTaskBuilder())
+                                    ->setTargetClassName($targetClass->getFullyQualifiedName())
+                                    ->setPropertyName("$property")
+                                    ->setPropertyType('\\' . $this->currentClass->getFullyQualifiedName())
+                                    ->setProtected()
+                                    ->addAnnotation($inverseAnnotation->render())
+                                    ->buildTask(),
+                                0
+                            );
+
+                            $this->taskQueue->insert(
+                                (new AddImportToClassTaskBuilder())
+                                    ->setTargetClassName($targetClass->getFullyQualifiedName())
+                                    ->setImportNamespace('Doctrine\\ORM\\Mapping')
+                                    ->setNamespaceAlias('ORM')
+                                    ->buildTask(),
+                                0
+                            );
+                        }
                     }
 
                     if ($commentString->regexMatch('/@cascade\s+remove/'))
@@ -219,7 +252,14 @@ class FullMigrationVisitor extends NodeVisitorAbstract
                     }
 
                     $this->commentHelper->addAnnotationToDocComment($comment, $annotation);
-                    $this->requiredImports['ORM'] = 'Doctrine\\ORM\\Mapping';
+                    $this->taskQueue->insert(
+                        (new AddImportToClassTaskBuilder())
+                            ->setTargetClassName($this->currentClass->getFullyQualifiedName())
+                            ->setImportNamespace('Doctrine\\ORM\\Mapping')
+                            ->setNamespaceAlias('ORM')
+                            ->buildTask(),
+                        0
+                    );
                 }
 
                 $innerProperty   = clone $realProperty;
@@ -335,14 +375,21 @@ class FullMigrationVisitor extends NodeVisitorAbstract
 
 
 
+    /**
+     * @param \Helmich\Scalars\Types\String $newClassName
+     * @param \Helmich\Scalars\Types\String $oldClassName
+     * @return ArrayList
+     */
     private function getPossibleTableNamesForClass(String $newClassName, String $oldClassName)
     {
-        return [
-            $newClassName->toLower()->replace('\\', '_'),
-            $newClassName->toLower()->split('\\')->set(0, 'tx')->join('_'),
-            $oldClassName->toLower()->replace('\\', '_'),
-            $oldClassName->toLower()->split('\\')->set(0, 'tx')->join('_')
-        ];
+        return new ArrayList(
+            [
+                $newClassName->toLower()->replace('\\', '_'),
+                $newClassName->toLower()->split('\\')->set(0, 'tx')->join('_'),
+                $oldClassName->toLower()->replace('\\', '_'),
+                $oldClassName->toLower()->split('\\')->set(0, 'tx')->join('_')
+            ]
+        );
     }
 
 
