@@ -27,6 +27,10 @@ class ClassDefinition
     private $facts = [];
 
 
+    /** @var PropertyDefinition[] */
+    private $properties = [];
+
+
     /** @var ClassMapping */
     private $classMapping;
 
@@ -147,6 +151,39 @@ class ClassDefinition
     public function setClassMapping(ClassMapping $classMapping)
     {
         $this->classMapping = $classMapping;
+    }
+
+
+
+    /**
+     * @param PropertyDefinition $propertyDefinition
+     * @return void
+     */
+    public function addProperty(PropertyDefinition $propertyDefinition)
+    {
+        $this->properties[$propertyDefinition->getName()] = $propertyDefinition;
+    }
+
+
+
+    /**
+     * @param string $name
+     * @return bool
+     */
+    public function hasProperty($name)
+    {
+        return array_key_exists($name, $this->properties);
+    }
+
+
+
+    /**
+     * @param string $name
+     * @return PropertyDefinition
+     */
+    public function getProperty($name)
+    {
+        return $this->hasProperty($name) ? $this->properties[$name] : NULL;
     }
 
 

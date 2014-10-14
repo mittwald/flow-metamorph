@@ -5,6 +5,7 @@ namespace Mw\Metamorph\Transformation\Analyzer;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinition;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionDeferred;
+use Mw\Metamorph\Domain\Model\Definition\PropertyDefinition;
 use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
@@ -86,6 +87,18 @@ class AnalyzerVisitor extends NodeVisitorAbstract
             }
 
             $this->currentClassDefinition = $classDef;
+        }
+        elseif ($node instanceof Node\Stmt\Property)
+        {
+            foreach($node->props as $subProp)
+            {
+                $property = new PropertyDefinition(
+                    $subProp->name,
+                    $subProp->getDocComment()->getReformattedText()
+                );
+
+                $this->currentClassDefinition->addProperty($property);
+            }
         }
     }
 

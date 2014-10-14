@@ -66,4 +66,20 @@ class ClassDefinitionDeferred extends ClassDefinition
 
 
 
+    public function hasProperty($name)
+    {
+        $this->loadRealInstance();
+        return $this->realInstance ? $this->realInstance->hasProperty($name) : FALSE;
+    }
+
+
+
+    public function getProperty($name)
+    {
+        $this->loadRealInstance();
+        return $this->realInstance ? $this->realInstance->getProperty($name) : NULL;
+    }
+
+
+
 }
