@@ -236,7 +236,7 @@ class FullMigrationVisitor extends NodeVisitorAbstract
                             $this->taskQueue->enqueue(
                                 (new AddImportToClassTaskBuilder())
                                     ->setTargetClassName($targetClass->getFullyQualifiedName())
-                                    ->setImportNamespace('Doctrine\\ORM\\Mapping')
+                                    ->setImport('Doctrine\\ORM\\Mapping')
                                     ->setNamespaceAlias('ORM')
                                     ->buildTask()
                             );
@@ -253,7 +253,7 @@ class FullMigrationVisitor extends NodeVisitorAbstract
                     $this->taskQueue->enqueue(
                         (new AddImportToClassTaskBuilder())
                             ->setTargetClassName($this->currentClass->getFullyQualifiedName())
-                            ->setImportNamespace('Doctrine\\ORM\\Mapping')
+                            ->setImport('Doctrine\\ORM\\Mapping')
                             ->setNamespaceAlias('ORM')
                             ->buildTask()
                     );

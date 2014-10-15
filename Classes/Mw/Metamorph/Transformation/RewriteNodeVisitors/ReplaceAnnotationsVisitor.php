@@ -111,7 +111,7 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor
                         $this->taskQueue->enqueue(
                             (new AddImportToClassTaskBuilder())
                                 ->setTargetClassName($this->currentClass->namespacedName->toString())
-                                ->setImportNamespace($namespace)
+                                ->setImport($namespace)
                                 ->setNamespaceAlias($alias)
                                 ->buildTask()
                         );

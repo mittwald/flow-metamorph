@@ -18,7 +18,7 @@ class AddImportToClassTask implements TaskInterface
     private $class;
 
 
-    private $namespace;
+    private $import;
 
 
     private $alias = NULL;
@@ -41,9 +41,9 @@ class AddImportToClassTask implements TaskInterface
 
     public function __construct($class, $namespace, $alias = NULL)
     {
-        $this->class     = $class;
-        $this->namespace = $namespace;
-        $this->alias     = $alias;
+        $this->class  = $class;
+        $this->import = $namespace;
+        $this->alias  = $alias;
     }
 
 
@@ -75,7 +75,7 @@ class AddImportToClassTask implements TaskInterface
                 {
                     return $this->importHelper->importNamespaceIntoOtherNamespace(
                         $node,
-                        $this->namespace,
+                        $this->import,
                         $this->alias
                     );
                 }
@@ -100,7 +100,7 @@ class AddImportToClassTask implements TaskInterface
         return sprintf(
             'AddImportToClass{class="%s", namespace="%s", alias="%s"}',
             $this->class,
-            $this->namespace,
+            $this->import,
             $this->alias
         );
     }
@@ -109,7 +109,7 @@ class AddImportToClassTask implements TaskInterface
 
     public function getHash()
     {
-        return sha1($this->class . '::' . $this->namespace . '::' . $this->alias);
+        return sha1($this->class . '::' . $this->import . '::' . $this->alias);
     }
 
 

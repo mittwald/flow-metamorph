@@ -12,7 +12,7 @@ class AddImportToClassTaskBuilder
     private $class;
 
 
-    private $namespace;
+    private $import;
 
 
     private $alias = NULL;
@@ -31,9 +31,9 @@ class AddImportToClassTaskBuilder
 
 
 
-    public function setImportNamespace($importNamespace)
+    public function setImport($importNamespace)
     {
-        $this->namespace = $importNamespace;
+        $this->import = $importNamespace;
         return $this;
     }
 
@@ -51,7 +51,7 @@ class AddImportToClassTaskBuilder
     {
         return new AddImportToClassTask(
             $this->class,
-            $this->namespace,
+            $this->import,
             $this->alias
         );
     }
