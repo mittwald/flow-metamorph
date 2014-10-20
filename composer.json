@@ -10,6 +10,8 @@
         "gitonomy/gitlib": "*",
         "mittwald-typo3/flow-t3compat": "*",
         "helmich/flow-eventbroker": "*",
+        "helmich/php-evaluator": "dev-master",
+        "helmich/php-scalarclasses": "dev-master",
         "ext-xsl": "*"
     },
     "autoload": {

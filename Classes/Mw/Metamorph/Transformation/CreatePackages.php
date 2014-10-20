@@ -31,13 +31,26 @@ class CreatePackages extends AbstractTransformation
 
         foreach ($packageMappingContainer->getPackageMappings() as $packageMapping)
         {
-            $this->packageManager->createPackage(
-                $packageMapping->getPackageKey(),
-                $this->createPackageMetaData($packageMapping),
-                NULL,
-                'typo3-flow-package'
-            );
-            $this->log('PKG:<comment>%s</comment>: <fg=green>CREATED</fg=green>', [$packageMapping->getPackageKey()]);
+            if (FALSE === $this->packageManager->isPackageAvailable($packageMapping->getPackageKey()))
+            {
+                $this->packageManager->createPackage(
+                    $packageMapping->getPackageKey(),
+                    $this->createPackageMetaData($packageMapping),
+                    NULL,
+                    'typo3-flow-package'
+                );
+                $this->log(
+                    'PKG:<comment>%s</comment>: <fg=green>CREATED</fg=green>',
+                    [$packageMapping->getPackageKey()]
+                );
+            }
+            else
+            {
+                $this->log(
+                    'PKG:<comment>%s</comment>: <fg=cyan>EXISTS</fg=cyan>',
+                    [$packageMapping->getPackageKey()]
+                );
+            }
         }
     }
 

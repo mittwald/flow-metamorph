@@ -11,56 +11,55 @@ class ReplaceMakeInstanceCallsVisitor extends AbstractVisitor
 
 
 
-    private $imports = [];
-
-
     /**
-     * @var \Mw\Metamorph\Transformation\Helper\Namespaces\ImportHelper
-     * @Flow\Inject
+     * @var Node\Stmt\Class_
      */
-    protected $importHelper;
+    private $currentClass;
 
 
 
     public function enterNode(Node $node)
     {
-        if ($node instanceof Node\Stmt\Namespace_)
+        if ($node instanceof Node\Stmt\Class_)
         {
-            $this->imports = [];
+            $this->currentClass = $node;
         }
     }
+
 
 
     public function leaveNode(Node $node)
     {
         if ($node instanceof Node\Expr\StaticCall)
         {
-            if ($node->class instanceof Node\Name\FullyQualified && ($node->class == 'Mw\\Metamorph\\TYPO3\\Utility\\GeneralUtility') && $node->name === 'makeInstance')
+            if ($node->class instanceof Node\Name\FullyQualified &&
+                $this->isGeneralUtilityClass($node->class) &&
+                $node->name === 'makeInstance'
+            )
             {
                 $args = $node->args;
 
                 $className = array_shift($args)->value;
                 if ($className instanceof Node\Scalar\String)
                 {
-                    $this->imports[$className->value] = new Node\Name($className->value);
-                    $components                       = explode('\\', $className->value);
-                    $className                        = new Node\Name(array_pop($components));
+                    $className = new Node\Name\FullyQualified($className->value);
                 }
 
                 return new Node\Expr\New_($className, $args);
             }
         }
-        elseif ($node instanceof Node\Stmt\Namespace_)
-        {
-            foreach ($this->imports as $import)
-            {
-                $node = $this->importHelper->importNamespaceIntoOtherNamespace($node, $import);
-            }
-
-            return $node;
-        }
         return NULL;
     }
 
+
+
+    private function isGeneralUtilityClass(Node\Name $name)
+    {
+        return (
+            $name == 'Mw\\T3Compat\\Utility\\GeneralUtility' ||
+            $name == 't3lib_div' ||
+            $name == 'TYPO3\\CMS\\Core\\Utility\\GeneralUtility'
+        );
+    }
 
 }

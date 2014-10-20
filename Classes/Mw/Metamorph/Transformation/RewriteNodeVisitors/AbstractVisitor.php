@@ -3,6 +3,7 @@ namespace Mw\Metamorph\Transformation\RewriteNodeVisitors;
 
 
 use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
+use Mw\Metamorph\Transformation\Task\TaskQueue;
 use PhpParser\NodeVisitorAbstract;
 
 
@@ -18,6 +19,10 @@ class AbstractVisitor extends NodeVisitorAbstract
     protected $classMap;
 
 
+    /** @var TaskQueue */
+    protected $taskQueue;
+
+
 
     public function injectSettings(array $settings)
     {
@@ -29,6 +34,13 @@ class AbstractVisitor extends NodeVisitorAbstract
     public function setClassMap(ClassMappingContainer $classMap)
     {
         $this->classMap = $classMap;
+    }
+
+
+
+    public function setDeferredTaskQueue(TaskQueue $queue)
+    {
+        $this->taskQueue = $queue;
     }
 
 }

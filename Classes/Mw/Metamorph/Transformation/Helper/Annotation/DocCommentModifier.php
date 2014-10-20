@@ -2,6 +2,7 @@
 namespace Mw\Metamorph\Transformation\Helper\Annotation;
 
 
+use Helmich\Scalars\Types\String;
 use PhpParser\Comment\Doc;
 
 
@@ -13,7 +14,7 @@ class DocCommentModifier
     public function addAnnotationToDocComment(Doc $comment, AnnotationRenderer $annotation)
     {
         $text = $comment->getReformattedText();
-        $text = $this->addAnnotationToDocCommentString($text, $annotation);
+        $text = $this->addAnnotationToDocCommentString(new String($text), $annotation);
 
         $comment->setText($text);
     }
@@ -22,38 +23,69 @@ class DocCommentModifier
 
     public function addAnnotationToDocCommentString($commentString, AnnotationRenderer $annotation)
     {
+        $commentString = ($commentString instanceof String) ? $commentString : new String($commentString);
+
         // Ensure that comment opening (/**) is on single line
-        if (!preg_match(',^[\t ]*/\*\*[\t ]*\n,', $commentString))
+        if (!$commentString->regexMatch(',^[\t ]*/\*\*[\t ]*\n,'))
         {
-            $commentString = preg_replace(',/\*\*[\t ]*,', "/**\n * ", $commentString);
+            $commentString = $commentString->regexReplace(',/\*\*[\t ]*,', "/**\n * ");
         }
 
         // Ensure that comment ending (*/) is on single line
-        if (!preg_match(',\n[\t ]*\*/[\t ]*$,', $commentString))
+        if (!$commentString->regexMatch(',\n[\t ]*\*/[\t ]*$,'))
         {
-            $commentString = preg_replace(',\*/[\t ]*$,', "\n */", $commentString);
+            $commentString = $commentString->regexReplace(',\*/[\t ]*$,', "\n */");
         }
 
-        $lines = explode("\n", $commentString);
-        $count = count($lines);
+        $lines = $commentString->split("\n");
+        $count = $lines->length();
 
         // Ensure that annotations are in a separate paragraph in longer comments.
-        if ($count > 2 && trim($lines[$count - 2]) !== '*' && !preg_match(',^[\t ]*\*[\t ]*@,', $lines[$count - 2]))
+        if ($count > 2
+            && $lines->getString($count - 2)->strip() !== '*'
+            && !$lines->getString($count - 2)->regexMatch(',^[\t ]*\*[\t ]*@,')
+        )
         {
-            $lines[$count - 1] = ' *';
+            $lines->set($count - 1, new String(' *'));
             $count++;
         }
 
-        $lines[$count - 1] = ' * ' . $annotation->render();
-        $lines[$count]     = ' */';
+        $lines
+            ->set($count - 1, new String(' * ' . $annotation->render()))
+            ->set($count, new String(' */'));
 
-        // Remove trailing whitespaces.
-        foreach ($lines as &$line)
+        return $lines
+            ->map(function (String $line) { return $line->stripRight(); })
+            ->join("\n")
+            ->toPrimitive();
+    }
+
+
+
+    public function removeAnnotationFromDocComment(Doc $comment, $annotation)
+    {
+        $text = $comment->getReformattedText();
+        $text = $this->removeAnnotationFromDocCommentString(new String($text), $annotation);
+
+        $comment->setText($text);
+    }
+
+
+
+    public function removeAnnotationFromDocCommentString($commentString, $annotation)
+    {
+        $commentString = ($commentString instanceof String) ? $commentString : new String($commentString);
+
+        $filterFn = function (String $line) use ($annotation)
         {
-            $line = rtrim($line);
-        }
+            return !$line->regexMatch(',^\s*\*\s*' . preg_quote($annotation) . ',');
+        };
 
-        return implode("\n", $lines);
+        return $commentString
+            ->split("\n")
+            ->filter($filterFn)
+            ->join("\n")
+            ->toPrimitive();
     }
 
 

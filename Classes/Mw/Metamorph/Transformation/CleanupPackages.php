@@ -31,8 +31,7 @@ class CleanupPackages extends AbstractTransformation
             $packageKey = $packageMapping->getPackageKey();
             if ($this->packageManager->isPackageAvailable($packageKey))
             {
-                $this->packageManager->deletePackage($packageKey);
-                $this->log('PKG:<comment>%s</comment>: <fg=red>DELETED</fg=red>', [$packageKey]);
+                $this->log('PKG:<comment>%s</comment>: <fg=cyan>present</fg=cyan>', [$packageKey]);
             }
             else
             {
