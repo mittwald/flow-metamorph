@@ -41,20 +41,7 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor
     {
         if ($node->getDocComment())
         {
-            $text = $node->getDocComment()->getText();
-
-            foreach ($this->classMap->getClassMappings() as $classMapping)
-            {
-                $new = $classMapping->getNewClassName();
-                $old = $classMapping->getOldClassName();
-
-                if (strpos($text, $old) !== FALSE)
-                {
-                    $text = str_replace($old, $new, $text);
-                }
-            }
-
-            $node->getDocComment()->setText($text);
+            $this->replaceOldClassnamesInDocComment($node);
         }
 
         if ($node instanceof Node\Stmt\Namespace_)
@@ -63,63 +50,17 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor
         }
         elseif ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Interface_)
         {
-            $this->currentClassNode = $node;
-            $oldName                = $node->namespacedName->toString();
-
-            if ($this->classMap->hasClassMapping($oldName))
-            {
-                list($namespace, $relativeClassName) = $this->getNamespaceAndRelativeNameForOldClass($oldName);
-
-                $node->name           = new Node\Name($relativeClassName);
-                $node->namespacedName = new Node\Name($namespace . '\\' . $relativeClassName);
-
-                $this->newNamespace = new Node\Name($namespace);
-                return $node;
-            }
+            return $this->convertClassNameForOldClass($node);
         }
         elseif ($node instanceof Node\Name)
         {
-            $oldName = $node->toString();
-            if ($this->classMap->hasClassMapping($oldName))
-            {
-                list($namespace, $relativeClassName) = $this->getNamespaceAndRelativeNameForOldClass($oldName);
-                $fqcn = $namespace . '\\' . $relativeClassName;
-
-                if ($this->currentClassNode === NULL || $this->currentClassNode->namespacedName->toString() != $fqcn)
-                {
-                    $this->imports[$fqcn] = new Node\Name($fqcn);
-                }
-                return new Node\Name($relativeClassName);
-            }
+            return $this->convertClassNameForOldClassUsage($node);
         }
         elseif ($node instanceof Node\Scalar\String)
         {
-            $text = $node->value;
-            foreach ($this->classMap->getClassMappings() as $classMapping)
-            {
-                $old = $classMapping->getOldClassName();
-                $new = $classMapping->getNewClassName();
-                if (strpos($text, $old) !== FALSE)
-                {
-                    $text = str_replace($old, $new, $text);
-                }
-            }
-            $node->value = $text;
+            return $this->convertClassNameInString($node);
         }
         return NULL;
-    }
-
-
-
-    private function getNamespaceAndRelativeNameForOldClass($oldClass)
-    {
-        $newName           = $this->classMap->getClassMapping($oldClass)->getNewClassName();
-        $newNameComponents = explode('\\', $newName);
-
-        $relativeClassName = array_pop($newNameComponents);
-        $namespace         = implode('\\', $newNameComponents);
-
-        return [$namespace, $relativeClassName];
     }
 
 
@@ -156,6 +97,19 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor
 
 
 
+    private function getNamespaceAndRelativeNameForOldClass($oldClass)
+    {
+        $newName           = $this->classMap->getClassMapping($oldClass)->getNewClassName();
+        $newNameComponents = explode('\\', $newName);
+
+        $relativeClassName = array_pop($newNameComponents);
+        $namespace         = implode('\\', $newNameComponents);
+
+        return [$namespace, $relativeClassName];
+    }
+
+
+
     private function getUseStatements()
     {
         $uses = [];
@@ -167,6 +121,104 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor
         }
 
         return $uses;
+    }
+
+
+
+    /**
+     * @param Node $node
+     * @return array
+     */
+    public function replaceOldClassnamesInDocComment(Node $node)
+    {
+        $text = $node->getDocComment()->getText();
+
+        foreach ($this->classMap->getClassMappings() as $classMapping)
+        {
+            $new = $classMapping->getNewClassName();
+            $old = $classMapping->getOldClassName();
+
+            if (strpos($text, $old) !== FALSE)
+            {
+                $text = str_replace($old, $new, $text);
+            }
+        }
+
+        $node->getDocComment()->setText($text);
+    }
+
+
+
+    /**
+     * @param Node $node
+     * @return null|Node
+     */
+    private function convertClassNameForOldClass(Node $node)
+    {
+        if ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Interface_)
+        {
+            $this->currentClassNode = $node;
+
+            /** @noinspection PhpUndefinedFieldInspection */
+            $oldName = $node->namespacedName->toString();
+
+            if ($this->classMap->hasClassMapping($oldName))
+            {
+                list($namespace, $relativeClassName) = $this->getNamespaceAndRelativeNameForOldClass($oldName);
+
+                $node->name           = new Node\Name($relativeClassName);
+                $node->namespacedName = new Node\Name($namespace . '\\' . $relativeClassName);
+
+                $this->newNamespace = new Node\Name($namespace);
+                return $node;
+            }
+        }
+        return NULL;
+    }
+
+
+
+    /**
+     * @param Node\Name $node
+     * @return Node\Name
+     */
+    private function convertClassNameForOldClassUsage(Node\Name $node)
+    {
+        $oldName = $node->toString();
+        if ($this->classMap->hasClassMapping($oldName))
+        {
+            list($namespace, $relativeClassName) = $this->getNamespaceAndRelativeNameForOldClass($oldName);
+            $fqcn = $namespace . '\\' . $relativeClassName;
+
+            if ($this->currentClassNode === NULL || $this->currentClassNode->namespacedName->toString() != $fqcn)
+            {
+                $this->imports[$fqcn] = new Node\Name($fqcn);
+            }
+            return new Node\Name($relativeClassName);
+        }
+        return NULL;
+    }
+
+
+
+    /**
+     * @param Node\Scalar\String $node
+     * @return Node
+     */
+    private function convertClassNameInString(Node\Scalar\String $node)
+    {
+        $text = $node->value;
+        foreach ($this->classMap->getClassMappings() as $classMapping)
+        {
+            $old = $classMapping->getOldClassName();
+            $new = $classMapping->getNewClassName();
+            if (strpos($text, $old) !== FALSE)
+            {
+                $text = str_replace($old, $new, $text);
+            }
+        }
+        $node->value = $text;
+        return NULL;
     }
 
 
