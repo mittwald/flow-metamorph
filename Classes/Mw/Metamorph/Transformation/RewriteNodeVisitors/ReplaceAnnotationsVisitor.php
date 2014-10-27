@@ -32,7 +32,7 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor
     {
         // @formatter:off
         $this->annotationMapping = [
-            '/@inject/'                        => '@Flow\\Inject',
+            '/@inject/' => '@Flow\\Inject',
 
             '/@validate[ ]+(?:\$?(?<var>[a-zA-Z0-9_]+)[ ]+)?(?<type>[A-Za-z_\\\\]+)(?:\((?<options>.*)\))?/' => function(array $m)
             {

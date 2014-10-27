@@ -58,47 +58,11 @@ class AnalyzerVisitor extends NodeVisitorAbstract
         }
         elseif ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Interface_)
         {
-            $mapping = $this->mappingContainer->getClassMappingByNewClassName(
-                $this->currentNamespace . '\\' . $node->name
-            );
-
-            $classDef = new ClassDefinition($node->name, $this->currentNamespace);
-            $classDef->setClassMapping($mapping);
-
-            if (NULL !== $node->extends && [] !== $node->extends)
-            {
-                list($class, $namespace) = $this->splitNameIntoClassAndNamespace($node->extends);
-                $classDef->setParentClass(new ClassDefinitionDeferred($class, $namespace));
-            }
-
-            if ($node->implements)
-            {
-                foreach ($node->implements as $interface)
-                {
-                    list($class, $namespace) = $this->splitNameIntoClassAndNamespace($interface);
-                    $classDef->addInterface(new ClassDefinitionDeferred($class, $namespace));
-                }
-            }
-
-            if ($node instanceof Node\Stmt\Class_)
-            {
-                $classDef->setFact('isAbstract', $node->isAbstract());
-                $classDef->setFact('isFinal', $node->isFinal());
-            }
-
-            $this->currentClassDefinition = $classDef;
+            $this->currentClassDefinition = $this->generateClassDefinition($node);
         }
         elseif ($node instanceof Node\Stmt\Property)
         {
-            foreach($node->props as $subProp)
-            {
-                $property = new PropertyDefinition(
-                    $subProp->name,
-                    $subProp->getDocComment() ? $subProp->getDocComment()->getReformattedText() : NULL
-                );
-
-                $this->currentClassDefinition->addProperty($property);
-            }
+            $this->addPropertyDefinitionsToClass($node);
         }
     }
 
@@ -119,10 +83,67 @@ class AnalyzerVisitor extends NodeVisitorAbstract
     {
         $parts = $node->parts;
 
-        $class = array_pop($parts);
+        $class     = array_pop($parts);
         $namespace = implode('\\', $parts);
 
         return [$class, $namespace];
+    }
+
+
+
+    /**
+     * @param Node\Stmt\Class_ $node
+     * @return ClassDefinition
+     */
+    private function generateClassDefinition(Node\Stmt\Class_ $node)
+    {
+        $mapping = $this->mappingContainer->getClassMappingByNewClassName(
+            $this->currentNamespace . '\\' . $node->name
+        );
+
+        $classDef = new ClassDefinition($node->name, $this->currentNamespace);
+        $classDef->setClassMapping($mapping);
+
+        if (NULL !== $node->extends && [] !== $node->extends)
+        {
+            list($class, $namespace) = $this->splitNameIntoClassAndNamespace($node->extends);
+            $classDef->setParentClass(new ClassDefinitionDeferred($class, $namespace));
+        }
+
+        if ($node->implements)
+        {
+            foreach ($node->implements as $interface)
+            {
+                list($class, $namespace) = $this->splitNameIntoClassAndNamespace($interface);
+                $classDef->addInterface(new ClassDefinitionDeferred($class, $namespace));
+            }
+        }
+
+        if ($node instanceof Node\Stmt\Class_)
+        {
+            $classDef->setFact('isAbstract', $node->isAbstract());
+            $classDef->setFact('isFinal', $node->isFinal());
+        }
+        return $classDef;
+    }
+
+
+
+    /**
+     * @param Node\Stmt\Property $node
+     * @return void
+     */
+    private function addPropertyDefinitionsToClass(Node\Stmt\Property $node)
+    {
+        foreach ($node->props as $subProp)
+        {
+            $this->currentClassDefinition->addProperty(
+                new PropertyDefinition(
+                    $subProp->name,
+                    $subProp->getDocComment() ? $subProp->getDocComment()->getReformattedText() : NULL
+                )
+            );
+        }
     }
 
 

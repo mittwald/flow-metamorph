@@ -42,23 +42,10 @@ class InjectUtilitiesVisitor extends AbstractVisitor
     private $currentClass;
 
 
-//    /**
-//     * @var array
-//     */
-//    private $requiredImports;
-
-
     /**
      * @var array
      */
     private $requiredInjections;
-
-
-//    /**
-//     * @var \Mw\Metamorph\Transformation\Helper\Namespaces\ImportHelper
-//     * @Flow\Inject
-//     */
-//    protected $importHelper;
 
 
     /**
@@ -74,7 +61,6 @@ class InjectUtilitiesVisitor extends AbstractVisitor
         if ($node instanceof Node\Stmt\Namespace_)
         {
             $this->currentNamespace = $node;
-//            $this->requiredImports  = [];
         }
         else if ($node instanceof Node\Stmt\Class_)
         {
@@ -89,15 +75,7 @@ class InjectUtilitiesVisitor extends AbstractVisitor
     {
         if ($node instanceof Node\Stmt\Namespace_)
         {
-//            foreach ($this->requiredImports as $alias => $namespace)
-//            {
-//                $node = $this->importHelper->importNamespaceIntoOtherNamespace($node, $namespace, $alias);
-//            }
-
             $this->currentNamespace = NULL;
-//            $this->requiredImports  = [];
-//
-//            return $node;
         }
         else if ($node instanceof Node\Stmt\Class_)
         {
@@ -105,7 +83,6 @@ class InjectUtilitiesVisitor extends AbstractVisitor
             {
                 $node = $this->injectHelper->injectDependencyIntoClass($node, $class, $name);
 
-//                $this->requiredImports['Flow'] = 'TYPO3\\Flow\\Annotations';
                 $this->taskQueue->enqueue(
                     (new AddImportToClassTaskBuilder())
                         ->setTargetClassName($this->currentClass->namespacedName->toString())
