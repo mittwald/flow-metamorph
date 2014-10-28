@@ -57,6 +57,8 @@ class CompatibleMigrationVisitor extends AbstractMigrationVisitor
                 $propertyConfig = $this->currentTca['columns']["$columnName"]['config'];
                 $annotation     = $this->getAnnotationRendererForPropertyConfiguration($propertyConfig);
 
+                $this->addColumnAnnotationIfNecessary($propertyConfig, $columnName, $comment);
+
                 if (NULL !== $annotation)
                 {
                     if ($this->isTcaColumnManyToOneRelation($propertyConfig) && isset($propertyConfig['foreign_table']))
@@ -99,29 +101,7 @@ class CompatibleMigrationVisitor extends AbstractMigrationVisitor
 
                     if ($this->isTcaColumnManyToManyRelation($propertyConfig))
                     {
-                        if (isset($propertyConfig['MM']))
-                        {
-                            $joinTableAnnotation = new AnnotationRenderer('ORM', 'JoinTable');
-                            $joinTableAnnotation->addParameter('name', $propertyConfig['MM']);
-                            $joinTableAnnotation->addParameter(
-                                'joinColumns',
-                                [
-                                    (new AnnotationRenderer('ORM', 'JoinColumn'))
-                                        ->addParameter('name', 'uid_local')
-                                        ->addParameter('referencedColumnName', 'uid')
-                                ]
-                            );
-                            $joinTableAnnotation->addParameter(
-                                'inverseJoinColumns',
-                                [
-                                    (new AnnotationRenderer('ORM', 'JoinColumn'))
-                                        ->addParameter('name', 'uid_foreign')
-                                        ->addParameter('referencedColumnName', 'uid')
-                                ]
-                            );
-
-                            $this->commentHelper->addAnnotationToDocComment($comment, $joinTableAnnotation);
-                        }
+                        $this->configureJoinTableIfNecessary($propertyConfig, $comment);
                     }
 
                     if ($commentString->regexMatch('/@cascade\s+remove/'))
@@ -201,6 +181,52 @@ class CompatibleMigrationVisitor extends AbstractMigrationVisitor
 
             $comment = $this->getOrCreateNodeDocComment($node);
             $this->commentHelper->addAnnotationToDocComment($comment, $tableAnnotation);
+        }
+    }
+
+
+
+    /**
+     * @param $propertyConfig
+     * @param $comment
+     * @return mixed
+     */
+    protected function configureJoinTableIfNecessary($propertyConfig, $comment)
+    {
+        if (isset($propertyConfig['MM']))
+        {
+            $buildJoinColumnAnnotation = function ($name)
+            {
+                return
+                    (new AnnotationRenderer('ORM', 'JoinColumn'))
+                        ->addParameter('name', $name)
+                        ->addParameter('referencedColumnName', 'uid');
+            };
+
+            $joinTableAnnotation = new AnnotationRenderer('ORM', 'JoinTable');
+            $joinTableAnnotation->addParameter('name', $propertyConfig['MM']);
+            $joinTableAnnotation->addParameter('joinColumns', [$buildJoinColumnAnnotation('uid_local')]);
+            $joinTableAnnotation->addParameter('inverseJoinColumns', [$buildJoinColumnAnnotation('uid_foreign')]);
+
+            $this->commentHelper->addAnnotationToDocComment($comment, $joinTableAnnotation);
+        }
+    }
+
+
+
+    /**
+     * @param $propertyConfig
+     * @param $columnName
+     * @param $comment
+     */
+    private function addColumnAnnotationIfNecessary($propertyConfig, $columnName, $comment)
+    {
+        if (!$this->isTcaColumnOneToManyRelation($propertyConfig))
+        {
+            $columnAnnotation = new AnnotationRenderer('ORM', 'Column');
+            $columnAnnotation->addParameter('name', $columnName);
+
+            $this->commentHelper->addAnnotationToDocComment($comment, $columnAnnotation);
         }
     }
 
