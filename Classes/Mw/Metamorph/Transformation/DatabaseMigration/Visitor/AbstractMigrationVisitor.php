@@ -2,19 +2,26 @@
 namespace Mw\Metamorph\Transformation\DatabaseMigration\Visitor;
 
 
-use Helmich\Scalars\Types\ArrayList;
 use Helmich\Scalars\Types\String;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinition;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer;
+use Mw\Metamorph\Transformation\DatabaseMigration\Tca\MappingHelper;
 use Mw\Metamorph\Transformation\DatabaseMigration\Tca\Tca;
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
 use Mw\Metamorph\Transformation\Helper\Annotation\DocCommentModifier;
 use Mw\Metamorph\Transformation\Task\Builder\AddImportToClassTaskBuilder;
 use Mw\Metamorph\Transformation\Task\Builder\AddPropertyToClassTaskBuilder;
 use Mw\Metamorph\Transformation\Task\TaskQueue;
+use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
 
 
+/**
+ * Base class for database migration refactoring visitors.
+ *
+ * @package    Mw\Metamorph
+ * @subpackage Transformation\DatabaseMigration\Visitor
+ */
 class AbstractMigrationVisitor extends NodeVisitorAbstract
 {
 
@@ -52,7 +59,9 @@ class AbstractMigrationVisitor extends NodeVisitorAbstract
     protected $currentTca;
 
 
-    /** @var string */
+    /**
+     * @var string
+     */
     protected $currentTable;
 
 
@@ -62,44 +71,60 @@ class AbstractMigrationVisitor extends NodeVisitorAbstract
     protected $taskQueue;
 
 
+    /**
+     * @var MappingHelper
+     */
+    protected $mappingHelper;
+
+
 
     public function __construct(Tca $tca, TaskQueue $taskQueue)
     {
-        $this->tca       = $tca;
-        $this->taskQueue = $taskQueue;
+        $this->tca           = $tca;
+        $this->taskQueue     = $taskQueue;
+        $this->mappingHelper = new MappingHelper($tca);
     }
 
 
 
-    protected function getTcaForClass(String $newClassName, String $oldClassName, array &$tca, &$tableName)
+    public function enterNode(Node $node)
     {
-        $possibleNames = $this->getPossibleTableNamesForClass($newClassName, $oldClassName);
-        foreach ($possibleNames as $name)
+        if ($node instanceof Node\Stmt\Class_)
         {
-            if (isset($this->tca[$name]))
+            $newClassName    = $node->namespacedName->toString();
+            $classDefinition = $this->classDefinitionContainer->get($newClassName);
+            $classMapping    = $classDefinition->getClassMapping();
+
+            if (NULL === $classMapping)
             {
-                $tca       = $this->tca[$name];
-                $tableName = $name;
+                throw new \Exception('No class mapping found for class ' . $newClassName);
             }
-        }
-    }
 
-
-
-    protected function getClassForTable($tableName)
-    {
-        $filterFunction = function (ClassDefinition $definition) use ($tableName)
-        {
-            $possibleTableNames = $this->getPossibleTableNamesForClass(
-                new String($definition->getFullyQualifiedName()),
-                new String($definition->getClassMapping()->getOldClassName())
+            $this->currentTca = [];
+            $this->mappingHelper->getTcaForClass(
+                new String($newClassName),
+                new String($classMapping->getOldClassName()),
+                $this->currentTca,
+                $this->currentTable
             );
 
-            return $possibleTableNames->contains($tableName);
-        };
+            $this->currentClass = $classDefinition;
 
-        $classDefinitions = $this->classDefinitionContainer->findByFilter($filterFunction);
-        return (count($classDefinitions) > 0) ? $classDefinitions[0] : NULL;
+            // Remove any kind of domain object annotation when no database
+            // mapping is configured for a class.
+            if ($this->currentTable === NULL && $this->currentClass->getFact('isAbstract') === FALSE)
+            {
+                $comment = $node->getDocComment();
+                if (NULL != $comment)
+                {
+                    $this->commentHelper->removeAnnotationFromDocComment($comment, '@Flow\\Entity');
+                    $this->commentHelper->removeAnnotationFromDocComment($comment, '@Flow\\ValueObject');
+                }
+                return $node;
+            }
+        }
+
+        return NULL;
     }
 
 
@@ -188,42 +213,6 @@ class AbstractMigrationVisitor extends NodeVisitorAbstract
 
 
 
-    protected function propertyToColumnName(String $propertyName)
-    {
-        return $propertyName->regexReplace(',([A-Z]),', '_$1')->toLower()->strip('_');
-    }
-
-
-
-    protected function columnNameToProperty(String $columnName)
-    {
-        return $columnName
-            ->split('_')
-            ->mapWithKey(function ($index, String $part) { return $index === 0 ? $part : $part->toCamelCase(); })
-            ->join('');
-    }
-
-
-
-    /**
-     * @param \Helmich\Scalars\Types\String $newClassName
-     * @param \Helmich\Scalars\Types\String $oldClassName
-     * @return ArrayList
-     */
-    protected function getPossibleTableNamesForClass(String $newClassName, String $oldClassName)
-    {
-        return new ArrayList(
-            [
-                $newClassName->toLower()->replace('\\', '_'),
-                $newClassName->toLower()->split('\\')->set(0, 'tx')->join('_'),
-                $oldClassName->toLower()->replace('\\', '_'),
-                $oldClassName->toLower()->split('\\')->set(0, 'tx')->join('_')
-            ]
-        );
-    }
-
-
-
     /**
      * @param $propertyName
      * @param $propertyConfig
@@ -231,7 +220,7 @@ class AbstractMigrationVisitor extends NodeVisitorAbstract
      */
     protected function introduceInversePropertyIfNecessary($propertyName, $propertyConfig, $foreignPropertyName)
     {
-        $targetClass = $this->getClassForTable($propertyConfig['foreign_table']);
+        $targetClass = $this->mappingHelper->getClassForTable($propertyConfig['foreign_table']);
         if (!$targetClass->hasProperty($foreignPropertyName))
         {
             $inverseAnnotation = new AnnotationRenderer('ORM', 'ManyToOne');
@@ -255,5 +244,32 @@ class AbstractMigrationVisitor extends NodeVisitorAbstract
                     ->buildTask()
             );
         }
+    }
+
+
+
+    /**
+     * @param $propertyConfig
+     * @return AnnotationRenderer
+     */
+    protected function getAnnotationRendererForPropertyConfiguration($propertyConfig)
+    {
+        if ($this->isTcaColumnManyToManyRelation($propertyConfig))
+        {
+            return new AnnotationRenderer('ORM', 'ManyToMany');
+        }
+        else if ($this->isTcaColumnManyToOneRelation($propertyConfig))
+        {
+            return new AnnotationRenderer('ORM', 'ManyToOne');
+        }
+        else if ($this->isTcaColumnOneToManyRelation($propertyConfig))
+        {
+            return new AnnotationRenderer('ORM', 'OneToMany');
+        }
+        else if ($this->isTcaColumnOneToOneRelation($propertyConfig))
+        {
+            return new AnnotationRenderer('ORM', 'OneToOne');
+        }
+        return NULL;
     }
 }

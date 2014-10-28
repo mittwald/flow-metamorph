@@ -2,64 +2,17 @@
 namespace Mw\Metamorph\Transformation\DatabaseMigration\Visitor;
 
 
-use Helmich\Scalars\Types\ArrayList;
 use Helmich\Scalars\Types\String;
-use Mw\Metamorph\Domain\Model\Definition\ClassDefinition;
-use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer;
-use Mw\Metamorph\Transformation\DatabaseMigration\Tca\Tca;
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
-use Mw\Metamorph\Transformation\Helper\Annotation\DocCommentModifier;
 use Mw\Metamorph\Transformation\Task\Builder\AddImportToClassTaskBuilder;
-use Mw\Metamorph\Transformation\Task\Builder\AddPropertyToClassTaskBuilder;
-use Mw\Metamorph\Transformation\Task\TaskQueue;
 use PhpParser\Comment\Doc;
 use PhpParser\Node;
-use PhpParser\NodeVisitorAbstract;
 use TYPO3\Flow\Annotations as Flow;
 
 
 class FullMigrationVisitor extends AbstractMigrationVisitor
 {
 
-
-
-    public function enterNode(Node $node)
-    {
-        if ($node instanceof Node\Stmt\Class_)
-        {
-            $newClassName    = $node->namespacedName->toString();
-            $classDefinition = $this->classDefinitionContainer->get($newClassName);
-            $classMapping    = $classDefinition->getClassMapping();
-
-            if (NULL === $classMapping)
-            {
-                throw new \Exception('No class mapping found for class ' . $newClassName);
-            }
-
-            $this->currentTca = [];
-            $this->getTcaForClass(
-                new String($newClassName),
-                new String($classMapping->getOldClassName()),
-                $this->currentTca,
-                $this->currentTable
-            );
-
-            $this->currentClass = $classDefinition;
-
-            if ($this->currentTable === NULL && $this->currentClass->getFact('isAbstract') === FALSE)
-            {
-                $comment = $node->getDocComment();
-                if (NULL != $comment)
-                {
-                    $this->commentHelper->removeAnnotationFromDocComment($comment, '@Flow\\Entity');
-                    $this->commentHelper->removeAnnotationFromDocComment($comment, '@Flow\\ValueObject');
-                }
-                return $node;
-            }
-        }
-
-        return NULL;
-    }
 
 
 
@@ -93,7 +46,7 @@ class FullMigrationVisitor extends AbstractMigrationVisitor
             foreach ($node->props as $propertyNode)
             {
                 $propertyName = new String($propertyNode->name);
-                $columnName = $this->propertyToColumnName($propertyName);
+                $columnName   = $this->mappingHelper->propertyToColumnName($propertyName);
 
                 if (!isset($this->currentTca['columns']["$columnName"]))
                 {
@@ -131,7 +84,9 @@ class FullMigrationVisitor extends AbstractMigrationVisitor
 
                     if ($this->isTcaColumnOneToManyRelation($propertyConfig) && isset($propertyConfig['foreign_field']))
                     {
-                        $foreignPropertyName = $this->columnNameToProperty(new String($propertyConfig['foreign_field']));
+                        $foreignPropertyName = $this->mappingHelper->columnNameToProperty(
+                            new String($propertyConfig['foreign_field'])
+                        );
                         $annotation->addParameter('mappedBy', "$foreignPropertyName");
 
                         $this->introduceInversePropertyIfNecessary(
@@ -168,31 +123,6 @@ class FullMigrationVisitor extends AbstractMigrationVisitor
     }
 
 
-
-    /**
-     * @param $propertyConfig
-     * @return AnnotationRenderer
-     */
-    private function getAnnotationRendererForPropertyConfiguration($propertyConfig)
-    {
-        if ($this->isTcaColumnManyToManyRelation($propertyConfig))
-        {
-            return new AnnotationRenderer('ORM', 'ManyToMany');
-        }
-        else if ($this->isTcaColumnManyToOneRelation($propertyConfig))
-        {
-            return new AnnotationRenderer('ORM', 'ManyToOne');
-        }
-        else if ($this->isTcaColumnOneToManyRelation($propertyConfig))
-        {
-            return new AnnotationRenderer('ORM', 'OneToMany');
-        }
-        else if ($this->isTcaColumnOneToOneRelation($propertyConfig))
-        {
-            return new AnnotationRenderer('ORM', 'OneToOne');
-        }
-        return NULL;
-    }
 
 
 
