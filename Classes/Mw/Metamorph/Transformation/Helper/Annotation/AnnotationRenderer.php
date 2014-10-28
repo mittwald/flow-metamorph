@@ -108,6 +108,10 @@ class AnnotationRenderer
             }
             return '{' . implode(', ', $expressions) . '}';
         }
+        else if ($value instanceof AnnotationRenderer)
+        {
+            return $value->render();
+        }
 
         // Fallback: Force-typecast to string.
         return '' . $value;
