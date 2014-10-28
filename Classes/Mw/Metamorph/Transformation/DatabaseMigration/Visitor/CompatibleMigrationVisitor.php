@@ -26,11 +26,12 @@ class CompatibleMigrationVisitor extends AbstractMigrationVisitor
     {
         if ($node instanceof Node\Stmt\Class_)
         {
+            $this->addUidPropertyToClass($node);
+            $this->addTableAnnotationToClass($node);
+
             $this->currentClass = NULL;
             $this->currentTca   = NULL;
             $this->currentTable = NULL;
-
-            $this->addUidPropertyToClass($node);
         }
         elseif ($node instanceof Node\Stmt\Property && $this->currentTable !== NULL)
         {
@@ -41,7 +42,7 @@ class CompatibleMigrationVisitor extends AbstractMigrationVisitor
 
             $newProperties = [];
 
-            $comment = $this->getOrCreateNodeDocComment($node);
+            $comment       = $this->getOrCreateNodeDocComment($node);
             $commentString = new String($comment->getText());
 
             foreach ($node->props as $propertyNode)
@@ -157,6 +158,23 @@ class CompatibleMigrationVisitor extends AbstractMigrationVisitor
                 ->setNamespaceAlias('ORM')
                 ->buildTask()
         );
+    }
+
+
+
+    /**
+     * @param Node\Stmt\Class_ $node
+     */
+    protected function addTableAnnotationToClass(Node\Stmt\Class_ $node)
+    {
+        if (NULL !== $this->currentTable && FALSE === $node->isAbstract())
+        {
+            $tableAnnotation = new AnnotationRenderer('ORM', 'Table');
+            $tableAnnotation->addParameter('name', $this->currentTable);
+
+            $comment = $this->getOrCreateNodeDocComment($node);
+            $this->commentHelper->addAnnotationToDocComment($comment, $tableAnnotation);
+        }
     }
 
 
