@@ -6,7 +6,6 @@ use Helmich\Scalars\Types\String;
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
 use Mw\Metamorph\Transformation\Task\Builder\AddImportToClassTaskBuilder;
 use Mw\Metamorph\Transformation\Task\Builder\AddPropertyToClassTaskBuilder;
-use PhpParser\Comment\Doc;
 use PhpParser\Node;
 
 
@@ -96,6 +95,33 @@ class CompatibleMigrationVisitor extends AbstractMigrationVisitor
                             $propertyConfig,
                             $foreignPropertyName
                         );
+                    }
+
+                    if ($this->isTcaColumnManyToManyRelation($propertyConfig))
+                    {
+                        if (isset($propertyConfig['MM']))
+                        {
+                            $joinTableAnnotation = new AnnotationRenderer('ORM', 'JoinTable');
+                            $joinTableAnnotation->addParameter('name', $propertyConfig['MM']);
+                            $joinTableAnnotation->addParameter(
+                                'joinColumns',
+                                [
+                                    (new AnnotationRenderer('ORM', 'JoinColumn'))
+                                        ->addParameter('name', 'uid_local')
+                                        ->addParameter('referencedColumnName', 'uid')
+                                ]
+                            );
+                            $joinTableAnnotation->addParameter(
+                                'inverseJoinColumns',
+                                [
+                                    (new AnnotationRenderer('ORM', 'JoinColumn'))
+                                        ->addParameter('name', 'uid_foreign')
+                                        ->addParameter('referencedColumnName', 'uid')
+                                ]
+                            );
+
+                            $this->commentHelper->addAnnotationToDocComment($comment, $joinTableAnnotation);
+                        }
                     }
 
                     if ($commentString->regexMatch('/@cascade\s+remove/'))
