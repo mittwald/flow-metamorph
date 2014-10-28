@@ -3,7 +3,6 @@ namespace Mw\Metamorph\Transformation\DatabaseMigration\Visitor;
 
 
 use Helmich\Scalars\Types\String;
-use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
 use Mw\Metamorph\Transformation\Task\Builder\AddImportToClassTaskBuilder;
 use PhpParser\Comment\Doc;
 use PhpParser\Node;
@@ -12,7 +11,6 @@ use TYPO3\Flow\Annotations as Flow;
 
 class FullMigrationVisitor extends AbstractMigrationVisitor
 {
-
 
 
 
@@ -121,8 +119,6 @@ class FullMigrationVisitor extends AbstractMigrationVisitor
 
         return NULL;
     }
-
-
 
 
 

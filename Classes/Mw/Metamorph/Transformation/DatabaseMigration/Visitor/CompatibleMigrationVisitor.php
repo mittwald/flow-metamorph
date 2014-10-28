@@ -2,9 +2,12 @@
 namespace Mw\Metamorph\Transformation\DatabaseMigration\Visitor;
 
 
-use Mw\Metamorph\Transformation\DatabaseMigration\Tca\Tca;
-use Mw\Metamorph\Transformation\Task\TaskQueue;
-use PhpParser\NodeVisitorAbstract;
+use Helmich\Scalars\Types\String;
+use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
+use Mw\Metamorph\Transformation\Task\Builder\AddImportToClassTaskBuilder;
+use Mw\Metamorph\Transformation\Task\Builder\AddPropertyToClassTaskBuilder;
+use PhpParser\Comment\Doc;
+use PhpParser\Node;
 
 
 /**
@@ -14,24 +17,153 @@ use PhpParser\NodeVisitorAbstract;
  * @package    Mw\Metamorph
  * @subpackage Transformation\DatabaseMigration\Visitor
  */
-class CompatibleMigrationVisitor extends NodeVisitorAbstract
+class CompatibleMigrationVisitor extends AbstractMigrationVisitor
 {
 
 
 
-    /** @var Tca */
-    private $tca;
-
-
-    /** @var TaskQueue */
-    private $taskQueue;
-
-
-
-    public function __construct(Tca $tca, TaskQueue $queue)
+    public function leaveNode(Node $node)
     {
-        $this->tca       = $tca;
-        $this->taskQueue = $queue;
+        if ($node instanceof Node\Stmt\Class_)
+        {
+            $this->currentClass = NULL;
+            $this->currentTca   = NULL;
+            $this->currentTable = NULL;
+
+            $this->addUidPropertyToClass($node);
+        }
+        elseif ($node instanceof Node\Stmt\Property && $this->currentTable !== NULL)
+        {
+            if (NULL === $this->currentTca)
+            {
+                return NULL;
+            }
+
+            $newProperties = [];
+
+            $comment = $node->getDocComment();
+            if (NULL === $comment)
+            {
+                $comments   = $node->getAttribute('comments', []);
+                $comments[] = $comment = new Doc("/**\n */");
+
+                $node->setAttribute('comments', $comments);
+            }
+            $commentString = new String($comment->getText());
+
+            foreach ($node->props as $propertyNode)
+            {
+                $propertyName = new String($propertyNode->name);
+                $columnName   = $this->mappingHelper->propertyToColumnName($propertyName);
+
+                if (!isset($this->currentTca['columns']["$columnName"]))
+                {
+                    return NULL;
+                }
+
+                $propertyConfig = $this->currentTca['columns']["$columnName"]['config'];
+                $annotation     = $this->getAnnotationRendererForPropertyConfiguration($propertyConfig);
+
+                if (NULL !== $annotation)
+                {
+                    if ($this->isTcaColumnManyToOneRelation($propertyConfig) && isset($propertyConfig['foreign_table']))
+                    {
+                        $foreignTable = $propertyConfig['foreign_table'];
+                        $inverse      = NULL;
+
+                        foreach ((array)$this->tca[$foreignTable]['columns'] as $foreignColumnName => $config)
+                        {
+                            if (
+                                isset($config['config']['foreign_field']) &&
+                                $config['config']['foreign_field'] == $columnName &&
+                                $config['config']['foreign_table'] == $this->currentTable
+                            )
+                            {
+                                $inverse = $foreignColumnName;
+                                break;
+                            }
+                        }
+
+                        if (NULL !== $inverse)
+                        {
+                            $annotation->addParameter('inversedBy', $inverse);
+                        }
+                    }
+
+                    if ($this->isTcaColumnOneToManyRelation($propertyConfig) && isset($propertyConfig['foreign_field']))
+                    {
+                        $foreignPropertyName = $this->mappingHelper->columnNameToProperty(
+                            new String($propertyConfig['foreign_field'])
+                        );
+                        $annotation->addParameter('mappedBy', "$foreignPropertyName");
+
+                        $this->introduceInversePropertyIfNecessary(
+                            $propertyName,
+                            $propertyConfig,
+                            $foreignPropertyName
+                        );
+                    }
+
+                    if ($commentString->regexMatch('/@cascade\s+remove/'))
+                    {
+                        $this->commentHelper->removeAnnotationFromDocComment($comment, '@cascade');
+                        $annotation->addParameter('cascade', ['remove']);
+                    }
+
+                    $this->commentHelper->addAnnotationToDocComment($comment, $annotation);
+                    $this->taskQueue->enqueue(
+                        (new AddImportToClassTaskBuilder())
+                            ->setTargetClassName($this->currentClass->getFullyQualifiedName())
+                            ->setImport('Doctrine\\ORM\\Mapping')
+                            ->setNamespaceAlias('ORM')
+                            ->buildTask()
+                    );
+                }
+
+                $innerProperty   = clone $propertyNode;
+                $newProperties[] = new Node\Stmt\Property($node->type, [$innerProperty], $node->getAttributes());
+            }
+
+            return $newProperties;
+        }
+
+        return NULL;
+    }
+
+
+
+    /**
+     * @param Node\Stmt\Class_ $classNode
+     */
+    protected function addUidPropertyToClass(Node\Stmt\Class_ $classNode)
+    {
+        $targetClassName = $classNode->namespacedName->toString();
+        $this->taskQueue->enqueue(
+            (new AddPropertyToClassTaskBuilder())
+                ->setTargetClassName($targetClassName)
+                ->setPropertyName('uid')
+                ->setPropertyType('int')
+                ->setProtected()
+                ->addAnnotation(new AnnotationRenderer('Flow', 'Identity'))
+                ->addAnnotation(new AnnotationRenderer('ORM', 'GeneratedValue'))
+                ->buildTask()
+        );
+
+        $this->taskQueue->enqueue(
+            (new AddImportToClassTaskBuilder())
+                ->setTargetClassName($targetClassName)
+                ->setImport('TYPO3\\Flow\\Annotations')
+                ->setNamespaceAlias('Flow')
+                ->buildTask()
+        );
+
+        $this->taskQueue->enqueue(
+            (new AddImportToClassTaskBuilder())
+                ->setTargetClassName($targetClassName)
+                ->setImport('Doctrine\\ORM\\Mapping')
+                ->setNamespaceAlias('ORM')
+                ->buildTask()
+        );
     }
 
 
