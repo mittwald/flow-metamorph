@@ -92,11 +92,16 @@ class AnalyzerVisitor extends NodeVisitorAbstract
 
 
     /**
-     * @param Node\Stmt\Class_ $node
+     * @param Node $node
      * @return ClassDefinition
      */
-    private function generateClassDefinition(Node\Stmt\Class_ $node)
+    private function generateClassDefinition(Node $node)
     {
+        if (!($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Interface_))
+        {
+            throw new \InvalidArgumentException('$node must be a class or interface node!');
+        }
+
         $mapping = $this->mappingContainer->getClassMappingByNewClassName(
             $this->currentNamespace . '\\' . $node->name
         );
@@ -110,17 +115,17 @@ class AnalyzerVisitor extends NodeVisitorAbstract
             $classDef->setParentClass(new ClassDefinitionDeferred($class, $namespace));
         }
 
-        if ($node->implements)
-        {
-            foreach ($node->implements as $interface)
-            {
-                list($class, $namespace) = $this->splitNameIntoClassAndNamespace($interface);
-                $classDef->addInterface(new ClassDefinitionDeferred($class, $namespace));
-            }
-        }
-
         if ($node instanceof Node\Stmt\Class_)
         {
+            if ($node->implements)
+            {
+                foreach ($node->implements as $interface)
+                {
+                    list($class, $namespace) = $this->splitNameIntoClassAndNamespace($interface);
+                    $classDef->addInterface(new ClassDefinitionDeferred($class, $namespace));
+                }
+            }
+
             $classDef->setFact('isAbstract', $node->isAbstract());
             $classDef->setFact('isFinal', $node->isFinal());
         }
