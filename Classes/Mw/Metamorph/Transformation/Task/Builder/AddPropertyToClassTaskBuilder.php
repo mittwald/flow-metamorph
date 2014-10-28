@@ -2,6 +2,7 @@
 namespace Mw\Metamorph\Transformation\Task\Builder;
 
 
+use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
 use Mw\Metamorph\Transformation\Task\AddPropertyToClassTask;
 
 class AddPropertyToClassTaskBuilder
@@ -31,11 +32,16 @@ class AddPropertyToClassTaskBuilder
 
 
     /**
-     * @param string $propertyAnnotation
+     * @param string|AnnotationRenderer $propertyAnnotation
      * @return self
      */
     public function addAnnotation($propertyAnnotation)
     {
+        if ($propertyAnnotation instanceof AnnotationRenderer)
+        {
+            $propertyAnnotation = $propertyAnnotation->render();
+        }
+
         $this->propertyAnnotations[] = $propertyAnnotation;
         return $this;
     }
