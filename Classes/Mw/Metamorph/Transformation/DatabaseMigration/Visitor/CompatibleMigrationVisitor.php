@@ -140,6 +140,7 @@ class CompatibleMigrationVisitor extends AbstractMigrationVisitor
                 ->setProtected()
                 ->addAnnotation(new AnnotationRenderer('Flow', 'Identity'))
                 ->addAnnotation(new AnnotationRenderer('ORM', 'GeneratedValue'))
+                ->addAnnotation(new AnnotationRenderer('ORM', 'Id'))
                 ->buildTask()
         );
 
