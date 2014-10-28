@@ -12,6 +12,7 @@ use Mw\Metamorph\Transformation\Helper\Annotation\DocCommentModifier;
 use Mw\Metamorph\Transformation\Task\Builder\AddImportToClassTaskBuilder;
 use Mw\Metamorph\Transformation\Task\Builder\AddPropertyToClassTaskBuilder;
 use Mw\Metamorph\Transformation\Task\TaskQueue;
+use PhpParser\Comment\Doc;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
 use TYPO3\Flow\Annotations as Flow;
@@ -272,5 +273,25 @@ class AbstractMigrationVisitor extends NodeVisitorAbstract
             return new AnnotationRenderer('ORM', 'OneToOne');
         }
         return NULL;
+    }
+
+
+
+    /**
+     * @param Node $node
+     * @return Doc
+     */
+    protected function getOrCreateNodeDocComment(Node $node)
+    {
+        $comment = $node->getDocComment();
+        if (NULL === $comment)
+        {
+            $comments   = $node->getAttribute('comments', []);
+            $comments[] = $comment = new Doc("/**\n */");
+
+            $node->setAttribute('comments', $comments);
+            return $comment;
+        }
+        return $comment;
     }
 }

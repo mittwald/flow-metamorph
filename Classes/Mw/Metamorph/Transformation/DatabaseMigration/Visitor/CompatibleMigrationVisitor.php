@@ -41,14 +41,7 @@ class CompatibleMigrationVisitor extends AbstractMigrationVisitor
 
             $newProperties = [];
 
-            $comment = $node->getDocComment();
-            if (NULL === $comment)
-            {
-                $comments   = $node->getAttribute('comments', []);
-                $comments[] = $comment = new Doc("/**\n */");
-
-                $node->setAttribute('comments', $comments);
-            }
+            $comment = $this->getOrCreateNodeDocComment($node);
             $commentString = new String($comment->getText());
 
             foreach ($node->props as $propertyNode)
