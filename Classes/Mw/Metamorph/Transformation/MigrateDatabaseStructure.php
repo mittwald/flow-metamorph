@@ -4,6 +4,7 @@ namespace Mw\Metamorph\Transformation;
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
+use Mw\Metamorph\Transformation\DatabaseMigration\Strategy\CompatibleMigrationStrategy;
 use Mw\Metamorph\Transformation\DatabaseMigration\Strategy\FullMigrationStrategy;
 use Mw\Metamorph\Transformation\DatabaseMigration\Strategy\MigrationStrategyInterface;
 use Mw\Metamorph\Transformation\Task\Queue;
@@ -26,7 +27,7 @@ class MigrateDatabaseStructure extends AbstractTransformation
                 $migrator = new FullMigrationStrategy();
                 break;
             case MorphConfiguration::TABLE_STRUCTURE_KEEP:
-                $migrator = FALSE;
+                $migrator = new CompatibleMigrationStrategy();
                 break;
             default:
                 return;
