@@ -137,34 +137,37 @@ class CompatibleMigrationVisitor extends AbstractMigrationVisitor
      */
     protected function addUidPropertyToClass(Node\Stmt\Class_ $classNode)
     {
-        $targetClassName = $classNode->namespacedName->toString();
-        $this->taskQueue->enqueue(
-            (new AddPropertyToClassTaskBuilder())
-                ->setTargetClassName($targetClassName)
-                ->setPropertyName('uid')
-                ->setPropertyType('int')
-                ->setProtected()
-                ->addAnnotation(new AnnotationRenderer('Flow', 'Identity'))
-                ->addAnnotation(new AnnotationRenderer('ORM', 'GeneratedValue'))
-                ->addAnnotation(new AnnotationRenderer('ORM', 'Id'))
-                ->buildTask()
-        );
+        if (TRUE == $this->currentClass->getFact('isEntity'))
+        {
+            $targetClassName = $classNode->namespacedName->toString();
+            $this->taskQueue->enqueue(
+                (new AddPropertyToClassTaskBuilder())
+                    ->setTargetClassName($targetClassName)
+                    ->setPropertyName('uid')
+                    ->setPropertyType('int')
+                    ->setProtected()
+                    ->addAnnotation(new AnnotationRenderer('Flow', 'Identity'))
+                    ->addAnnotation(new AnnotationRenderer('ORM', 'GeneratedValue'))
+                    ->addAnnotation(new AnnotationRenderer('ORM', 'Id'))
+                    ->buildTask()
+            );
 
-        $this->taskQueue->enqueue(
-            (new AddImportToClassTaskBuilder())
-                ->setTargetClassName($targetClassName)
-                ->setImport('TYPO3\\Flow\\Annotations')
-                ->setNamespaceAlias('Flow')
-                ->buildTask()
-        );
+            $this->taskQueue->enqueue(
+                (new AddImportToClassTaskBuilder())
+                    ->setTargetClassName($targetClassName)
+                    ->setImport('TYPO3\\Flow\\Annotations')
+                    ->setNamespaceAlias('Flow')
+                    ->buildTask()
+            );
 
-        $this->taskQueue->enqueue(
-            (new AddImportToClassTaskBuilder())
-                ->setTargetClassName($targetClassName)
-                ->setImport('Doctrine\\ORM\\Mapping')
-                ->setNamespaceAlias('ORM')
-                ->buildTask()
-        );
+            $this->taskQueue->enqueue(
+                (new AddImportToClassTaskBuilder())
+                    ->setTargetClassName($targetClassName)
+                    ->setImport('Doctrine\\ORM\\Mapping')
+                    ->setNamespaceAlias('ORM')
+                    ->buildTask()
+            );
+        }
     }
 
 
