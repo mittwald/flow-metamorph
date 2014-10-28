@@ -14,6 +14,7 @@ use Mw\Metamorph\Transformation\Task\Builder\AddPropertyToClassTaskBuilder;
 use Mw\Metamorph\Transformation\Task\TaskQueue;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
+use TYPO3\Flow\Annotations as Flow;
 
 
 /**
