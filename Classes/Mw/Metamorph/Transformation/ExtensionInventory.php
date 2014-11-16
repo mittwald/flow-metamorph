@@ -115,8 +115,6 @@ class ExtensionInventory extends AbstractTransformation
             $authors      = $trimExplode($conf['author']);
             $authorEmails = $trimExplode($conf['author_email']);
 
-            $authors->dump();
-
             for ($i = 0; $i < $authors->length(); $i++)
             {
                 $packageMapping->addAuthor($authors[$i], isset($authorEmails[$i]) ? $authorEmails[$i] : NULL);
