@@ -2,6 +2,15 @@
 namespace Mw\Metamorph\Domain\Model\State;
 
 
+use TYPO3\Flow\Annotations as Flow;
+
+
+/**
+ * @package    Mw\Metamorph
+ * @subpackage Domain\Model\State
+ *
+ * @Flow\Scope("prototype")
+ */
 class ClassMappingContainer
 {
 
@@ -11,11 +20,16 @@ class ClassMappingContainer
 
 
 
-    /** @var ClassMapping[] */
+    /**
+     * @var array<\Mw\Metamorph\Domain\Model\State\ClassMapping>
+     */
     protected $classMappings = [];
 
 
 
+    /**
+     * @return ClassMapping[]
+     */
     public function getClassMappings()
     {
         return $this->classMappings;
@@ -34,7 +48,7 @@ class ClassMappingContainer
     {
         if (FALSE === $this->hasClassMapping($classMapping->getOldClassName()))
         {
-            $this->reviewed = FALSE;
+            $this->reviewed        = FALSE;
             $this->classMappings[] = $classMapping;
         }
     }

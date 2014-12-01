@@ -34,7 +34,6 @@ class CreateClasses extends AbstractTransformation
     public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
         $classMappingContainer = $configuration->getClassMappingContainer();
-        $classMappingContainer->assertReviewed();
         $packageClassCount = [];
 
         foreach ($classMappingContainer->getClassMappings() as $classMapping)

@@ -2,6 +2,15 @@
 namespace Mw\Metamorph\Domain\Model\State;
 
 
+use TYPO3\Flow\Annotations as Flow;
+
+
+/**
+ * @package    Mw\Metamorph
+ * @subpackage Domain\Model\State
+ *
+ * @Flow\Scope("prototype")
+ */
 class ClassMapping
 {
 
@@ -13,21 +22,44 @@ class ClassMapping
     const ACTION_IGNORE = 'IGNORE';
 
 
+    /**
+     * @var string
+     * @Flow\Validate(type="NotEmpty")
+     */
     protected $sourceFile;
 
 
+    /**
+     * @var string
+     * @Flow\Validate(type="NotEmpty")
+     */
     protected $oldClassName;
 
 
+    /**
+     * @var string
+     * @Flow\Validate(type="NotEmpty")
+     */
     protected $newClassName;
 
 
+    /**
+     * @var string
+     * @Flow\Validate(type="NotEmpty")
+     */
     protected $action = self::ACTION_MORPH;
 
 
+    /**
+     * @var string
+     * @Flow\Validate(type="NotEmpty")
+     */
     protected $package;
 
 
+    /**
+     * @var string
+     */
     protected $targetFile;
 
 

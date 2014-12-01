@@ -2,14 +2,13 @@
 namespace Mw\Metamorph\Transformation;
 
 
-
+use Mw\Metamorph\Annotations as Metamorph;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Transformation\ClassInventory\ClassFinderVisitor;
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
@@ -21,6 +20,13 @@ use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Object\ObjectManagerInterface;
 
 
+/**
+ * @package    Mw\Metamorph
+ * @subpackage Transformation
+ *
+ * @Metamorph\SkipClassReview
+ * @Metamorph\SkipResourceReview
+ */
 class ClassInventory extends AbstractTransformation
 {
 
@@ -60,12 +66,9 @@ class ClassInventory extends AbstractTransformation
 
     public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
-        $packageMappingContainer = $configuration->getPackageMappingContainer();
-        $packageMappingContainer->assertReviewed();
-
         $this->classMappingContainer = $configuration->getClassMappingContainer();
 
-        foreach ($packageMappingContainer->getPackageMappings() as $packageMapping)
+        foreach ($configuration->getPackageMappingContainer()->getPackageMappings() as $packageMapping)
         {
             if ($packageMapping->getAction() === PackageMapping::ACTION_MORPH)
             {

@@ -2,6 +2,7 @@
 namespace Mw\Metamorph\Transformation;
 
 
+use Mw\Metamorph\Annotations as Metamorph;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Model\State\ResourceMapping;
@@ -12,6 +13,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 
 
+/**
+ * @package    Mw\Metamorph
+ * @subpackage Transformation
+ *
+ * @Metamorph\SkipResourceReview
+ */
 class ResourceInventory extends AbstractTransformation
 {
 
@@ -35,8 +42,6 @@ class ResourceInventory extends AbstractTransformation
     public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
         $packageMappingContainer = $configuration->getPackageMappingContainer();
-        $packageMappingContainer->assertReviewed();
-
         $resourceMappingContainer = $configuration->getResourceMappingContainer();
 
         foreach ($packageMappingContainer->getPackageMappings() as $packageMapping)
@@ -45,7 +50,6 @@ class ResourceInventory extends AbstractTransformation
         }
 
         $this->log('Found <comment>' . count($resourceMappingContainer->getResourceMappings()) . '</comment> resource files.');
-
         $this->morphRepository->update($configuration);
     }
 
