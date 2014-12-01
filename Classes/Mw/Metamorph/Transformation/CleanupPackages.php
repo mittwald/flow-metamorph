@@ -23,10 +23,7 @@ class CleanupPackages extends AbstractTransformation
 
     public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
-        $packageMappingContainer = $configuration->getPackageMappingContainer();
-        $packageMappingContainer->assertReviewed();
-
-        foreach ($packageMappingContainer->getPackageMappings() as $packageMapping)
+        foreach ($configuration->getPackageMappingContainer()->getPackageMappings() as $packageMapping)
         {
             $packageKey = $packageMapping->getPackageKey();
             if ($this->packageManager->isPackageAvailable($packageKey))

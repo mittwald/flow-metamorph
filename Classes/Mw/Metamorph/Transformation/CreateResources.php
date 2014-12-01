@@ -26,13 +26,7 @@ class CreateResources extends AbstractTransformation
 
     public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
-        $resourceMappingContainer = $configuration->getResourceMappingContainer();
-        $resourceMappingContainer->assertReviewed();
-
-        $packageMappingContainer = $configuration->getPackageMappingContainer();
-        $packageMappingContainer->assertReviewed();
-
-        foreach ($resourceMappingContainer->getResourceMappings() as $resourceMapping)
+        foreach ($configuration->getResourceMappingContainer()->getResourceMappings() as $resourceMapping)
         {
             $package = $this->packageManager->getPackage($resourceMapping->getPackage());
 

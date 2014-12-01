@@ -2,6 +2,15 @@
 namespace Mw\Metamorph\Domain\Model\State;
 
 
+use TYPO3\Flow\Annotations as Flow;
+
+
+/**
+ * @package    Mw\Metamorph
+ * @subpackage Domain\Model\State
+ *
+ * @Flow\Scope("prototype")
+ */
 class ResourceMappingContainer
 {
 
@@ -11,7 +20,7 @@ class ResourceMappingContainer
 
 
     /**
-     * @var ResourceMapping[]
+     * @var array<\Mw\Metamorph\Domain\Model\State\ResourceMapping>
      */
     protected $resourceMappings = [];
 
@@ -38,6 +47,9 @@ class ResourceMappingContainer
 
 
 
+    /**
+     * @return ResourceMapping[]
+     */
     public function getResourceMappings()
     {
         return $this->resourceMappings;

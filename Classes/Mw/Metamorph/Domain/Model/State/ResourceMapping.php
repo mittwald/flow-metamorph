@@ -2,6 +2,15 @@
 namespace Mw\Metamorph\Domain\Model\State;
 
 
+use TYPO3\Flow\Annotations as Flow;
+
+
+/**
+ * @package    Mw\Metamorph
+ * @subpackage Domain\Model\State
+ *
+ * @Flow\Scope("prototype")
+ */
 class ResourceMapping
 {
 
@@ -9,18 +18,21 @@ class ResourceMapping
 
     /**
      * @var string
+     * @Flow\Validate(type="NotEmpty")
      */
     protected $sourceFile;
 
 
     /**
      * @var string
+     * @Flow\Validate(type="NotEmpty")
      */
     protected $targetFile;
 
 
     /**
      * @var string
+     * @Flow\Validate(type="NotEmpty")
      */
     protected $package;
 

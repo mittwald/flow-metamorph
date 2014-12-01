@@ -4,6 +4,7 @@ namespace Mw\Metamorph\Transformation;
 
 use Helmich\Scalars\Types\ArrayList;
 use Helmich\Scalars\Types\String;
+use Mw\Metamorph\Annotations as Metamorph;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
@@ -12,6 +13,15 @@ use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 
 
+/**
+ * @package    Mw\Metamorph
+ * @subpackage Transformation
+ *
+ * @Metamorph\SkipConfigurationValidation
+ * @Metamorph\SkipPackageReview
+ * @Metamorph\SkipClassReview
+ * @Metamorph\SkipResourceReview
+ */
 class ExtensionInventory extends AbstractTransformation
 {
 
@@ -106,9 +116,9 @@ class ExtensionInventory extends AbstractTransformation
             {
                 return (new String($list))
                     ->split(',')
-                    ->map(function(String $s) { return $s->strip(); })
-                    ->filter(function(String $s) { return $s->length() > 0; })
-                    ->map(function(String $s) { return $s->toPrimitive(); });
+                    ->map(function (String $s) { return $s->strip(); })
+                    ->filter(function (String $s) { return $s->length() > 0; })
+                    ->map(function (String $s) { return $s->toPrimitive(); });
             };
 
             /** @var ArrayList $authors */

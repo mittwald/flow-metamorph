@@ -45,8 +45,6 @@ class AnalyzeClasses extends AbstractTransformation
     public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
         $classMappingContainer = $configuration->getClassMappingContainer();
-        $classMappingContainer->assertReviewed();
-
         foreach ($classMappingContainer->getClassMappings() as $classMapping)
         {
             $this->analyzeClass($classMapping, $classMappingContainer);
