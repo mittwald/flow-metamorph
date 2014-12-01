@@ -6,11 +6,18 @@ use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 
 
+/**
+ * @package Mw\Metamorph
+ * @subpackage Domain\Model\State
+ */
 trait Reviewable
 {
 
 
 
+    /**
+     * @var bool
+     */
     protected $reviewed = TRUE;
 
 

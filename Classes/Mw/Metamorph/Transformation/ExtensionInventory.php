@@ -8,6 +8,9 @@ use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
+use Mw\Metamorph\Domain\Service\MorphValidationService;
+use Mw\Metamorph\Exception\HumanInterventionRequiredException;
+use Mw\Metamorph\View\ValidationResultRenderer;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 
@@ -22,6 +25,20 @@ class ExtensionInventory extends AbstractTransformation
      * @Flow\Inject
      */
     protected $morphRepository;
+
+
+    /**
+     * @var MorphValidationService
+     * @Flow\Inject
+     */
+    protected $morphValidationService;
+
+
+    /**
+     * @var ValidationResultRenderer
+     * @Flow\Inject
+     */
+    protected $validationResultRenderer;
 
 
 
@@ -73,6 +90,18 @@ class ExtensionInventory extends AbstractTransformation
         }
 
         $this->morphRepository->update($configuration);
+
+        $validationResults = $this->morphValidationService->validate($configuration);
+        if (NULL !== $validationResults && $validationResults->hasErrors())
+        {
+            throw new HumanInterventionRequiredException(
+                $this->validationResultRenderer->renderValidationResult(
+                    $validationResults,
+                    'The automatically generated morph configuration is invalid. Please fix the validation errors below manually.' . PHP_EOL .
+                    'Have a look at the files in the <comment>' . $configuration->getPackage()->getConfigurationPath() . 'Metamorph</comment> directory.'
+                )
+            );
+        }
     }
 
 
@@ -106,9 +135,9 @@ class ExtensionInventory extends AbstractTransformation
             {
                 return (new String($list))
                     ->split(',')
-                    ->map(function(String $s) { return $s->strip(); })
-                    ->filter(function(String $s) { return $s->length() > 0; })
-                    ->map(function(String $s) { return $s->toPrimitive(); });
+                    ->map(function (String $s) { return $s->strip(); })
+                    ->filter(function (String $s) { return $s->length() > 0; })
+                    ->map(function (String $s) { return $s->toPrimitive(); });
             };
 
             /** @var ArrayList $authors */

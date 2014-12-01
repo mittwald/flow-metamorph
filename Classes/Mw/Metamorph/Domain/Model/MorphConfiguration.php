@@ -8,8 +8,15 @@ use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use Mw\Metamorph\Domain\Model\State\PackageMappingContainer;
 use Mw\Metamorph\Domain\Model\State\ResourceMappingContainer;
 use TYPO3\Flow\Package\PackageInterface;
+use TYPO3\Flow\Annotations as Flow;
 
 
+/**
+ * @package Mw\Metamorph
+ * @subpackage Domain\Model
+ *
+ * @Flow\Scope("prototype")
+ */
 class MorphConfiguration
 {
 

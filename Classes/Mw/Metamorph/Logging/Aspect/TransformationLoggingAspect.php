@@ -2,6 +2,7 @@
 namespace Mw\Metamorph\Logging\Aspect;
 
 
+use Helmich\Scalars\Types\String;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Logging\LoggingWrapper;
@@ -94,11 +95,27 @@ class TransformationLoggingAspect
             $out->writeln('');
             $out->writeln('<question>  Human intervention required  </question>');
             $out->writeln('');
-            $out->writeFormatted($exception->getMessage(), 2);
+
+            $i = str_repeat(" ", 2);
+            (new String($exception->getMessage()))
+                ->split("\n")
+                ->map(function($l) use ($i, $out) { $out->writeln($i . $l); });
+
             $out->writeln('');
 
             throw $exception;
         }
+    }
+
+
+
+    private function indent($text, $indent=2)
+    {
+        $i = str_repeat(" ", $indent);
+        return (new String($text))
+            ->split("\n")
+            ->map(function($l) use ($i) { var_dump($i . $l); return $i . $l; })
+            ->join("\n");
     }
 
 

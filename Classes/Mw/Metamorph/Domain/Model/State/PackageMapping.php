@@ -2,6 +2,16 @@
 namespace Mw\Metamorph\Domain\Model\State;
 
 
+use Helmich\Scalars\Types\String;
+use TYPO3\Flow\Annotations as Flow;
+
+
+/**
+ * @package    Mw\Metamorph
+ * @subpackage Domain\Model\State
+ *
+ * @Flow\Scope("prototype")
+ */
 class PackageMapping
 {
 
@@ -13,24 +23,49 @@ class PackageMapping
     const ACTION_IGNORE = 'IGNORE';
 
 
+    /**
+     * @var string
+     * @Flow\Validate(type="NotEmpty")
+     */
     protected $extensionKey;
 
 
+    /**
+     * @var string
+     * @Flow\Validate(type="Mw\Metamorph\Domain\Validator\PackageKeyValidator")
+     */
     protected $packageKey;
 
 
+    /**
+     * @var string
+     * @Flow\Validate(type="NotEmpty")
+     */
     protected $filePath;
 
 
+    /**
+     * @var string
+     * @Flow\Validate(type="NotEmpty")
+     */
     protected $action = self::ACTION_MORPH;
 
 
+    /**
+     * @var string
+     */
     protected $description;
 
 
+    /**
+     * @var string
+     */
     protected $version;
 
 
+    /**
+     * @var array
+     */
     protected $authors = [];
 
 
@@ -148,5 +183,12 @@ class PackageMapping
     }
 
 
+
+    public function isPackageKeyValid()
+    {
+        return (new String($this->packageKey))
+            ->split('.')
+            ->length() >= 2;
+    }
 
 }
