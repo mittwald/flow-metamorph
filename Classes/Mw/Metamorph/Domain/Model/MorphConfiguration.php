@@ -7,12 +7,12 @@ use Mw\Metamorph\Domain\Model\Extension\ExtensionMatcher;
 use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use Mw\Metamorph\Domain\Model\State\PackageMappingContainer;
 use Mw\Metamorph\Domain\Model\State\ResourceMappingContainer;
-use TYPO3\Flow\Package\PackageInterface;
 use TYPO3\Flow\Annotations as Flow;
+use TYPO3\Flow\Package\PackageInterface;
 
 
 /**
- * @package Mw\Metamorph
+ * @package    Mw\Metamorph
  * @subpackage Domain\Model
  *
  * @Flow\Scope("prototype")
@@ -68,19 +68,19 @@ class MorphConfiguration
 
 
     /**
-     * @var ClassMappingContainer
+     * @var \Mw\Metamorph\Domain\Model\State\ClassMappingContainer
      */
     protected $classMappingContainer = NULL;
 
 
     /**
-     * @var PackageMappingContainer
+     * @var \Mw\Metamorph\Domain\Model\State\PackageMappingContainer
      */
     protected $packageMappingContainer = NULL;
 
 
     /**
-     * @var ResourceMappingContainer
+     * @var \Mw\Metamorph\Domain\Model\State\ResourceMappingContainer
      */
     protected $resourceMappingContainer = NULL;
 
@@ -227,6 +227,14 @@ class MorphConfiguration
         return $this->package;
     }
 
+
+
+    public function __clone()
+    {
+        $this->packageMappingContainer  = clone $this->packageMappingContainer;
+        $this->classMappingContainer    = clone $this->classMappingContainer;
+        $this->resourceMappingContainer = clone $this->resourceMappingContainer;
+    }
 
 
 } 

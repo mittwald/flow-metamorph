@@ -38,7 +38,7 @@ class MorphValidationService
             $validationGroups
         );
 
-        return $validator->validate($configuration);
+        return $validator->validate(clone $configuration);
     }
 
 

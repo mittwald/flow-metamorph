@@ -27,6 +27,9 @@ class ClassMappingContainer
 
 
 
+    /**
+     * @return ClassMapping[]
+     */
     public function getClassMappings()
     {
         return $this->classMappings;

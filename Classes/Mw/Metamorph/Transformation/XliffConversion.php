@@ -28,7 +28,6 @@ class XliffConversion extends AbstractTransformation
     public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
         $resourceMappingContainer = $configuration->getResourceMappingContainer();
-        $resourceMappingContainer->assertReviewed();
 
         $locallangFiles = $this->findLocallangXmlFiles($resourceMappingContainer);
         $xliffFileCount = 0;

@@ -47,6 +47,9 @@ class ResourceMappingContainer
 
 
 
+    /**
+     * @return ResourceMapping[]
+     */
     public function getResourceMappings()
     {
         return $this->resourceMappings;

@@ -52,7 +52,6 @@ class PackageClassRewrite extends AbstractTransformation
     public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
         $classMappingContainer = $configuration->getClassMappingContainer();
-        $classMappingContainer->assertReviewed();
 
         $taskQueue = new TaskQueue();
 
