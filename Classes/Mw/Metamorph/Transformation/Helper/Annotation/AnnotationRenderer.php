@@ -2,6 +2,8 @@
 namespace Mw\Metamorph\Transformation\Helper\Annotation;
 
 
+use Helmich\Scalars\Types\String;
+
 class AnnotationRenderer
 {
 
@@ -73,9 +75,9 @@ class AnnotationRenderer
 
     private function renderParameterValue($value)
     {
-        if (is_string($value))
+        if (is_string($value) || $value instanceof String)
         {
-            return '"' . str_replace(['"'], ['\\"'], $value) . '"';
+            return '"' . str_replace(['"'], ['\\"'], "$value") . '"';
         }
         else if (is_numeric($value))
         {
@@ -105,6 +107,10 @@ class AnnotationRenderer
                 }
             }
             return '{' . implode(', ', $expressions) . '}';
+        }
+        else if ($value instanceof AnnotationRenderer)
+        {
+            return $value->render();
         }
 
         // Fallback: Force-typecast to string.
