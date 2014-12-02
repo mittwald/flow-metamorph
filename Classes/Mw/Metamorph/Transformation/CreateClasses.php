@@ -2,6 +2,7 @@
 namespace Mw\Metamorph\Transformation;
 
 
+use Helmich\Scalars\Types\String;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
@@ -34,7 +35,7 @@ class CreateClasses extends AbstractTransformation
     public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
         $classMappingContainer = $configuration->getClassMappingContainer();
-        $packageClassCount = [];
+        $packageClassCount     = [];
 
         foreach ($classMappingContainer->getClassMappings() as $classMapping)
         {
@@ -45,10 +46,12 @@ class CreateClasses extends AbstractTransformation
 
             $package      = $this->packageManager->getPackage($classMapping->getPackage());
             $source       = file_get_contents($classMapping->getSourceFile());
-            $newClassName = $classMapping->getNewClassName();
+            $newClassName = new String($classMapping->getNewClassName());
 
-            $relativeFilename = str_replace('\\', '/', $newClassName) . '.php';
-            $absoluteFilename = $package->getClassesPath() . '/' . $relativeFilename;
+            $relativeFilename = $newClassName->replace('\\', '/')->append('.php');
+            $absoluteFilename = $this->isClassTestCase($relativeFilename)
+                ? $package->getPackagePath() . '/Tests/' . $relativeFilename->replace('Tests/', '')
+                : $package->getClassesPath() . '/' . $relativeFilename;
 
             Files::createDirectoryRecursively(dirname($absoluteFilename));
 
@@ -69,5 +72,12 @@ class CreateClasses extends AbstractTransformation
         {
             $this->log('<comment>%d</comment> classes written to package <comment>%s</comment>.', [$count, $package]);
         }
+    }
+
+
+
+    private function isClassTestCase(String $relativeFilename)
+    {
+        return $relativeFilename->strip('/')->contains('Tests/') || $relativeFilename->endsWidth('Test.php');
     }
 }
