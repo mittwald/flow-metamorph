@@ -1,7 +1,6 @@
 <?php
 namespace Mw\Metamorph\Domain\Event;
 
-
 /*                                                                        *
  * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
  *                                                                        *
@@ -9,10 +8,6 @@ namespace Mw\Metamorph\Domain\Event;
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
 
-
-class MorphConfigurationExecutionStartedEvent extends AbstractMorphConfigurationEvent
-{
-
-
+class MorphConfigurationExecutionStartedEvent extends AbstractMorphConfigurationEvent {
 
 }

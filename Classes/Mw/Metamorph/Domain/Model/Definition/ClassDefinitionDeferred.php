@@ -1,85 +1,55 @@
 <?php
 namespace Mw\Metamorph\Domain\Model\Definition;
 
-
 use TYPO3\Flow\Annotations as Flow;
 
+class ClassDefinitionDeferred extends ClassDefinition {
 
-class ClassDefinitionDeferred extends ClassDefinition
-{
+	/**
+	 * @var ClassDefinitionContainer
+	 * @Flow\Inject
+	 */
+	protected $container;
 
+	/**
+	 * @var ClassDefinition
+	 */
+	private $realInstance = NULL;
 
+	private function loadRealInstance() {
+		if (NULL === $this->realInstance) {
+			$this->realInstance = $this->container->get($this->getFullyQualifiedName());
+		}
+	}
 
-    /**
-     * @var ClassDefinitionContainer
-     * @Flow\Inject
-     */
-    protected $container;
+	public function getParentClass() {
+		$this->loadRealInstance();
+		return $this->realInstance ? $this->realInstance->getParentClass() : NULL;
+	}
 
+	public function getInterfaces() {
+		$this->loadRealInstance();
+		return $this->realInstance ? $this->realInstance->getInterfaces() : [];
+	}
 
-    /**
-     * @var ClassDefinition
-     */
-    private $realInstance = NULL;
+	public function getFact($name) {
+		$this->loadRealInstance();
+		return $this->realInstance ? $this->realInstance->getFact($name) : NULL;
+	}
 
+	public function getClassMapping() {
+		$this->loadRealInstance();
+		return $this->realInstance ? $this->realInstance->getClassMapping() : NULL;
+	}
 
+	public function hasProperty($name) {
+		$this->loadRealInstance();
+		return $this->realInstance ? $this->realInstance->hasProperty($name) : FALSE;
+	}
 
-    private function loadRealInstance()
-    {
-        if (NULL === $this->realInstance)
-        {
-            $this->realInstance = $this->container->get($this->getFullyQualifiedName());
-        }
-    }
-
-
-
-    public function getParentClass()
-    {
-        $this->loadRealInstance();
-        return $this->realInstance ? $this->realInstance->getParentClass() : NULL;
-    }
-
-
-
-    public function getInterfaces()
-    {
-        $this->loadRealInstance();
-        return $this->realInstance ? $this->realInstance->getInterfaces() : [];
-    }
-
-
-
-    public function getFact($name)
-    {
-        $this->loadRealInstance();
-        return $this->realInstance ? $this->realInstance->getFact($name) : NULL;
-    }
-
-
-
-    public function getClassMapping()
-    {
-        $this->loadRealInstance();
-        return $this->realInstance ? $this->realInstance->getClassMapping() : NULL;
-    }
-
-
-
-    public function hasProperty($name)
-    {
-        $this->loadRealInstance();
-        return $this->realInstance ? $this->realInstance->hasProperty($name) : FALSE;
-    }
-
-
-
-    public function getProperty($name)
-    {
-        $this->loadRealInstance();
-        return $this->realInstance ? $this->realInstance->getProperty($name) : NULL;
-    }
-
-
+	public function getProperty($name) {
+		$this->loadRealInstance();
+		return $this->realInstance ? $this->realInstance->getProperty($name) : NULL;
+	}
 
 }

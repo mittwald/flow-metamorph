@@ -1,9 +1,7 @@
 <?php
 namespace Mw\Metamorph\Domain\Model\State;
 
-
 use TYPO3\Flow\Annotations as Flow;
-
 
 /**
  * @package    Mw\Metamorph
@@ -11,58 +9,39 @@ use TYPO3\Flow\Annotations as Flow;
  *
  * @Flow\Scope("prototype")
  */
-class ResourceMappingContainer
-{
+class ResourceMappingContainer {
 
+	use Reviewable;
 
+	/**
+	 * @var array<\Mw\Metamorph\Domain\Model\State\ResourceMapping>
+	 */
+	protected $resourceMappings = [];
 
-    use Reviewable;
+	public function hasResourceMapping($sourceFile) {
+		return NULL !== $this->getResourceMapping($sourceFile);
+	}
 
+	public function getResourceMapping($sourceFile) {
+		foreach ($this->resourceMappings as $resourceMapping) {
+			if ($sourceFile === $resourceMapping->getSourceFile()) {
+				return $resourceMapping;
+			}
+		}
+		return NULL;
+	}
 
-    /**
-     * @var array<\Mw\Metamorph\Domain\Model\State\ResourceMapping>
-     */
-    protected $resourceMappings = [];
+	/**
+	 * @return ResourceMapping[]
+	 */
+	public function getResourceMappings() {
+		return $this->resourceMappings;
+	}
 
-
-
-    public function hasResourceMapping($sourceFile)
-    {
-        return NULL !== $this->getResourceMapping($sourceFile);
-    }
-
-
-
-    public function getResourceMapping($sourceFile)
-    {
-        foreach ($this->resourceMappings as $resourceMapping)
-        {
-            if ($sourceFile === $resourceMapping->getSourceFile())
-            {
-                return $resourceMapping;
-            }
-        }
-        return NULL;
-    }
-
-
-
-    /**
-     * @return ResourceMapping[]
-     */
-    public function getResourceMappings()
-    {
-        return $this->resourceMappings;
-    }
-
-
-
-    public function addResourceMapping(ResourceMapping $resourceMapping)
-    {
-        if (FALSE === $this->hasResourceMapping($resourceMapping->getSourceFile()))
-        {
-            $this->reviewed           = FALSE;
-            $this->resourceMappings[] = $resourceMapping;
-        }
-    }
+	public function addResourceMapping(ResourceMapping $resourceMapping) {
+		if (FALSE === $this->hasResourceMapping($resourceMapping->getSourceFile())) {
+			$this->reviewed           = FALSE;
+			$this->resourceMappings[] = $resourceMapping;
+		}
+	}
 } 

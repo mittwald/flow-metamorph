@@ -1,14 +1,12 @@
 <?php
 namespace Mw\Metamorph\Command;
 
-
 /*                                                                        *
  * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
  *                                                                        *
  * (C) 2014 Martin Helmich <m.helmich@mittwald.de>                        *
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
-
 
 use Mw\Metamorph\Command\Prompt\MorphCreationDataPrompt;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
@@ -28,165 +26,132 @@ use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Cli\CommandController;
 use TYPO3\Flow\Object\DependencyInjection\DependencyProxy;
 
-
 /**
  * @Flow\Scope("singleton")
  */
-class MorphCommandController extends CommandController
-{
+class MorphCommandController extends CommandController {
 
+	/**
+	 * @var MorphConfigurationRepository
+	 * @Flow\Inject
+	 */
+	protected $morphConfigurationRepository;
 
+	/**
+	 * @var MorphServiceInterface
+	 * @Flow\Inject
+	 */
+	protected $morphService;
 
-    /**
-     * @var MorphConfigurationRepository
-     * @Flow\Inject
-     */
-    protected $morphConfigurationRepository;
+	/**
+	 * @var LoggingWrapper
+	 * @Flow\Inject
+	 */
+	protected $loggingWrapper;
 
+	/**
+	 * @var SymfonyConsoleOutput
+	 * @Flow\Inject(lazy=FALSE)
+	 */
+	protected $console;
 
-    /**
-     * @var MorphServiceInterface
-     * @Flow\Inject
-     */
-    protected $morphService;
+	private function initializeLogging() {
+		// Workaround; apparently, lazy dependency injection cannot be switched off here (perhaps a bug in Flow?)
+		if ($this->console instanceof DependencyProxy) {
+			$this->console->write('');
+		}
+		$this->loggingWrapper->setOutput(new DecoratedOutput($this->console));
+	}
 
+	/**
+	 * Creates a new site package with a morph configuration.
+	 *
+	 * @param string $packageKey     The package key to use for the morph package.
+	 * @param bool   $nonInteractive Set this flag to suppress interactive prompts during package creation.
+	 * @return void
+	 */
+	public function createCommand($packageKey, $nonInteractive = FALSE) {
+		$this->initializeLogging();
 
-    /**
-     * @var LoggingWrapper
-     * @Flow\Inject
-     */
-    protected $loggingWrapper;
+		$input  = new ArrayInput([]);
+		$output = new DecoratedOutput($this->console);
 
+		$data = new MorphCreationDto();
 
-    /**
-     * @var SymfonyConsoleOutput
-     * @Flow\Inject(lazy=FALSE)
-     */
-    protected $console;
+		if (FALSE === $nonInteractive) {
+			$helperSet = new HelperSet(array(new FormatterHelper()));
 
+			$helper = new QuestionHelper();
+			$helper->setHelperSet($helperSet);
 
+			$prompt = new MorphCreationDataPrompt($input, $output, $helper);
+			$prompt->setValuesOnCreateDto($data);
+		}
 
-    private function initializeLogging()
-    {
-        // Workaround; apparently, lazy dependency injection cannot be switched off here (perhaps a bug in Flow?)
-        if ($this->console instanceof DependencyProxy)
-        {
-            $this->console->write('');
-        }
-        $this->loggingWrapper->setOutput(new DecoratedOutput($this->console));
-    }
+		$this->morphService->create($packageKey, $data, $output);
+	}
 
+	/**
+	 * List available morphs.
+	 *
+	 * @param bool $quiet Set this flag to generate less verbose (and machine-readable) output.
+	 * @return void
+	 */
+	public function listCommand($quiet = FALSE) {
+		$this->initializeLogging();
+		$morphs = $this->morphConfigurationRepository->findAll();
 
+		if (count($morphs)) {
+			$table = new Table($this->console);
+			$table->setHeaders(['Name', 'Source directory']);
 
-    /**
-     * Creates a new site package with a morph configuration.
-     *
-     * @param string $packageKey     The package key to use for the morph package.
-     * @param bool   $nonInteractive Set this flag to suppress interactive prompts during package creation.
-     * @return void
-     */
-    public function createCommand($packageKey, $nonInteractive = FALSE)
-    {
-        $this->initializeLogging();
+			foreach ($morphs as $morph) {
+				$table->addRow([$morph->getName(), $morph->getSourceDirectory()]);
+			}
 
-        $input  = new ArrayInput([]);
-        $output = new DecoratedOutput($this->console);
+			if ($quiet) {
+				$table->setStyle('compact');
+			}
 
-        $data = new MorphCreationDto();
+			$table->render();
+		} elseif (!$quiet) {
+			$this->outputLine('Found <comment>no</comment> morph configurations.');
+			$this->outputLine('Use <comment>./flow morph:create</comment> to create a morph configuration.');
+		}
 
-        if (FALSE === $nonInteractive)
-        {
-            $helperSet = new HelperSet(array(new FormatterHelper()));
+	}
 
-            $helper = new QuestionHelper();
-            $helper->setHelperSet($helperSet);
+	/**
+	 * Morph a TYPO3 CMS application.
+	 *
+	 * @param string $morphConfigurationName The name of the morph configuration to execute.
+	 * @param bool   $reset                  Completely reset stored state before beginning.
+	 * @throws \Mw\Metamorph\Exception\MorphNotFoundException
+	 * @return void
+	 */
+	public function executeCommand($morphConfigurationName, $reset = FALSE) {
+		$this->initializeLogging();
+		$morph = $this->morphConfigurationRepository->findByIdentifier($morphConfigurationName);
 
-            $prompt = new MorphCreationDataPrompt($input, $output, $helper);
-            $prompt->setValuesOnCreateDto($data);
-        }
+		if ($morph === NULL) {
+			throw new MorphNotFoundException(
+				'No morph configuration with identifier <b>' . $morphConfigurationName . '</b> found!',
+				1399993315
+			);
+		}
 
-        $this->morphService->create($packageKey, $data, $output);
-    }
+		if (TRUE === $reset) {
+			$this->morphService->reset($morph, $this->console);
+		}
 
-
-
-    /**
-     * List available morphs.
-     *
-     * @param bool $quiet Set this flag to generate less verbose (and machine-readable) output.
-     * @return void
-     */
-    public function listCommand($quiet = FALSE)
-    {
-        $this->initializeLogging();
-        $morphs = $this->morphConfigurationRepository->findAll();
-
-        if (count($morphs))
-        {
-            $table = new Table($this->console);
-            $table->setHeaders(['Name', 'Source directory']);
-
-            foreach ($morphs as $morph)
-            {
-                $table->addRow([$morph->getName(), $morph->getSourceDirectory()]);
-            }
-
-            if ($quiet)
-            {
-                $table->setStyle('compact');
-            }
-
-            $table->render();
-        }
-        elseif (!$quiet)
-        {
-            $this->outputLine('Found <comment>no</comment> morph configurations.');
-            $this->outputLine('Use <comment>./flow morph:create</comment> to create a morph configuration.');
-        }
-
-    }
-
-
-
-    /**
-     * Morph a TYPO3 CMS application.
-     *
-     * @param string $morphConfigurationName The name of the morph configuration to execute.
-     * @param bool   $reset                  Completely reset stored state before beginning.
-     * @throws \Mw\Metamorph\Exception\MorphNotFoundException
-     * @return void
-     */
-    public function executeCommand($morphConfigurationName, $reset = FALSE)
-    {
-        $this->initializeLogging();
-        $morph = $this->morphConfigurationRepository->findByIdentifier($morphConfigurationName);
-
-        if ($morph === NULL)
-        {
-            throw new MorphNotFoundException(
-                'No morph configuration with identifier <b>' . $morphConfigurationName . '</b> found!',
-                1399993315
-            );
-        }
-
-        if (TRUE === $reset)
-        {
-            $this->morphService->reset($morph, $this->console);
-        }
-
-        try
-        {
-            $this->morphService->execute($morph, new DecoratedOutput($this->console));
-        }
-        catch (HumanInterventionRequiredException $e)
-        {
-        }
-        catch (\Exception $e)
-        {
-            $this->output->outputLine('<error>  UNCAUGHT EXCEPTION  </error>');
-            $this->output->outputLine('  ' . get_class($e) . ': ' . $e->getMessage());
-            $this->sendAndExit(1);
-        }
-    }
+		try {
+			$this->morphService->execute($morph, new DecoratedOutput($this->console));
+		} catch (HumanInterventionRequiredException $e) {
+		} catch (\Exception $e) {
+			$this->output->outputLine('<error>  UNCAUGHT EXCEPTION  </error>');
+			$this->output->outputLine('  ' . get_class($e) . ': ' . $e->getMessage());
+			$this->sendAndExit(1);
+		}
+	}
 
 }

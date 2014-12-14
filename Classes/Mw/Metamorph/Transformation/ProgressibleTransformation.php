@@ -1,26 +1,15 @@
 <?php
 namespace Mw\Metamorph\Transformation;
 
+trait ProgressibleTransformation {
 
-trait ProgressibleTransformation
-{
+	protected function startProgress($message, $max) {
+	}
 
+	protected function advanceProgress() {
+	}
 
-    protected function startProgress($message, $max)
-    {
-    }
-
-
-
-    protected function advanceProgress()
-    {
-    }
-
-
-
-    protected function finishProgress()
-    {
-    }
-
+	protected function finishProgress() {
+	}
 
 }

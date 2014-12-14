@@ -1,152 +1,112 @@
 <?php
 namespace Mw\Metamorph\Domain\Service\Dto;
 
-
 /**
  * Data transfer object for passing morph creation parameters into the MorphService.
  *
  * @package    Mw\Metamorph
  * @subpackage \Domain\Service\Dto
  */
-class MorphCreationDto
-{
+class MorphCreationDto {
 
+	/**
+	 * Source directory of TYPO3 CMS installation.
+	 * @var string
+	 */
+	private $sourceDirectory;
 
+	/**
+	 * List of regular expressions to match extension names.
+	 * @var array
+	 */
+	private $extensionPatterns = [];
 
-    /**
-     * Source directory of TYPO3 CMS installation.
-     * @var string
-     */
-    private $sourceDirectory;
+	/**
+	 * What to do with existing database structures.
+	 * @var string
+	 */
+	private $tableStructureMode;
 
+	/**
+	 * How aggressively to refactor piBase extensions.
+	 * @var string
+	 */
+	private $pibaseRefactoringMode;
 
-    /**
-     * List of regular expressions to match extension names.
-     * @var array
-     */
-    private $extensionPatterns = [];
+	/**
+	 * Versioning system to use for new morph package.
+	 * @var string
+	 */
+	private $versioning;
 
+	/**
+	 * @return array
+	 */
+	public function getExtensionPatterns() {
+		return $this->extensionPatterns;
+	}
 
-    /**
-     * What to do with existing database structures.
-     * @var string
-     */
-    private $tableStructureMode;
+	/**
+	 * @param array $extensionPatterns
+	 */
+	public function setExtensionPatterns($extensionPatterns) {
+		$this->extensionPatterns = $extensionPatterns;
+	}
 
+	/**
+	 * @return string
+	 */
+	public function getPibaseRefactoringMode() {
+		return $this->pibaseRefactoringMode;
+	}
 
-    /**
-     * How aggressively to refactor piBase extensions.
-     * @var string
-     */
-    private $pibaseRefactoringMode;
+	/**
+	 * @param string $pibaseRefactoringMode
+	 */
+	public function setPibaseRefactoringMode($pibaseRefactoringMode) {
+		$this->pibaseRefactoringMode = $pibaseRefactoringMode;
+	}
 
+	/**
+	 * @return string
+	 */
+	public function getSourceDirectory() {
+		return $this->sourceDirectory;
+	}
 
-    /**
-     * Versioning system to use for new morph package.
-     * @var string
-     */
-    private $versioning;
+	/**
+	 * @param string $sourceDirectory
+	 */
+	public function setSourceDirectory($sourceDirectory) {
+		$this->sourceDirectory = $sourceDirectory;
+	}
 
+	/**
+	 * @return string
+	 */
+	public function getTableStructureMode() {
+		return $this->tableStructureMode;
+	}
 
+	/**
+	 * @param string $tableStructureMode
+	 */
+	public function setTableStructureMode($tableStructureMode) {
+		$this->tableStructureMode = $tableStructureMode;
+	}
 
-    /**
-     * @return array
-     */
-    public function getExtensionPatterns()
-    {
-        return $this->extensionPatterns;
-    }
+	/**
+	 * @return string
+	 */
+	public function getVersionControlSystem() {
+		return $this->versioning;
+	}
 
-
-
-    /**
-     * @param array $extensionPatterns
-     */
-    public function setExtensionPatterns($extensionPatterns)
-    {
-        $this->extensionPatterns = $extensionPatterns;
-    }
-
-
-
-    /**
-     * @return string
-     */
-    public function getPibaseRefactoringMode()
-    {
-        return $this->pibaseRefactoringMode;
-    }
-
-
-
-    /**
-     * @param string $pibaseRefactoringMode
-     */
-    public function setPibaseRefactoringMode($pibaseRefactoringMode)
-    {
-        $this->pibaseRefactoringMode = $pibaseRefactoringMode;
-    }
-
-
-
-    /**
-     * @return string
-     */
-    public function getSourceDirectory()
-    {
-        return $this->sourceDirectory;
-    }
-
-
-
-    /**
-     * @param string $sourceDirectory
-     */
-    public function setSourceDirectory($sourceDirectory)
-    {
-        $this->sourceDirectory = $sourceDirectory;
-    }
-
-
-
-    /**
-     * @return string
-     */
-    public function getTableStructureMode()
-    {
-        return $this->tableStructureMode;
-    }
-
-
-
-    /**
-     * @param string $tableStructureMode
-     */
-    public function setTableStructureMode($tableStructureMode)
-    {
-        $this->tableStructureMode = $tableStructureMode;
-    }
-
-
-
-    /**
-     * @return string
-     */
-    public function getVersionControlSystem()
-    {
-        return $this->versioning;
-    }
-
-
-
-    /**
-     * @param string $versioning
-     */
-    public function setVersionControlSystem($versioning)
-    {
-        $this->versioning = $versioning;
-    }
-
-
+	/**
+	 * @param string $versioning
+	 */
+	public function setVersionControlSystem($versioning) {
+		$this->versioning = $versioning;
+	}
 
 }

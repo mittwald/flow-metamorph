@@ -1,7 +1,6 @@
 <?php
 namespace Mw\Metamorph\Transformation\DatabaseMigration\Strategy;
 
-
 use Mw\Metamorph\Transformation\DatabaseMigration\Visitor\CompatibleMigrationVisitor;
 
 /**
@@ -10,19 +9,14 @@ use Mw\Metamorph\Transformation\DatabaseMigration\Visitor\CompatibleMigrationVis
  * @package    Mw\Metamorph
  * @subpackage Transformation\DatabaseMigration\Strategy
  */
-class CompatibleMigrationStrategy extends AbstractMigrationStategy
-{
+class CompatibleMigrationStrategy extends AbstractMigrationStategy {
 
-
-
-    /**
-     * @return CompatibleMigrationVisitor
-     */
-    protected function getMigrationVisitor()
-    {
-        $migrationVisitor = new CompatibleMigrationVisitor($this->tca, $this->taskQueue);
-        return $migrationVisitor;
-    }
-
+	/**
+	 * @return CompatibleMigrationVisitor
+	 */
+	protected function getMigrationVisitor() {
+		$migrationVisitor = new CompatibleMigrationVisitor($this->tca, $this->taskQueue);
+		return $migrationVisitor;
+	}
 
 }

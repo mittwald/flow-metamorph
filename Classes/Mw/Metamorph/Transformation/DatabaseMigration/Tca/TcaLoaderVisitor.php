@@ -1,7 +1,6 @@
 <?php
 namespace Mw\Metamorph\Transformation\DatabaseMigration\Tca;
 
-
 use Helmich\PhpEvaluator\Evaluator\ConstantStore;
 use Helmich\PhpEvaluator\Evaluator\Evaluator;
 use Helmich\PhpEvaluator\Evaluator\FunctionStore;
@@ -15,159 +14,125 @@ use PhpParser\NodeVisitorAbstract;
 use PhpParser\Parser;
 use TYPO3\Flow\Annotations as Flow;
 
+class TcaLoaderVisitor extends NodeVisitorAbstract {
 
-class TcaLoaderVisitor extends NodeVisitorAbstract
-{
+	private $tca;
 
+	/**
+	 * @var PackageMapping
+	 */
+	private $packageMapping;
 
+	/**
+	 * @var Parser
+	 */
+	private $parser;
 
-    private $tca;
+	/**
+	 * @var string
+	 */
+	private $currentFile = NULL;
 
+	/**
+	 * @var Evaluator
+	 * @Flow\Inject
+	 */
+	protected $evaluator;
 
-    /**
-     * @var PackageMapping
-     */
-    private $packageMapping;
+	public function __construct(Tca $tca, PackageMapping $packageMapping, $currentFile = NULL) {
+		$this->tca            = $tca;
+		$this->packageMapping = $packageMapping;
+		$this->currentFile    = $currentFile;
+		$this->parser         = new Parser(new Lexer());
+	}
 
+	public function initializeObject() {
+		$extPathFunc = function ($extKey) {
+			return $this->packageMapping->getFilePath() . '/';
+		};
 
-    /**
-     * @var Parser
-     */
-    private $parser;
+		$functions = new FunctionStore();
+		$functions->setFallbackFunction(function ($name, $arguments) { });
 
+		$functions['TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath'] = $extPathFunc;
+		$functions['t3lib_extMgm::extPath']                                      = $extPathFunc;
 
-    /**
-     * @var string
-     */
-    private $currentFile = NULL;
+		$variables            = new VariableStore(
+			[
+				'_EXTKEY' => $this->packageMapping->getExtensionKey(),
+				'TCA'     => $this->tca
+			]
+		);
+		$variables['GLOBALS'] = $variables;
 
+		$this->evaluator->setGlobalScope($variables);
+		$this->evaluator->setConstantStore(new ConstantStore());
+		$this->evaluator->setFunctionStore($functions);
+	}
 
-    /**
-     * @var Evaluator
-     * @Flow\Inject
-     */
-    protected $evaluator;
+	public function enterNode(Node $node) {
+		if ($this->isTcaAssignment($node)) {
+			/** @var Node\Expr\Assign $node */
+			$val = $this->evaluator->evaluateExpression($node->expr);
+			$var = $node->var;
 
+			$target =& $this->tca;
 
+			if ($var instanceof Node\Expr\ArrayDimFetch) {
+				list($var, $dimensions) = $this->getVarAndKeysFromArrayFetch($var);
+				foreach ($dimensions as $dimension) {
+					$target =& $target[$dimension];
+				}
+			}
 
-    public function __construct(Tca $tca, PackageMapping $packageMapping, $currentFile = NULL)
-    {
-        $this->tca            = $tca;
-        $this->packageMapping = $packageMapping;
-        $this->currentFile    = $currentFile;
-        $this->parser         = new Parser(new Lexer());
-    }
+			$target = $val;
 
+			if (isset($val['ctrl']['dynamicConfigFile']) && $val['ctrl']['dynamicConfigFile'] !== $this->currentFile) {
+				$tcaFile = $val['ctrl']['dynamicConfigFile'];
+				$content = file_get_contents($tcaFile);
+				$stmts   = $this->parser->parse($content);
 
+				$traverser = new NodeTraverser();
+				$traverser->addVisitor(new NameResolver());
+				$traverser->addVisitor(new TcaLoaderVisitor($this->tca, $this->packageMapping, $tcaFile));
 
-    public function initializeObject()
-    {
-        $extPathFunc = function ($extKey)
-        {
-            return $this->packageMapping->getFilePath() . '/';
-        };
+				$traverser->traverse($stmts);
+			}
+		}
+	}
 
-        $functions = new FunctionStore();
-        $functions->setFallbackFunction(function ($name, $arguments) { });
+	private function isTcaAssignment(Node $node) {
+		if (!$node instanceof Node\Expr\Assign) {
+			return FALSE;
+		}
 
-        $functions['TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath'] = $extPathFunc;
-        $functions['t3lib_extMgm::extPath']                                      = $extPathFunc;
+		$left = $node->var;
+		if ($left instanceof Node\Expr\Variable && $left->name === 'TCA') {
+			return TRUE;
+		}
 
-        $variables            = new VariableStore(
-            [
-                '_EXTKEY' => $this->packageMapping->getExtensionKey(),
-                'TCA'     => $this->tca
-            ]
-        );
-        $variables['GLOBALS'] = $variables;
+		if ($left instanceof Node\Expr\ArrayDimFetch) {
+			list($var, $_) = $this->getVarAndKeysFromArrayFetch($left);
 
-        $this->evaluator->setGlobalScope($variables);
-        $this->evaluator->setConstantStore(new ConstantStore());
-        $this->evaluator->setFunctionStore($functions);
-    }
+			/** @var Node\Expr\Variable $var */
+			if ($var->name === 'TCA') {
+				return TRUE;
+			}
+		}
 
+		return FALSE;
+	}
 
+	private function getVarAndKeysFromArrayFetch(Node\Expr\ArrayDimFetch $node) {
+		$left = $node;
+		$keys = [];
 
-    public function enterNode(Node $node)
-    {
-        if ($this->isTcaAssignment($node))
-        {
-            /** @var Node\Expr\Assign $node */
-            $val = $this->evaluator->evaluateExpression($node->expr);
-            $var = $node->var;
+		while (!$left instanceof Node\Expr\Variable) {
+			$keys[] = $this->evaluator->evaluateExpression($left->dim);
+			$left   = $left->var;
+		}
 
-            $target =& $this->tca;
-
-            if ($var instanceof Node\Expr\ArrayDimFetch)
-            {
-                list($var, $dimensions) = $this->getVarAndKeysFromArrayFetch($var);
-                foreach ($dimensions as $dimension)
-                {
-                    $target =& $target[$dimension];
-                }
-            }
-
-            $target = $val;
-
-            if (isset($val['ctrl']['dynamicConfigFile']) && $val['ctrl']['dynamicConfigFile'] !== $this->currentFile)
-            {
-                $tcaFile = $val['ctrl']['dynamicConfigFile'];
-                $content = file_get_contents($tcaFile);
-                $stmts   = $this->parser->parse($content);
-
-                $traverser = new NodeTraverser();
-                $traverser->addVisitor(new NameResolver());
-                $traverser->addVisitor(new TcaLoaderVisitor($this->tca, $this->packageMapping, $tcaFile));
-
-                $traverser->traverse($stmts);
-            }
-        }
-    }
-
-
-
-    private function isTcaAssignment(Node $node)
-    {
-        if (!$node instanceof Node\Expr\Assign)
-        {
-            return FALSE;
-        }
-
-        $left = $node->var;
-        if ($left instanceof Node\Expr\Variable && $left->name === 'TCA')
-        {
-            return TRUE;
-        }
-
-        if ($left instanceof Node\Expr\ArrayDimFetch)
-        {
-            list($var, $_) = $this->getVarAndKeysFromArrayFetch($left);
-
-            /** @var Node\Expr\Variable $var */
-            if ($var->name === 'TCA')
-            {
-                return TRUE;
-            }
-        }
-
-        return FALSE;
-    }
-
-
-
-    private function getVarAndKeysFromArrayFetch(Node\Expr\ArrayDimFetch $node)
-    {
-        $left = $node;
-        $keys = [];
-
-        while (!$left instanceof Node\Expr\Variable)
-        {
-            $keys[] = $this->evaluator->evaluateExpression($left->dim);
-            $left   = $left->var;
-        }
-
-        return [$left, $keys];
-    }
-
+		return [$left, $keys];
+	}
 
 }

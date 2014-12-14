@@ -1,15 +1,10 @@
 <?php
 namespace Mw\Metamorph\Io;
 
-
 use Symfony\Component\Console\Output\OutputInterface;
 
+interface DecoratedOutputInterface extends OutputInterface {
 
-interface DecoratedOutputInterface extends OutputInterface
-{
-
-
-
-    public function writeFormatted($text, $indent=0);
+	public function writeFormatted($text, $indent = 0);
 
 }

@@ -1,7 +1,6 @@
 <?php
 namespace Mw\Metamorph\Transformation;
 
-
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ResourceMapping;
 use Mw\Metamorph\Domain\Model\State\ResourceMappingContainer;
@@ -11,127 +10,104 @@ use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\PackageManagerInterface;
 use TYPO3\Flow\Utility\Files;
 
+class XliffConversion extends AbstractTransformation {
 
-class XliffConversion extends AbstractTransformation
-{
+	use ProgressibleTransformation;
 
-    use ProgressibleTransformation;
+	/**
+	 * @var PackageManagerInterface
+	 * @Flow\Inject
+	 */
+	protected $packageManager;
 
+	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
+		$resourceMappingContainer = $configuration->getResourceMappingContainer();
 
-    /**
-     * @var PackageManagerInterface
-     * @Flow\Inject
-     */
-    protected $packageManager;
+		$locallangFiles = $this->findLocallangXmlFiles($resourceMappingContainer);
+		$xliffFileCount = 0;
 
+		$this->startProgress('Converting LL files', count($locallangFiles));
+		foreach ($locallangFiles as $sourceFile => $data) {
+			$xliffFileCount += count($data['languages']);
+			$this->processLocallangFile($sourceFile, $data['languages'], $data['mapping']);
+			$this->advanceProgress();
+		}
+		$this->finishProgress();
 
+		$this->log(
+			'Converted <comment>' . count($locallangFiles) . '</comment> locallang files into <comment>' .
+			$xliffFileCount . '</comment> XLIFF files.'
+		);
+	}
 
-    public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
-    {
-        $resourceMappingContainer = $configuration->getResourceMappingContainer();
+	private function processLocallangFile($filename, array $languages, ResourceMapping $mapping) {
+		$package = $this->packageManager->getPackage($mapping->getPackage());
 
-        $locallangFiles = $this->findLocallangXmlFiles($resourceMappingContainer);
-        $xliffFileCount = 0;
+		$stylesheet = new \DOMDocument();
+		$stylesheet->load('resource://Mw.Metamorph/Private/Xslt/LocallangToXliff.xsl');
 
-        $this->startProgress('Converting LL files', count($locallangFiles));
-        foreach ($locallangFiles as $sourceFile => $data)
-        {
-            $xliffFileCount += count($data['languages']);
-            $this->processLocallangFile($sourceFile, $data['languages'], $data['mapping']);
-            $this->advanceProgress();
-        }
-        $this->finishProgress();
+		$document = new \DOMDocument();
+		$document->load($filename);
 
-        $this->log(
-            'Converted <comment>' . count($locallangFiles) . '</comment> locallang files into <comment>' .
-            $xliffFileCount . '</comment> XLIFF files.'
-        );
-    }
+		$processor = new \XSLTProcessor();
+		$processor->setParameter('metamorph', 'package', $mapping->getPackage());
+		$processor->setParameter('metamorph', 'date', (new \DateTime())->format('c'));
+		$processor->importStylesheet($stylesheet);
 
+		foreach ($languages as $language) {
+			$processor->setParameter('metamorph', 'language', $language);
 
+			$targetDir  = Files::concatenatePaths([$package->getPackagePath(), dirname($mapping->getTargetFile())]);
+			$targetFile = str_replace('.xml', '.xlf', basename($mapping->getTargetFile()));
 
-    private function processLocallangFile($filename, array $languages, ResourceMapping $mapping)
-    {
-        $package = $this->packageManager->getPackage($mapping->getPackage());
+			if ($language !== 'default') {
+				$targetFile = $language . '.' . $targetFile;
+			}
 
-        $stylesheet = new \DOMDocument();
-        $stylesheet->load('resource://Mw.Metamorph/Private/Xslt/LocallangToXliff.xsl');
+			$targetPath = Files::concatenatePaths([$targetDir, $targetFile]);
 
-        $document = new \DOMDocument();
-        $document->load($filename);
+			$converted               = $processor->transformToDoc($document);
+			$converted->formatOutput = TRUE;
+			$converted->save($targetPath);
+		}
+	}
 
-        $processor = new \XSLTProcessor();
-        $processor->setParameter('metamorph', 'package', $mapping->getPackage());
-        $processor->setParameter('metamorph', 'date', (new \DateTime())->format('c'));
-        $processor->importStylesheet($stylesheet);
+	private function findLocallangXmlFiles(ResourceMappingContainer $resourceMappingContainer) {
+		$files = [];
 
-        foreach ($languages as $language)
-        {
-            $processor->setParameter('metamorph', 'language', $language);
+		foreach ($resourceMappingContainer->getResourceMappings() as $resourceMapping) {
+			if (substr($resourceMapping->getTargetFile(), -4) !== '.xml') {
+				continue;
+			}
 
-            $targetDir  = Files::concatenatePaths([$package->getPackagePath(), dirname($mapping->getTargetFile())]);
-            $targetFile = str_replace('.xml', '.xlf', basename($mapping->getTargetFile()));
+			try {
+				$doc = new \DOMDocument();
+				$doc->load($resourceMapping->getSourceFile());
 
-            if ($language !== 'default')
-            {
-                $targetFile = $language . '.' . $targetFile;
-            }
+				$xpath = new \DOMXPath($doc);
+				if (NULL === ($rootElements = $xpath->query('/T3locallang'))) {
+					continue;
+				}
 
-            $targetPath = Files::concatenatePaths([$targetDir, $targetFile]);
+				if (NULL === ($languageKeys = $xpath->query('data/languageKey', $rootElements->item(0)))) {
+					continue;
+				}
 
-            $converted               = $processor->transformToDoc($document);
-            $converted->formatOutput = TRUE;
-            $converted->save($targetPath);
-        }
-    }
+				$knownLanguageKeys = [];
+				foreach ($languageKeys as $languageKey) {
+					/** @noinspection PhpUndefinedFieldInspection */
+					$knownLanguageKeys[] = $xpath->query('@index', $languageKey)->item(0)->value;
+				}
 
+				$files[$resourceMapping->getSourceFile()] = [
+					'languages' => $knownLanguageKeys,
+					'mapping'   => $resourceMapping
+				];
+			} catch (\Exception $e) {
+				continue;
+			}
+		}
 
-
-    private function findLocallangXmlFiles(ResourceMappingContainer $resourceMappingContainer)
-    {
-        $files = [];
-
-        foreach ($resourceMappingContainer->getResourceMappings() as $resourceMapping)
-        {
-            if (substr($resourceMapping->getTargetFile(), -4) !== '.xml')
-            {
-                continue;
-            }
-
-            try
-            {
-                $doc = new \DOMDocument();
-                $doc->load($resourceMapping->getSourceFile());
-
-                $xpath = new \DOMXPath($doc);
-                if (NULL === ($rootElements = $xpath->query('/T3locallang')))
-                {
-                    continue;
-                }
-
-                if (NULL === ($languageKeys = $xpath->query('data/languageKey', $rootElements->item(0))))
-                {
-                    continue;
-                }
-
-                $knownLanguageKeys = [];
-                foreach ($languageKeys as $languageKey)
-                {
-                    /** @noinspection PhpUndefinedFieldInspection */
-                    $knownLanguageKeys[] = $xpath->query('@index', $languageKey)->item(0)->value;
-                }
-
-                $files[$resourceMapping->getSourceFile()] = [
-                    'languages' => $knownLanguageKeys,
-                    'mapping'   => $resourceMapping
-                ];
-            }
-            catch (\Exception $e)
-            {
-                continue;
-            }
-        }
-
-        return $files;
-    }
+		return $files;
+	}
 }
