@@ -3,7 +3,6 @@ namespace Mw\Metamorph\Transformation;
 
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
-use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
@@ -15,6 +14,7 @@ class CreateResources extends AbstractTransformation
 {
 
 
+    use ProgressibleTransformation;
 
     /**
      * @var PackageManagerInterface
@@ -26,17 +26,26 @@ class CreateResources extends AbstractTransformation
 
     public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
     {
+        $this->startProgress(
+            'Migrating resources',
+            count($configuration->getResourceMappingContainer()->getResourceMappings())
+        );
+
         foreach ($configuration->getResourceMappingContainer()->getResourceMappings() as $resourceMapping)
         {
             $package = $this->packageManager->getPackage($resourceMapping->getPackage());
 
-            $targetFilePath  = Files::concatenatePaths(
+            $targetFilePath = Files::concatenatePaths(
                 [$package->getPackagePath(), $resourceMapping->getTargetFile()]
             );
             $targetDirectory = dirname($targetFilePath);
 
             Files::createDirectoryRecursively($targetDirectory);
             copy($resourceMapping->getSourceFile(), $targetFilePath);
+
+            $this->advanceProgress();
         }
+
+        $this->finishProgress();
     }
 }

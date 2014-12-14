@@ -14,6 +14,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class MigrateDatabaseStructure extends AbstractTransformation
 {
 
+    use ProgressibleTransformation;
 
 
     public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
@@ -38,6 +39,8 @@ class MigrateDatabaseStructure extends AbstractTransformation
         $migrator->setDeferredTaskQueue($queue);
         $migrator->execute($configuration);
 
-        $queue->executeAll($configuration, function ($m) { $this->log($m); });
+        $this->startProgress('Cleaning up', 0);
+        $queue->executeAll($configuration, function ($m) { $this->advanceProgress(); });
+        $this->finishProgress();
     }
 }

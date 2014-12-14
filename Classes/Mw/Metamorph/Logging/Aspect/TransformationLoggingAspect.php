@@ -6,6 +6,7 @@ use Helmich\Scalars\Types\String;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Logging\LoggingWrapper;
+use Symfony\Component\Console\Helper\ProgressBar;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Aop\JoinPointInterface;
 
@@ -15,6 +16,7 @@ use TYPO3\Flow\Aop\JoinPointInterface;
  *
  * @package    Mw\Metamorph
  * @subpackage Logging\Aspect
+ *
  * @Flow\Aspect
  */
 class TransformationLoggingAspect
@@ -27,6 +29,12 @@ class TransformationLoggingAspect
      * @Flow\Inject
      */
     protected $loggingWrapper;
+
+
+    /**
+     * @var ProgressBar
+     */
+    private $progress = NULL;
 
 
 
@@ -99,7 +107,7 @@ class TransformationLoggingAspect
             $i = str_repeat(" ", 2);
             (new String($exception->getMessage()))
                 ->split("\n")
-                ->map(function($l) use ($i, $out) { $out->writeFormatted($l, 2); });
+                ->map(function ($l) use ($i, $out) { $out->writeFormatted($l, 2); });
 
             $out->writeln('');
 
@@ -119,6 +127,58 @@ class TransformationLoggingAspect
     {
         list($message, $arguments) = array_values($joinPoint->getMethodArguments());
         $this->loggingWrapper->writeNested($message, $arguments);
+    }
+
+
+
+    /**
+     * @param JoinPointInterface $joinPoint
+     * @return mixed
+     *
+     * @Flow\AfterReturning("within(Mw\Metamorph\Transformation\Transformation) && method(.*->startProgress())")
+     */
+    public function progressStartAdvice(JoinPointInterface $joinPoint)
+    {
+        list($message, $max) = array_values($joinPoint->getMethodArguments());
+
+        $progress = new ProgressBar($this->loggingWrapper, $max);
+        $progress->setFormat(
+            $this->loggingWrapper->getNestingPrefix() . ($max
+                ? '%message:-20s% <comment>%current:4s%</comment>/<comment>%max:-4s%</comment> [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s%'
+                : '%message:-20s% <comment>%current:4s%</comment>/<comment>%max:-4s%</comment> [%bar%]'
+            )
+        );
+        $progress->setBarCharacter('<comment>=</comment>');
+        $progress->setMessage($message);
+
+        $joinPoint->getProxy()->__metamorphProgress = $progress;
+    }
+
+
+
+    /**
+     * @param JoinPointInterface $joinPoint
+     * @return mixed
+     *
+     * @Flow\AfterReturning("within(Mw\Metamorph\Transformation\Transformation) && method(.*->advanceProgress())")
+     */
+    public function progressAdvanceAdvice(JoinPointInterface $joinPoint)
+    {
+        $joinPoint->getProxy()->__metamorphProgress->advance();
+    }
+
+
+
+    /**
+     * @param JoinPointInterface $joinPoint
+     * @return mixed
+     *
+     * @Flow\AfterReturning("within(Mw\Metamorph\Transformation\Transformation) && method(.*->finishProgress())")
+     */
+    public function progressFinishAdvice(JoinPointInterface $joinPoint)
+    {
+        $joinPoint->getProxy()->__metamorphProgress->finish();
+        $this->loggingWrapper->write("\n");
     }
 
 }

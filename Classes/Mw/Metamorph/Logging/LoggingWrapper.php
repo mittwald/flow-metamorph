@@ -199,7 +199,7 @@ class LoggingWrapper implements DecoratedOutputInterface
 
 
 
-    private function getNestingPrefix()
+    public function getNestingPrefix()
     {
         if ($this->nestingLevel > 0)
         {

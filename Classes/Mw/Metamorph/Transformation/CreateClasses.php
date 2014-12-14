@@ -18,6 +18,9 @@ class CreateClasses extends AbstractTransformation
 
 
 
+    use ProgressibleTransformation;
+
+
     /**
      * @var \TYPO3\Flow\Package\PackageManagerInterface
      * @Flow\Inject
@@ -37,6 +40,8 @@ class CreateClasses extends AbstractTransformation
     {
         $classMappingContainer = $configuration->getClassMappingContainer();
         $packageClassCount     = [];
+
+        $this->startProgress('Migrating classes', count($classMappingContainer->getClassMappings()));
 
         foreach ($classMappingContainer->getClassMappings() as $classMapping)
         {
@@ -63,8 +68,10 @@ class CreateClasses extends AbstractTransformation
             $packageClassCount[$package->getPackageKey()]++;
 
             $classMapping->setTargetFile($absoluteFilename);
+            $this->advanceProgress();
         }
 
+        $this->finishProgress();
         $this->morphRepository->update($configuration);
 
         foreach ($packageClassCount as $package => $count)
