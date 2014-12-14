@@ -109,17 +109,6 @@ class TransformationLoggingAspect
 
 
 
-    private function indent($text, $indent=2)
-    {
-        $i = str_repeat(" ", $indent);
-        return (new String($text))
-            ->split("\n")
-            ->map(function($l) use ($i) { var_dump($i . $l); return $i . $l; })
-            ->join("\n");
-    }
-
-
-
     /**
      * @param JoinPointInterface $joinPoint
      * @return mixed
