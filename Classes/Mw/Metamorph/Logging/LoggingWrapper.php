@@ -203,9 +203,9 @@ class LoggingWrapper implements DecoratedOutputInterface
     {
         if ($this->nestingLevel > 0)
         {
-            return str_repeat('|  ', $this->nestingLevel) . '\\_ ';
+            return str_repeat('│ ', $this->nestingLevel - 1) . '├─◼ ';
         }
-        return '- ';
+        return '◼ ';
     }
 
 }
