@@ -99,7 +99,7 @@ class TransformationLoggingAspect
             $i = str_repeat(" ", 2);
             (new String($exception->getMessage()))
                 ->split("\n")
-                ->map(function($l) use ($i, $out) { $out->writeln($i . $l); });
+                ->map(function($l) use ($i, $out) { $out->writeFormatted($l, 2); });
 
             $out->writeln('');
 

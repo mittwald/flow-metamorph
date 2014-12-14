@@ -23,18 +23,37 @@ class DecoratedOutput implements DecoratedOutputInterface
 
 
 
-    public function writeFormatted($text, $leftPadding = 0)
+    public function writeFormatted($text, $leftPadding = 0, $width = 120)
     {
-        $lines = explode(PHP_EOL, $text);
-        foreach ($lines as $line)
+        $lines   = explode(PHP_EOL, $text);
+        $padding = str_repeat(' ', $leftPadding);
+
+        while ($line = array_shift($lines))
         {
-            $formattedText = str_repeat(' ', $leftPadding) . wordwrap(
-                    $line,
-                    80 - $leftPadding,
-                    PHP_EOL . str_repeat(' ', $leftPadding),
-                    TRUE
-                );
-            $this->writeln($formattedText);
+            $line      = $padding . $line;
+            $length    = strlen($line);
+            $charCount = 0;
+
+            for ($j = 0; $j < $length; $j++, $charCount++)
+            {
+                if ($line{$j} === '<')
+                {
+                    for (; $line{$j} !== '>'; $j++)
+                    {
+                        ;
+                    }
+                }
+
+                if ($line{$j} === ' ' && $charCount >= $width)
+                {
+                    $this->writeln(substr($line, 0, $j));
+                    array_unshift($lines, substr($line, $j + 1));
+                    goto endLoop;
+                }
+            }
+
+            $this->writeln($line);
+            endLoop:
         }
     }
 
