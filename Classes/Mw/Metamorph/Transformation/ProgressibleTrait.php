@@ -1,7 +1,7 @@
 <?php
 namespace Mw\Metamorph\Transformation;
 
-trait ProgressibleTransformation {
+trait ProgressibleTrait {
 
 	protected function startProgress($message, $max) {
 	}

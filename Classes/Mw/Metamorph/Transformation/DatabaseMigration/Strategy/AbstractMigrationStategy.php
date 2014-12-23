@@ -6,6 +6,7 @@ use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Transformation\DatabaseMigration\Tca\Tca;
 use Mw\Metamorph\Transformation\DatabaseMigration\Tca\TcaLoader;
+use Mw\Metamorph\Transformation\ProgressibleTrait;
 use Mw\Metamorph\Transformation\Task\TaskQueue;
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
@@ -23,6 +24,8 @@ use TYPO3\Flow\Annotations as Flow;
  * @subpackage Transformation\DatabaseMigration\Strategy
  */
 abstract class AbstractMigrationStategy implements MigrationStrategyInterface {
+
+//	use ProgressibleTrait;
 
 	/**
 	 * @var TcaLoader
@@ -76,9 +79,12 @@ abstract class AbstractMigrationStategy implements MigrationStrategyInterface {
 		$packageMappingContainer = $configuration->getPackageMappingContainer();
 		$packageMappingContainer->assertReviewed();
 
+		$this->startProgress('Loading TCA', count($packageMappingContainer->getPackageMappings()));
 		foreach ($packageMappingContainer->getPackageMappings() as $packageMapping) {
 			$this->tcaLoader->loadTcaForPackage($packageMapping, $this->tca);
+			$this->advanceProgress();
 		}
+		$this->finishProgress();
 	}
 
 	private function processClasses(MorphConfiguration $configuration) {
@@ -88,6 +94,7 @@ abstract class AbstractMigrationStategy implements MigrationStrategyInterface {
 			$this->classDefinitionContainer->findByFact('isValueObject', TRUE)
 		);
 
+		$this->startProgress('Refactoring classes', count($classes));
 		foreach ($classes as $class) {
 			$file    = $class->getClassMapping()->getTargetFile();
 			$content = file_get_contents($file);
@@ -101,7 +108,9 @@ abstract class AbstractMigrationStategy implements MigrationStrategyInterface {
 
 			$content = $this->printer->prettyPrintFile($stmts);
 			file_put_contents($file, $content);
+			$this->advanceProgress();
 		}
+		$this->finishProgress();
 	}
 
 	/**
@@ -109,4 +118,12 @@ abstract class AbstractMigrationStategy implements MigrationStrategyInterface {
 	 */
 	abstract protected function getMigrationVisitor();
 
+	protected function startProgress($message, $max) {
+	}
+
+	protected function advanceProgress() {
+	}
+
+	protected function finishProgress() {
+	}
 }

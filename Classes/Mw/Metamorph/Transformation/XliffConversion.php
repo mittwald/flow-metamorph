@@ -12,7 +12,7 @@ use TYPO3\Flow\Utility\Files;
 
 class XliffConversion extends AbstractTransformation {
 
-	use ProgressibleTransformation;
+	use ProgressibleTrait;
 
 	/**
 	 * @var PackageManagerInterface

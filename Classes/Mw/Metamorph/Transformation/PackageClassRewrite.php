@@ -16,7 +16,7 @@ use TYPO3\Flow\Annotations as Flow;
 
 class PackageClassRewrite extends AbstractTransformation {
 
-	use ProgressibleTransformation;
+	use ProgressibleTrait;
 
 	/**
 	 * @var \TYPO3\Flow\Object\ObjectManagerInterface

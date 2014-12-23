@@ -13,7 +13,7 @@ use TYPO3\Flow\Utility\Files;
 
 class CreateClasses extends AbstractTransformation {
 
-	use ProgressibleTransformation;
+	use ProgressibleTrait;
 
 	/**
 	 * @var \TYPO3\Flow\Package\PackageManagerInterface
