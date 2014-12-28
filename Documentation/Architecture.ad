@@ -1,0 +1,134 @@
+= Metamorph architecture documentation
+Martin Helmich <m.helmich@mittwald.de>
+2014-12-23
+:source-highlighter: coderay
+:icons: font
+:toc:
+
+.Building this document
+****
+
+This is an *ASCIIdoc* document. To render it, you will need the `asciidoctor` and `pygments.rb` gems. You can then render it with the following command
+line call:
+
+----
+asciidoctor -a icons=font Architecture.adoc
+----
+****
+
+== Architecture overview
+
+== The domain model explained
+
+=== Basic entities
+
+==== Morph configuration
+
+The most central entity of the domain model is the `MorphConfiguration` class (unless otherwise noted, the `Mw\Metamorph\Domain\Model` namespace is assumed for all classes). This is the entity that you create using the `morph:create` command and get presented using the `morph:list` command.
+
+A morph configuration object has the following properties:
+
+Name:: This must be a valid TYPO3 Flow package key.
+Table structure mode:: The value of this property determines how Metamorph should treat an Extbase extension's table structure. If this value is `MIGRATE`, Metamorph will simply migrate your domain entity classes and then have _Doctrine_ generate a new table schema from the class definitions. If this value is `KEEP`, Metamorph will enrich your domain model classes with doctrine annotations so that the table schema stays identical to the Extbase version.
+{Package/Class/Resource}Mapping:: asdasd
+
+=== Persistence
+
+=== Transformations
+
+When executing a morph, Metamorph will execute a series of _transformations_; typically these will somehow process your source TYPO3 CMS installation and modify the local TYPO3 Flow installation.
+
+Each transformation step is modelled as a PHP class that needs to implement the interface `Mw\Metamorph\Transformation\Transformation`, as shown in the following listing. Typically though, you should use the class `Mw\Metamorph\Transformation\AbstractTransformation`, as this class already implements some of the basic functionality.
+
+.The transformation interface
+[source,php]
+----
+include::../Classes/Mw/Metamorph/Transformation/Transformation.php[]
+----
+
+Metamorph comes with a set of bundled transformations, that _should_ handle most of the issues that arise when migrating Extbase or pibase extensions. These will be looked at in more detail in a later section of this document.
+
+The transformations that are executed are specified in the settings, in special in the `Mw.Metamorph.transformations` property. Have a look at the following listing to see how the transformations and their execution order is specified:
+
+.Specifying transformations and execution order in the package configuration
+[[metamorph-settings]]
+[source,yml]
+----
+Mw:
+  Metamorph:
+    transformations:
+      extensionInventory:
+        name: ExtensionInventory // <1>
+        position: 10 // <2>
+      classInventory:
+        name: ClassInventory
+        position: 20
+        settings: // <3>
+          visitors: []
+      resourceInventory:
+        name: ResourceInventory
+        position: after classInventory
+----
+<1> This is a class name. If you specify an unqualified class name, Metamorph will assume the namespace `Mw\Metamorph\Transformation` for this class.
+<2> You can position elements using FLOW's _positional array sorter_.
+<3> Some transformations allow you to pass custom settings. These will be passed into the `setSettings` method of the transformation class.
+
+As you may have guessed, you are free to add additional transformation steps to this list in the settings of your own packages. This allows you to extend and modify Metamorph's default transformation process according to your own custom requirements.
+
+TIP: When overwriting/extending another package's settings, remember to add the `mittwald-typo3/metamorph` dependency to your own package's `composer.json`. TYPO3 Flow uses the Composer dependency graph to figure out in which order the settings should be merged.
+
+=== Existing transformations
+
+== Modifying source code inside transformations
+
+Metamorph relies heavily on on Nikita Popov's https://github.com/nikic/PHP-Parser[_PHP-Parser_ library] for parsing and modifying PHP source code. Source code transformation is accomplished by parsing PHP code into a http://en.wikipedia.org/wiki/Abstract_syntax_tree[syntax tree] using the PHP parser, then transforming that syntax tree according to your requirements and then dumping the tree back into source code.
+
+Using the PHP Parser, this might look as follows:
+
+[source,php]
+----
+$lexer   = new \PhpParser\Lexer();
+$parser  = new \PhpParser\Parser($lexer);
+$printer = new \PhpParser\PrettyPrinter\Standard();
+
+$source = file_get_contents("Some/Source/Class.php");
+$stmts  = $parser->parse($source);
+
+// Do the magic on $stmts
+
+file_put_contents("Some/Target/Class.php", $printer->prettyPrintFile($stmts));
+----
+
+In the above example, `$stmts` is simply a list of tree nodes (that is, instances of `PhpParser\Node`). While you could now walk this tree manually, it is usually easier to use the `PhpParser\NodeTraverser` class and providing a custom node http://en.wikipedia.org/wiki/Visitor_pattern[visitor]. For this, you need to implement the `PhpParser\NodeVisitor` interface, typically by extending the `PhpParser\NodeVisitorAbstract` class.
+
+Consider the following visitor class that replaces the name of all defined classes with "Chocolate":
+
+[source,php]
+----
+use PhpParser\NodeVisitorAbstract;
+use PhpParser\Node;
+
+class MyNodeVisitor extends NodeVisitorAbstract {
+    public function leaveNode(Node $node) { // <1>
+        if ($node instanceof Node\Stmt\Class_) {
+            $node->name = "Chocolate";
+            return $node; // <2>
+        }
+        return NULL; // <3>
+    }
+}
+----
+<1> This method is called for each node, when the traverser _leaves_ the node (effectively implementing a depth-first traversal of the tree). You can also implement the `enterNode(Node $node)` function to implement a breath-first search.
+<2> If a node was modified by the visitor, it needs to be returned.
+<3> Return `NULL` for unchanged nodes. You can also return `FALSE` to completely remove a node (and all sub-nodes) from the syntax tree.
+
+You can call this visitor as follows:
+
+[source,php]
+----
+$traverser = new \PhpParser\NodeTraverser();
+$traverser->addVisitor(new MyNodeVisitor()); // <1>
+
+$stmts = $traverser->traverse();
+----
+<1> You can actually add as many visitors as you like to a single traverser.
