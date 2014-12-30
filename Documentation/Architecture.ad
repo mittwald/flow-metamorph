@@ -8,11 +8,17 @@ Martin Helmich <m.helmich@mittwald.de>
 .Building this document
 ****
 
-This is an *ASCIIdoc* document. To render it, you will need the `asciidoctor` and `pygments.rb` gems. You can then render it with the following command
+This is an *ASCIIdoc* document. To render it, you will need the `asciidoctor` and `pygments.rb` gems. You can then render it into an HTML document with the following command
 line call:
 
 ----
-asciidoctor -a icons=font Architecture.adoc
+asciidoctor -r asciidoctor-diagram Architecture.adoc
+----
+
+Build the PDF using the `asciidoctor-pdf` gem with the following command line call:
+
+----
+asciidoctor-pdf -r asciidoctor-diagram Architecture.adoc
 ----
 ****
 
@@ -22,17 +28,192 @@ asciidoctor -a icons=font Architecture.adoc
 
 === Basic entities
 
+["plantuml", "asciidoctor-diagram-classes", "png"]
+---------------------------------------------------------------------
+class MorphConfiguration {
+	# name : string
+	# sourceDirectory : string
+	# tableStructureMode : enum[KEEP, MIGRATE]
+}
+
+interface ExtensionMatcher {
+	match (extensionKey : string)
+}
+
+class AllMatcher
+class UnionMatcher
+class PatternMatcher {
+	# pattern : string
+}
+
+AllMatcher --|> ExtensionMatcher
+UnionMatcher --|> ExtensionMatcher
+UnionMatcher *--> ExtensionMatcher
+PatternMatcher --|> ExtensionMatcher
+
+MorphConfiguration --> ExtensionMatcher
+
+class ResourceMappingContainer {
+	+ getResourceMappings() : ResourceMapping[]
+	+ hasResourceMapping(sourceFile) : bool
+	+ addResourceMapping(mapping : ResourceMapping)
+	+ getResourceMapping(sourceFile) : ResourceMapping
+}
+
+class ClassMappingContainer {
+	+ getClassMappings() : ClassMapping[]
+	+ hasClassMapping(oldClassName) : bool
+	+ addClassMapping(mapping : ClassMapping)
+	+ getClassMapping(oldClassName) : ClassMapping
+	+ getClassMappingByNewClassName(newClassName : string) : ClassMapping
+	+ getClassMappingByFilter(filter : callable) : ClassMapping
+}
+
+class PackageMappingContainer {
+	+ getPackageMappings() : PackageMapping[]
+	+ hasPackageMapping(extensionKey) : bool
+	+ addPackageMapping(mapping : PackageMapping)
+	+ getPackageMapping(extensionKey) : PackageMapping
+	+ getPackageMappingByFilter(filter : callable) : PackageMapping
+	+ removePackageMapping(extensionKey)
+}
+
+class ResourceMapping {
+	# sourceFile : string
+	# targetFile : string
+	# package : string
+	# action : string
+}
+
+class ClassMapping {
+	# sourceFile : string
+	# oldClassName : string
+	# newClassName : string
+	# package : string
+	# targetFile : string
+	# action : string
+}
+
+class PackageMapping {
+	# extensionKey: string
+	# packageKey : string
+	# filePath : string
+	# action : string
+	# description : string
+	# version : string
+	# authors : array<array<string,string>>
+}
+
+class Reviewable << (T,#FF7700) >> {
+	# reviewed : bool
+}
+
+ResourceMappingContainer *--> ResourceMapping
+ClassMappingContainer *--> ClassMapping
+PackageMappingContainer *--> PackageMapping
+
+MorphConfiguration --> ResourceMappingContainer
+MorphConfiguration --> ClassMappingContainer
+MorphConfiguration --> PackageMappingContainer
+
+ResourceMappingContainer --|> Reviewable
+ClassMappingContainer --|> Reviewable
+PackageMappingContainer --|> Reviewable
+---------------------------------------------------------------------
+
 ==== Morph configuration
 
-The most central entity of the domain model is the `MorphConfiguration` class (unless otherwise noted, the `Mw\Metamorph\Domain\Model` namespace is assumed for all classes). This is the entity that you create using the `morph:create` command and get presented using the `morph:list` command.
+The most central entity of the domain model is the `MorphConfiguration` class (unless otherwise noted, the `Mw\Metamorph\Domain\Model` namespace is implied for all classes). This is the entity that you create using the `morph:create` command and get presented using the `morph:list` command.
 
 A morph configuration object has the following properties:
 
-Name:: This must be a valid TYPO3 Flow package key.
-Table structure mode:: The value of this property determines how Metamorph should treat an Extbase extension's table structure. If this value is `MIGRATE`, Metamorph will simply migrate your domain entity classes and then have _Doctrine_ generate a new table schema from the class definitions. If this value is `KEEP`, Metamorph will enrich your domain model classes with doctrine annotations so that the table schema stays identical to the Extbase version.
-{Package/Class/Resource}Mapping:: asdasd
+`name`:: This must be a valid TYPO3 Flow package key.
+`sourceDirectory`:: The directory from where to import extensions. This usually should be the root directory of a TYPO3 CMS installation.
+`tableStructureMode`:: The value of this property determines how Metamorph should treat an Extbase extension's table structure. If this value is `MIGRATE`, Metamorph will simply migrate your domain entity classes and then have _Doctrine_ generate a new table schema from the class definitions. If this value is `KEEP`, Metamorph will enrich your domain model classes with doctrine annotations so that the table schema stays identical to the Extbase version.
+`extensionMatcher`:: This property contains a configuration on how TYPO3 extensions to be migrated should be selected. See the <<Extension selection>> section for more information.
+`{package|class|resource}MappingContainer`:: See the <<Mapping configurations>> section for more information.
+
+NOTE: The attributes `name`, `sourceDirectory`, `extensionMatcher` and `tableStructureMode` are queried by the morph creation wizard. All other properties are filled dynamically by transformation steps when the morph configuration is actually executed.
+
+==== Extension selection
+
+Each morph configuration object is associated to an `ExtensionMatcher` object. This object determines which extensions from the source TYPO3 site should be migrated to Flow. The `ExtensionMatcher` object looks as follows:
+
+[source,php]
+----
+namespace Mw\Metamorph\Domain\Model\Extension;
+
+interface ExtensionMatcher
+{
+    public function match($extensionKey);
+}
+----
+
+When creating a morph configuration using the CLI wizard, you will typically get one or several instances of the `PatternExtensionMatcher` class, which contains a regular expression that extension keys must match in order to be migrated.
+
+==== Mapping configurations
+
+The _mapping configurations_ describe what should happen to individual source items during the migration process. For example, the _package mapping_ describes, which TYPO3 extensions should be migrated to Flow packages, which package keys should be used and what metadata to write into the target package's `composer.json`.
+
+Package mapping:: Describes *for each TYPO3 extension*, (1) whether to migrate this extension or not, (2) which package key to use and (3) what metadata to write into the `composer.json` file (author, description, versions, ...).
+
+Class mapping:: Describes *for each PHP class* in all migrated extensions, (1) whether to migrate this class or not, (2) which (new) class name to use and (3) in which package the class should be migrated.
+
+Resource mapping:: Describes *for each resource file* in all migrated extensions, (1) whether to migrate this resource or not and (2) to which location in the file system the resource should be migrated.
+
+NOTE: Typically, the package, class and resource mappings are auto-generated during one of the first transformation steps. During this process, Metamorph will make assumptions concerning package keys (see <<Building the package map>>), new class names (see <<Building the class map>>) and resource file names (see <<Building the resource map>>). These can then be manually edited later.
+
+In order to prevent apocalyptic scenarios, Metamorph will require auto-generated mappings to be reviewed by the user before doing anything. While Metamorph is capable of performing quite sound assumptions when migrating Extbase extensions, converting pibase extensions is largely guesswork.
+
+==== Class schemata
+
+The `ClassDefinition` and `PropertyDefinition` classes model a TYPO3 extension's class schema. You can use these classes to inquire (and store) facts about classes and properties.
+
+NOTE: The class schema is built during run-time (see the <<Analyzing the class definitions>> section).
+
+A common use case might be to inqure about inheritance hierarchies in the source code:
+
+[source,php]
+----
+class SomeTransformation {
+  /**
+   * @var \Mw\Metamorph\Domain\Model\ClassDefinitionContainer
+   * @Flow\Inject
+   */
+  protected $classDefinitionContainer; // <1>
+
+  public function execute(MorphConfiguration $configuration) {
+    $frontendUserSubclasses = $this
+      ->classDefinitionContainer
+      ->findByFilter(function(ClassDefinition $d) {
+        return
+          $d->doesInherit('TYPO3\\CMS\\Extbase\\Domain\\Model\\FrontendUser') ||
+          $d->doesInherit('Tx_Extbase_Domain_Model_FrontendUser'); // <2>
+        });
+
+    // Do some magic!
+  }
+}
+----
+<1> You can access the class definitions by injecting the `Mw\Metamorph\Domain\Model\ClassDefinitionContainer` class (it's a singleton).
+<2> Metamorph *does not* resolve compatibility class names (yet). If you want to transform older TYPO3 extensions too, you should also check for legacy class names.
 
 === Persistence
+
+Persisting the domain entities is not a concern of the domain model. The actual persistence logic is embedded in proxy classes that are organized in the `Mw\Metamorph\Persistence` namespace. All persistence classes use YAML files as storage backend (optionally, with a Git repository as versioning backend).
+
+IMPORTANT: Usually, you should never use these classes! Access to the persistence layer is encapsulated by the `MorphConfigurationRepository` class.
+
+As the `MorphConfiguration` class is always the aggregate root, the `MorphConfigurationWriter` class should always be used for persisting morph configurations. The writer will dump the entire aggregate into YAML files and store these in a TYPO3 Flow package. The morph configuration name will be used as package name.
+
+=== Constraints
+
+There are some constraints that the current state of the domain model entities must always fulfil. Since the transformation steps may change the domain entities, these constraints are checked before and after each transformation step. This is done using aspects of Flow's AOP framework.
+
+Currently, the following constraints are asserted before each transformation step:
+
+* The domain entities must be in a valid state. This means for example, that all required values are set, and the package mapping must contain valid TYPO3 Flow package keys.
+* Package, class and resource mapping must be reviewed. Whenever new values are automatically added to any of these mapping configurations, they are flagged as _unreviewed_. Metamorph will then deny any destructive operations until the changed to the mapping configuration have been reviewed. This is a safeguard against potentially harmful transformations.
 
 === Transformations
 
@@ -43,8 +224,23 @@ Each transformation step is modelled as a PHP class that needs to implement the 
 .The transformation interface
 [source,php]
 ----
-include::../Classes/Mw/Metamorph/Transformation/Transformation.php[]
+namespace Mw\Metamorph\Transformation;
+
+use Mw\Metamorph\Domain\Model\MorphConfiguration;
+use Mw\Metamorph\Domain\Service\MorphExecutionState;
+use Symfony\Component\Console\Output\OutputInterface;
+
+interface Transformation
+{
+    public function setSettings(array $settings);
+    public function execute(
+        MorphConfiguration $configuration,
+        MorphExecutionState $state,
+        OutputInterface $out // <1>
+    );
+}
 ----
+<1> Don't depend on the `$out` parameter. It's likely to be deprecated.
 
 Metamorph comes with a set of bundled transformations, that _should_ handle most of the issues that arise when migrating Extbase or pibase extensions. These will be looked at in more detail in a later section of this document.
 
@@ -52,22 +248,22 @@ The transformations that are executed are specified in the settings, in special 
 
 .Specifying transformations and execution order in the package configuration
 [[metamorph-settings]]
-[source,yml]
+[source,yaml]
 ----
 Mw:
   Metamorph:
     transformations:
       extensionInventory:
-        name: ExtensionInventory // <1>
-        position: 10 // <2>
+        name: ExtensionInventory # <1>
+        position: 10 # <2>
       classInventory:
         name: ClassInventory
         position: 20
-        settings: // <3>
+        settings: # <3>
           visitors: []
       resourceInventory:
         name: ResourceInventory
-        position: after classInventory
+        position: after classInventory # <2>
 ----
 <1> This is a class name. If you specify an unqualified class name, Metamorph will assume the namespace `Mw\Metamorph\Transformation` for this class.
 <2> You can position elements using FLOW's _positional array sorter_.
@@ -77,11 +273,128 @@ As you may have guessed, you are free to add additional transformation steps to 
 
 TIP: When overwriting/extending another package's settings, remember to add the `mittwald-typo3/metamorph` dependency to your own package's `composer.json`. TYPO3 Flow uses the Composer dependency graph to figure out in which order the settings should be merged.
 
-=== Existing transformations
+== Existing transformations
+
+=== Building the package map
+
+The `Mw\Metamorph\Transformation\ExtensionInventory` step should be the first transformation to be executed (although it does not actually transform anything, yet). It will perform the following actions:
+
+- Go into the source directory of the current morph configuration (remember, the source directory is the root directory of a TYPO3 CMS installation) and scan the `typo3conf/ext` directory for TYPO3 extensions.
+- Apply the _extension matcher_ (see <<Extension selection>> for more information) of the current configuration *on each extension* to check whether the extension should be migrated to the current TYPO3 Flow installation.
+- For each extension that should be migrated:
+
+  * Try to guess a good TYPO3 Flow package key (and yes, this is actually mostly guesswork!). This is done using the following algorithm (pseudocode):
++
+[source,java]
+----
+extensionKey
+  .split('_')
+  .map((word : string) => word.firstLetterToUppercase())
+  .join('.')
+----
++
+NOTE: This algorithm is not optimal! It will not always generate valid package keys, so sometimes, manual adjustments may be necessary. See the explanation box below for more information.
+
+  * Extract metadata (like description and author information) from the TYPO3 extension's `ext_emconf.php` file.
+
+  * Create a new package mapping from the TYPO3 extension.
+
+.On package name generation
+****
+
+As you may have noticed, the automatic package name generation does not produce optimal results in all cases. In some cases, manual adjustments might be necessary. Metamorph will try to warn you about invalid or otherwise dangerous package names. However, while these are easy to find, they are difficult to fix automatically, so some manual adjustments might be needed.
+
+The table below contains some examples on how extension keys are converted to package keys (along with some typical pitfalls):
+
+|===
+|Extension key |Package key |Remarks
+
+|`mw_example`
+|`Mw.Example`
+|Valid! Yay!
+
+|`example`
+|`Example`
+|Invalid, no vendor prefix
+
+|`mw_example_advanced`
+|`Mw.Example.Advanced`
+|Valid per se, but PSR-0 namespaces overlap with `Mw.Example`
+|===
+
+****
+
+=== Building the class map
+
+The `Mw\Metamorph\Transformation\ClassInventory` step should be executed *after* the package map generation. It will perform the following actions:
+
+- *For each* package from the package mapping,
+
+  * Find all PHP files. Parse the PHP files and look for class definitions.
+  * *For each PHP class*, use the package name and try to generate a class name that fits into the PSR-0 prefix of the package namespace.
+  * Create a new class mapping for each PHP class.
+
+.On class name generation
+****
+Metamorph tries to automatically determine a class name (and namespace) that fits into the PSR-0 namespace root of the containing package. This usually works well for Extbase classes that follow certain conventions, but is mainly guesswork for pibase extensions that are named without any fixed conventions. There are some special rules for plugin classes (like `tx_<extkey>_pi1`), though. Consider the following table for some examples on generated class names (the root namespace is `Mw\Example` in all cases):
+
+|===
+|Old class name |New class name |Remarks
+
+|`Mw\MwExample\Controller\FooController`
+|`Mw\Example\Controller\FooController`
+|
+
+|`Tx_MwExample_Controller_FooController`
+|`Mw\Example\Controller\FooController`
+|
+
+|`tx_mwexample_pi1`
+|`Mw\Example\Plugin\Pi1`
+| You should rename that one! `Pi1` is not a good class name.
+|===
+
+****
+
+=== Building the resource map
+
+The `Mw\Metamorph\Transformation\ResourceInventory` step should be executed *after* the package map generation. It will perform the following actions:
+
+- *For each* package from the package mapping,
+
+  * Find all resource files. Files are found by their *file extension*.
+  * Determine where the file should be stored in the migrated TYPO3 Flow package. While Extbase extensions follow the same pattern as Flow packages (with a `Resources/` directory and `Private` and `Public` subdirectories), in pibase extensions, resource files can actually be found anywhere. By default, Metamorph will try to categorize found resource files by their extension into groups and then move these into respective subdirectories.
++
+This is entirely configurable. The entire resource mapping is stored in the `Mw.Metamorph.resourceExtensions` setting:
++
+.Definition of resource mappings in the package settings
+[source,yaml]
+----
+Mw:
+  Metamorph:
+    resourceExtensions:
+      templates:
+        targetPath: Private/Templates
+        extensions: [html, htm]
+      languageFiles:
+        targetPath: Private/Language
+        extensions: [xml, xlf]
+      images:
+        targetPath: Public/Images
+        extensions: [jpeg, jpg, gif, tif, svg, eps, png]
+      javascript:
+        targetPath: Public/JavaScript
+        extensions: [js, coffee, ts]
+      css:
+        targetPath: Public/Stylesheets
+        extensions: [css, sass, less, scss]
+----
+
+=== Analyzing the class definitions
 
 == Modifying source code inside transformations
 
-Metamorph relies heavily on on Nikita Popov's https://github.com/nikic/PHP-Parser[_PHP-Parser_ library] for parsing and modifying PHP source code. Source code transformation is accomplished by parsing PHP code into a http://en.wikipedia.org/wiki/Abstract_syntax_tree[syntax tree] using the PHP parser, then transforming that syntax tree according to your requirements and then dumping the tree back into source code.
+Metamorph relies heavily on Nikita Popov's https://github.com/nikic/PHP-Parser[_PHP-Parser_ library] for parsing and modifying PHP source code. Source code transformation is accomplished by parsing PHP code into a http://en.wikipedia.org/wiki/Abstract_syntax_tree[syntax tree] using the PHP parser, then transforming that syntax tree according to your requirements and then dumping the tree back into source code.
 
 Using the PHP Parser, this might look as follows:
 
@@ -118,7 +431,7 @@ class MyNodeVisitor extends NodeVisitorAbstract {
     }
 }
 ----
-<1> This method is called for each node, when the traverser _leaves_ the node (effectively implementing a depth-first traversal of the tree). You can also implement the `enterNode(Node $node)` function to implement a breath-first search.
+<1> This method is called for each node, when the traverser _leaves_ the node (effectively implementing a depth-first traversal of the tree). You can also implement the `enterNode(Node $node)` function to implement a breath-first search or even combine the two methods.
 <2> If a node was modified by the visitor, it needs to be returned.
 <3> Return `NULL` for unchanged nodes. You can also return `FALSE` to completely remove a node (and all sub-nodes) from the syntax tree.
 
