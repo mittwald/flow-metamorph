@@ -102,5 +102,4 @@ class TransformationLoggingAspect {
 		$this->loggingWrapper->writeNested($message, $arguments);
 	}
 
-
 }

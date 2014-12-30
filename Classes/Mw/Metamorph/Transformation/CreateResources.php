@@ -40,4 +40,5 @@ class CreateResources extends AbstractTransformation implements Progressible {
 
 		$this->finishProgress();
 	}
+
 }

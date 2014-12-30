@@ -22,10 +22,8 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor {
 	public function __construct() {
 		// @formatter:off
 		$this->annotationMapping = [
-			'/@inject/'                                                                                      => '@Flow\\Inject',
-			'/@validate[ ]+(?:\$?(?<var>[a-zA-Z0-9_]+)[ ]+)?(?<type>[A-Za-z_\\\\]+)(?:\((?<options>.*)\))?/' => function (
-				array $m
-			) {
+			'/@inject/' => '@Flow\\Inject',
+			'/@validate[ ]+(?:\$?(?<var>[a-zA-Z0-9_]+)[ ]+)?(?<type>[A-Za-z_\\\\]+)(?:\((?<options>.*)\))?/' => function (array $m) {
 				$renderer = new AnnotationRenderer('Flow', 'Validate');
 				$renderer->addParameter('type', $m['type']);
 
@@ -39,10 +37,8 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor {
 
 				return $renderer->render();
 			},
-			'/@dontvalidatehmac/'                                                                            => '@Flow\\SkipCsrfProtection',
-			'/@dontvalidate(?:\s+\$?(?<var>.+))?/'                                                           => function (
-				array $m
-			) {
+			'/@dontvalidatehmac/' => '@Flow\\SkipCsrfProtection',
+			'/@dontvalidate(?:\s+\$?(?<var>.+))?/' => function (array $m) {
 				$renderer = new AnnotationRenderer('Flow', 'IgnoreValidation');
 
 				if (isset($m['var'])) {
@@ -51,15 +47,13 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor {
 
 				return $renderer->render();
 			},
-			'/@scope\s+(?<scope>singleton|prototype)/'                                                       => function (
-				array $m
-			) {
+			'/@scope\s+(?<scope>singleton|prototype)/' => function (array $m) {
 				return (new AnnotationRenderer('Flow', 'Scope'))
 					->setArgument($m['scope'])
 					->render();
 			},
-			'/@dontverifyrequesthash/'                                                                       => '@Flow\\SkipCsrfProtection',
-			'/@lazy/'                                                                                        => '@Flow\\Lazy'
+			'/@dontverifyrequesthash/' => '@Flow\\SkipCsrfProtection',
+			'/@lazy/' => '@Flow\\Lazy'
 		];
 		// @formatter:on
 	}

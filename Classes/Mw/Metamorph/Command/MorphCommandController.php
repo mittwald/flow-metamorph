@@ -118,7 +118,6 @@ class MorphCommandController extends CommandController {
 			$this->outputLine('Found <comment>no</comment> morph configurations.');
 			$this->outputLine('Use <comment>./flow morph:create</comment> to create a morph configuration.');
 		}
-
 	}
 
 	/**
