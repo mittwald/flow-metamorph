@@ -4,6 +4,12 @@ Mw\Metamorph\Command\MorphCommandController:
       object:
         name: Symfony\Component\Console\Output\ConsoleOutput
 
+Mw\Metamorph\Transformation\ClassInventory:
+  properties:
+    classNameConversionStrategy:
+      object:
+        name: Mw\Metamorph\Transformation\ClassNameConversion\CompoundConversionStrategy
+
 Symfony\Component\Console\Output\ConsoleOutput:
   className: Symfony\Component\Console\Output\ConsoleOutput
   scope: prototype
