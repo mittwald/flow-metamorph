@@ -88,6 +88,19 @@ Mw:
       images: {targetPath: Public/Images, extensions: [jpeg, jpg, gif, tif, svg, eps, png]}
       javascript: {targetPath: Public/JavaScript, extensions: [js, coffee, ts]}
       css: {targetPath: Public/Stylesheets, extensions: [css, sass, less, scss]}
+    classNameStrategies:
+      extbase:
+        name: ExtbaseNamespacedConversionStrategy
+        position: 10
+      extbaseLegacy:
+        name: ExtbaseLegacyConversionStrategy
+        position: after extbase
+      pibase:
+        name: PibasePluginConversionStrategy
+        position: after extbaseLegacy
+      generic:
+        name: GenericConversionStrategy
+        position: end
 
 TYPO3:
   Flow:

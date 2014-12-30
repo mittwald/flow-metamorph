@@ -9,6 +9,7 @@ use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
 use Mw\Metamorph\Transformation\ClassInventory\ClassFinderVisitor;
+use Mw\Metamorph\Transformation\ClassNameConversion\ClassNameConversionStrategy;
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor;
@@ -37,16 +38,16 @@ class ClassInventory extends AbstractTransformation {
 	protected $parser;
 
 	/**
-	 * @var ObjectManagerInterface
-	 * @Flow\Inject
-	 */
-	protected $objectManager;
-
-	/**
 	 * @var MorphConfigurationRepository
 	 * @Flow\Inject
 	 */
 	protected $morphRepository;
+
+	/**
+	 * @var ClassNameConversionStrategy
+	 * @Flow\Inject
+	 */
+	protected $classNameConversionStrategy;
 
 	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
 		$this->classMappingContainer = $configuration->getClassMappingContainer();
