@@ -1,7 +1,6 @@
 <?php
 namespace Mw\Metamorph\Transformation;
 
-
 use Helmich\Scalars\Types\String;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
@@ -12,107 +11,86 @@ use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\PackageInterface;
 use TYPO3\Flow\Utility\Files;
 
+class CreateClasses extends AbstractTransformation {
 
-class CreateClasses extends AbstractTransformation
-{
+	/**
+	 * @var \TYPO3\Flow\Package\PackageManagerInterface
+	 * @Flow\Inject
+	 */
+	protected $packageManager;
 
+	/**
+	 * @var MorphConfigurationRepository
+	 * @Flow\Inject
+	 */
+	protected $morphRepository;
 
+	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
+		$classMappingContainer = $configuration->getClassMappingContainer();
+		$packageClassCount     = [];
 
-    /**
-     * @var \TYPO3\Flow\Package\PackageManagerInterface
-     * @Flow\Inject
-     */
-    protected $packageManager;
+		foreach ($classMappingContainer->getClassMappings() as $classMapping) {
+			if ($classMapping->getAction() !== ClassMapping::ACTION_MORPH) {
+				continue;
+			}
 
+			$package      = $this->packageManager->getPackage($classMapping->getPackage());
+			$source       = file_get_contents($classMapping->getSourceFile());
+			$newClassName = new String($classMapping->getNewClassName());
 
-    /**
-     * @var MorphConfigurationRepository
-     * @Flow\Inject
-     */
-    protected $morphRepository;
+			$relativeFilename = $newClassName->replace('\\', '/')->append('.php');
+			$absoluteFilename = $this->getAbsoluteFilename($relativeFilename, $package);
 
+			Files::createDirectoryRecursively(dirname($absoluteFilename));
 
+			file_put_contents($absoluteFilename, $source);
 
-    public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out)
-    {
-        $classMappingContainer = $configuration->getClassMappingContainer();
-        $packageClassCount     = [];
+			if (!isset($packageClassCount[$package->getPackageKey()])) {
+				$packageClassCount[$package->getPackageKey()] = 0;
+			}
+			$packageClassCount[$package->getPackageKey()]++;
 
-        foreach ($classMappingContainer->getClassMappings() as $classMapping)
-        {
-            if ($classMapping->getAction() !== ClassMapping::ACTION_MORPH)
-            {
-                continue;
-            }
+			$classMapping->setTargetFile($absoluteFilename);
+		}
 
-            $package      = $this->packageManager->getPackage($classMapping->getPackage());
-            $source       = file_get_contents($classMapping->getSourceFile());
-            $newClassName = new String($classMapping->getNewClassName());
+		$this->morphRepository->update($configuration);
 
-            $relativeFilename = $newClassName->replace('\\', '/')->append('.php');
-            $absoluteFilename = $this->getAbsoluteFilename($relativeFilename, $package);
+		foreach ($packageClassCount as $package => $count) {
+			$this->log('<comment>%d</comment> classes written to package <comment>%s</comment>.', [$count, $package]);
+		}
+	}
 
-            Files::createDirectoryRecursively(dirname($absoluteFilename));
+	/**
+	 * Determines if a class contains a test case.
+	 *
+	 * @param \Helmich\Scalars\Types\String $relativeFilename The relative class file name.
+	 * @return bool TRUE if the class contains a test case, otherwise FALSE.
+	 */
+	private function isClassTestCase(String $relativeFilename) {
+		return $relativeFilename->strip('/')->contains('Tests/') || $relativeFilename->endsWidth('Test.php');
+	}
 
-            file_put_contents($absoluteFilename, $source);
-
-            if (!isset($packageClassCount[$package->getPackageKey()]))
-            {
-                $packageClassCount[$package->getPackageKey()] = 0;
-            }
-            $packageClassCount[$package->getPackageKey()]++;
-
-            $classMapping->setTargetFile($absoluteFilename);
-        }
-
-        $this->morphRepository->update($configuration);
-
-        foreach ($packageClassCount as $package => $count)
-        {
-            $this->log('<comment>%d</comment> classes written to package <comment>%s</comment>.', [$count, $package]);
-        }
-    }
-
-
-
-    /**
-     * Determines if a class contains a test case.
-     *
-     * @param \Helmich\Scalars\Types\String $relativeFilename The relative class file name.
-     * @return bool TRUE if the class contains a test case, otherwise FALSE.
-     */
-    private function isClassTestCase(String $relativeFilename)
-    {
-        return $relativeFilename->strip('/')->contains('Tests/') || $relativeFilename->endsWidth('Test.php');
-    }
-
-
-
-    /**
-     * Gets the absolute target filename for a class file.
-     *
-     * @param \Helmich\Scalars\Types\String $relativeFilename The relative class file name (auto-derived from class name).
-     * @param PackageInterface              $package          The target package.
-     * @return string The target filename.
-     */
-    private function getAbsoluteFilename(String $relativeFilename, PackageInterface $package)
-    {
-        if (FALSE === $this->isClassTestCase($relativeFilename))
-        {
-            return $package->getClassesPath() . '/' . $relativeFilename;
-        }
-        else
-        {
-            return (new String(''))
-                ->append($package->getPackagePath())
-                ->stripRight('/')
-                ->append('/Tests/Unit/')
-                ->append(
-                    $relativeFilename
-                        ->replace('Tests/', '')
-                        ->replace((new String($package->getPackageKey()))->replace('.', '/')->append('/'), '')
-                )
-                ->toPrimitive();
-        }
-    }
+	/**
+	 * Gets the absolute target filename for a class file.
+	 *
+	 * @param \Helmich\Scalars\Types\String $relativeFilename The relative class file name (auto-derived from class name).
+	 * @param PackageInterface              $package          The target package.
+	 * @return string The target filename.
+	 */
+	private function getAbsoluteFilename(String $relativeFilename, PackageInterface $package) {
+		if (FALSE === $this->isClassTestCase($relativeFilename)) {
+			return $package->getClassesPath() . '/' . $relativeFilename;
+		} else {
+			return (new String(''))
+				->append($package->getPackagePath())
+				->stripRight('/')
+				->append('/Tests/Unit/')
+				->append(
+					$relativeFilename
+						->replace('Tests/', '')
+						->replace((new String($package->getPackageKey()))->replace('.', '/')->append('/'), '')
+				)
+				->toPrimitive();
+		}
+	}
 }

@@ -1,7 +1,6 @@
 <?php
 namespace Mw\Metamorph\Scm\Listener;
 
-
 use Helmich\EventBroker\Annotations as Event;
 use Mw\Metamorph\Domain\Event\MorphConfigurationCreatedEvent;
 use Mw\Metamorph\Domain\Event\MorphConfigurationExecutionStartedEvent;
@@ -10,72 +9,58 @@ use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Scm\BackendLocator;
 use TYPO3\Flow\Annotations as Flow;
 
+class ScmSynchronizationListener {
 
-class ScmSynchronizationListener
-{
+	/**
+	 * @var BackendLocator
+	 * @Flow\Inject
+	 */
+	protected $locator;
 
+	/**
+	 * @param MorphConfigurationCreatedEvent $event
+	 * @Event\Listener("Mw\Metamorph\Domain\Event\MorphConfigurationCreatedEvent")
+	 */
+	public function initializeRepositoryListener(MorphConfigurationCreatedEvent $event) {
+		$backend   = $this->locator->getBackendByIdentifier($event->getOptions()->getVersionControlSystem());
+		$package   = $event->getMorphConfiguration()->getPackage();
+		$directory = $package->getPackagePath();
 
+		$backend->initialize($directory);
+	}
 
-    /**
-     * @var BackendLocator
-     * @Flow\Inject
-     */
-    protected $locator;
+	/**
+	 * @param MorphConfigurationExecutionStartedEvent $event
+	 * @throws HumanInterventionRequiredException
+	 *
+	 * @Event\Listener("Mw\Metamorph\Domain\Event\MorphConfigurationExecutionStartedEvent", async=FALSE)
+	 */
+	public function ensureConfigurationIsUnmodified(MorphConfigurationExecutionStartedEvent $event) {
+		$backend   = $this->locator->getBackendByConfiguration($event->getMorphConfiguration());
+		$package   = $event->getMorphConfiguration()->getPackage();
+		$directory = $package->getPackagePath();
 
+		if ($backend->isModified($directory)) {
+			throw new HumanInterventionRequiredException(
+				sprintf(
+					'The directory <comment>%s</comment> contains changes that are not checked into version control. ' .
+					'Please make sure that a clean working copy exists.',
+					$directory
+				)
+			);
+		}
+	}
 
+	/**
+	 * @param MorphConfigurationFileModifiedEvent $event
+	 * @Event\Listener("Mw\Metamorph\Domain\Event\MorphConfigurationFileModifiedEvent")
+	 */
+	public function commitConfigurationChanges(MorphConfigurationFileModifiedEvent $event) {
+		$backend   = $this->locator->getBackendByConfiguration($event->getMorphConfiguration());
+		$package   = $event->getMorphConfiguration()->getPackage();
+		$directory = $package->getPackagePath();
 
-    /**
-     * @param MorphConfigurationCreatedEvent $event
-     * @Event\Listener("Mw\Metamorph\Domain\Event\MorphConfigurationCreatedEvent")
-     */
-    public function initializeRepositoryListener(MorphConfigurationCreatedEvent $event)
-    {
-        $backend   = $this->locator->getBackendByIdentifier($event->getOptions()->getVersionControlSystem());
-        $package   = $event->getMorphConfiguration()->getPackage();
-        $directory = $package->getPackagePath();
-
-        $backend->initialize($directory);
-    }
-
-
-
-    /**
-     * @param MorphConfigurationExecutionStartedEvent $event
-     * @throws HumanInterventionRequiredException
-     *
-     * @Event\Listener("Mw\Metamorph\Domain\Event\MorphConfigurationExecutionStartedEvent", async=FALSE)
-     */
-    public function ensureConfigurationIsUnmodified(MorphConfigurationExecutionStartedEvent $event)
-    {
-        $backend   = $this->locator->getBackendByConfiguration($event->getMorphConfiguration());
-        $package   = $event->getMorphConfiguration()->getPackage();
-        $directory = $package->getPackagePath();
-
-        if ($backend->isModified($directory))
-        {
-            throw new HumanInterventionRequiredException(
-                sprintf(
-                    'The directory <comment>%s</comment> contains changes that are not checked into version control. ' .
-                    'Please make sure that a clean working copy exists.',
-                    $directory
-                )
-            );
-        }
-    }
-
-
-
-    /**
-     * @param MorphConfigurationFileModifiedEvent $event
-     * @Event\Listener("Mw\Metamorph\Domain\Event\MorphConfigurationFileModifiedEvent")
-     */
-    public function commitConfigurationChanges(MorphConfigurationFileModifiedEvent $event)
-    {
-        $backend   = $this->locator->getBackendByConfiguration($event->getMorphConfiguration());
-        $package   = $event->getMorphConfiguration()->getPackage();
-        $directory = $package->getPackagePath();
-
-        $backend->commit($directory, $event->getPurpose(), [$event->getRelativeFilename()]);
-    }
+		$backend->commit($directory, $event->getPurpose(), [$event->getRelativeFilename()]);
+	}
 
 }

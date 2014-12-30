@@ -1,7 +1,6 @@
 <?php
 namespace Mw\Metamorph\Transformation\RewriteNodeVisitors;
 
-
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinition;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer;
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
@@ -12,114 +11,89 @@ use PhpParser\Comment\Doc;
 use PhpParser\Node;
 use TYPO3\Flow\Annotations as Flow;
 
+class RewriteSingletonsVisitor extends AbstractVisitor {
 
-class RewriteSingletonsVisitor extends AbstractVisitor
-{
+	/**
+	 * @var ClassDefinitionContainer
+	 * @Flow\Inject
+	 */
+	protected $classDefinitionContainer;
 
+	/**
+	 * @var ImportHelper
+	 * @Flow\Inject
+	 */
+	protected $importHelper;
 
+	/**
+	 * @var Node\Stmt\Namespace_
+	 */
+	private $currentNamespace;
 
-    /**
-     * @var ClassDefinitionContainer
-     * @Flow\Inject
-     */
-    protected $classDefinitionContainer;
+	/**
+	 * @var DocCommentModifier
+	 * @Flow\Inject
+	 */
+	protected $commentModifier;
 
+	public function enterNode(Node $node) {
+		if ($node instanceof Node\Stmt\Namespace_) {
+			$this->currentNamespace = $node;
+		}
+	}
 
+	public function leaveNode(Node $node) {
+		if (!$node instanceof Node\Stmt\Class_) {
+			return NULL;
+		}
 
-    /**
-     * @var ImportHelper
-     * @Flow\Inject
-     */
-    protected $importHelper;
+		/** @noinspection PhpUndefinedFieldInspection */
+		$name       = $node->namespacedName->toString();
+		$definition = $this->classDefinitionContainer->get($name);
 
+		if ($definition && $this->isSingleton($definition)) {
+			$implementsList = $node->implements;
+			foreach ($implementsList as $key => $implements) {
+				if ($implements->toString() === 't3lib_Singleton' || $implements->toString(
+					) === 'TYPO3\\CMS\\Core\\SingletonInterface'
+				) {
+					unset($implementsList[$key]);
+				}
+			}
+			$node->implements = array_values($implementsList);
 
-    /**
-     * @var Node\Stmt\Namespace_
-     */
-    private $currentNamespace;
+			$comment = $node->getDocComment();
+			if (NULL === $comment) {
+				$comments   = $node->getAttribute('comments', []);
+				$comments[] = $comment = new Doc("/**\n */");
 
+				$node->setAttribute('comments', $comments);
+			}
 
-    /**
-     * @var DocCommentModifier
-     * @Flow\Inject
-     */
-    protected $commentModifier;
+			$this->commentModifier->addAnnotationToDocComment(
+				$comment,
+				(new AnnotationRenderer('Flow', 'Scope'))->setArgument('singleton')
+			);
 
+			$this->taskQueue->enqueue(
+				(new AddImportToClassTaskBuilder())
+					->setTargetClassName($node->namespacedName->toString())
+					->setImport('TYPO3\\Flow\\Annotations')
+					->setNamespaceAlias('Flow')
+					->buildTask()
+			);
 
+			return $node;
+		}
 
-    public function enterNode(Node $node)
-    {
-        if ($node instanceof Node\Stmt\Namespace_)
-        {
-            $this->currentNamespace = $node;
-        }
-    }
+		return NULL;
+	}
 
-
-
-    public function leaveNode(Node $node)
-    {
-        if (!$node instanceof Node\Stmt\Class_)
-        {
-            return NULL;
-        }
-
-        /** @noinspection PhpUndefinedFieldInspection */
-        $name       = $node->namespacedName->toString();
-        $definition = $this->classDefinitionContainer->get($name);
-
-        if ($definition && $this->isSingleton($definition))
-        {
-            $implementsList = $node->implements;
-            foreach ($implementsList as $key => $implements)
-            {
-                if ($implements->toString() === 't3lib_Singleton' || $implements->toString(
-                    ) === 'TYPO3\\CMS\\Core\\SingletonInterface'
-                )
-                {
-                    unset($implementsList[$key]);
-                }
-            }
-            $node->implements = array_values($implementsList);
-
-            $comment = $node->getDocComment();
-            if (NULL === $comment)
-            {
-                $comments   = $node->getAttribute('comments', []);
-                $comments[] = $comment = new Doc("/**\n */");
-
-                $node->setAttribute('comments', $comments);
-            }
-
-            $this->commentModifier->addAnnotationToDocComment(
-                $comment,
-                (new AnnotationRenderer('Flow', 'Scope'))->setArgument('singleton')
-            );
-
-            $this->taskQueue->enqueue(
-                (new AddImportToClassTaskBuilder())
-                    ->setTargetClassName($node->namespacedName->toString())
-                    ->setImport('TYPO3\\Flow\\Annotations')
-                    ->setNamespaceAlias('Flow')
-                    ->buildTask()
-            );
-
-            return $node;
-        }
-
-        return NULL;
-    }
-
-
-
-    private function isSingleton(ClassDefinition $classDefinition)
-    {
-        return
-            $classDefinition->doesImplement('t3lib_Singleton') ||
-            $classDefinition->doesImplement('TYPO3\\CMS\\Core\\SingletonInterface') ||
-            $classDefinition->doesInherit('TYPO3\\CMS\\Extbase\\Persistence\\Repository');
-    }
-
-
+	private function isSingleton(ClassDefinition $classDefinition) {
+		return
+			$classDefinition->doesImplement('t3lib_Singleton') ||
+			$classDefinition->doesImplement('TYPO3\\CMS\\Core\\SingletonInterface') ||
+			$classDefinition->doesInherit('TYPO3\\CMS\\Extbase\\Persistence\\Repository');
+	}
 
 }
