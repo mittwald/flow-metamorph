@@ -1,7 +1,6 @@
 <?php
 namespace Mw\Metamorph\Annotations;
 
-
 /**
  * @package    Mw\Metamorph
  * @subpackage Annotations
@@ -9,9 +8,6 @@ namespace Mw\Metamorph\Annotations;
  * @Annotation
  * @Target("CLASS")
  */
-class SkipPackageReview
-{
-
-
+class SkipPackageReview {
 
 }

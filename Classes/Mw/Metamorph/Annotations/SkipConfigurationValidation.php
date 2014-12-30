@@ -1,14 +1,12 @@
 <?php
 namespace Mw\Metamorph\Annotations;
 
-
-/*                                                                        *
- * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
- *                                                                        *
- * (C) 2014 Martin Helmich <m.helmich@mittwald.de>                        *
- *          Mittwald CM Service GmbH & Co. KG                             *
- *                                                                        */
-
+	/*                                                                        *
+	 * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
+	 *                                                                        *
+	 * (C) 2014 Martin Helmich <m.helmich@mittwald.de>                        *
+	 *          Mittwald CM Service GmbH & Co. KG                             *
+	 *                                                                        */
 
 /**
  * Annotations that marks Transformation for which the morph configuration
@@ -25,9 +23,6 @@ namespace Mw\Metamorph\Annotations;
  * @Annotation
  * @Target("CLASS")
  */
-class SkipConfigurationValidation
-{
-
-
+class SkipConfigurationValidation {
 
 }

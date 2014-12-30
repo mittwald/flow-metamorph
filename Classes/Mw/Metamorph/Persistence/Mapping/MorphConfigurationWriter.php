@@ -1,14 +1,12 @@
 <?php
 namespace Mw\Metamorph\Persistence\Mapping;
 
-
 /*                                                                        *
  * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
  *                                                                        *
  * (C) 2014 Martin Helmich <m.helmich@mittwald.de>                        *
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
-
 
 use Mw\Metamorph\Domain\Model\Extension\ExtensionMatcher;
 use Mw\Metamorph\Domain\Model\Extension\PatternExtensionMatcher;
@@ -23,8 +21,6 @@ use TYPO3\Flow\Package\MetaData;
 use TYPO3\Flow\Package\PackageInterface;
 use TYPO3\Flow\Package\PackageManagerInterface;
 use TYPO3\Flow\Utility\Files;
-use TYPO3\Flow\Validation\ValidatorResolver;
-
 
 /**
  * Writes morph configurations to disk.
@@ -34,99 +30,75 @@ use TYPO3\Flow\Validation\ValidatorResolver;
  *
  * @Flow\Scope("singleton")
  */
-class MorphConfigurationWriter
-{
+class MorphConfigurationWriter {
 
+	/**
+	 * @var PackageManagerInterface
+	 * @Flow\Inject
+	 */
+	protected $packageManager;
 
+	/**
+	 * @var PackageMappingContainerWriter
+	 * @Flow\Inject
+	 */
+	protected $packageMappingWriter;
 
-    /**
-     * @var PackageManagerInterface
-     * @Flow\Inject
-     */
-    protected $packageManager;
+	/**
+	 * @var ClassMappingContainerWriter
+	 * @Flow\Inject
+	 */
+	protected $classMappingWriter;
 
+	/**
+	 * @var ResourceMappingContainerWriter
+	 * @Flow\Inject
+	 */
+	protected $resourceMappingWriter;
 
-    /**
-     * @var PackageMappingContainerWriter
-     * @Flow\Inject
-     */
-    protected $packageMappingWriter;
+	public function createMorph(MorphConfiguration $morphConfiguration) {
+		$metaData = new MetaData($morphConfiguration->getName());
+		$package  = $this->packageManager->createPackage($morphConfiguration->getName(), $metaData);
+		$morphConfiguration->setPackage($package);
 
+		$this->writeMorph($package, $morphConfiguration);
+	}
 
-    /**
-     * @var ClassMappingContainerWriter
-     * @Flow\Inject
-     */
-    protected $classMappingWriter;
+	public function updateMorph(MorphConfiguration $morphConfiguration) {
+		$package = $this->packageManager->getPackage($morphConfiguration->getName());
+		$this->writeMorph($package, $morphConfiguration);
+	}
 
+	public function removeMorph(MorphConfiguration $morphConfiguration) {
+		$this->packageManager->deletePackage($morphConfiguration->getName());
+	}
 
-    /**
-     * @var ResourceMappingContainerWriter
-     * @Flow\Inject
-     */
-    protected $resourceMappingWriter;
+	private function writeMorph(PackageInterface $package, MorphConfiguration $morphConfiguration) {
+		$morphData = [
+			'sourceDirectory'       => $morphConfiguration->getSourceDirectory(),
+			'extensions'            => $this->exportExtensionMatcher($morphConfiguration->getExtensionMatcher()),
+			'tableStructureMode'    => $morphConfiguration->getTableStructureMode(),
+			'pibaseRefactoringMode' => $morphConfiguration->getPibaseRefactoringMode()
+		];
 
+		$configurationPath = $package->getConfigurationPath();
+		$morphPath         = Files::concatenatePaths([$configurationPath, 'Metamorph', 'Morph.yml']);
 
+		Files::createDirectoryRecursively(dirname($morphPath));
+		file_put_contents($morphPath, Yaml::dump($morphData));
 
-    public function createMorph(MorphConfiguration $morphConfiguration)
-    {
-        $metaData = new MetaData($morphConfiguration->getName());
-        $package  = $this->packageManager->createPackage($morphConfiguration->getName(), $metaData);
-        $morphConfiguration->setPackage($package);
+		$this->packageMappingWriter->writeMorphPackageMapping($morphConfiguration);
+		$this->classMappingWriter->writeMorphClassMapping($morphConfiguration);
+		$this->resourceMappingWriter->writeMorphResourceMapping($morphConfiguration);
+	}
 
-        $this->writeMorph($package, $morphConfiguration);
-    }
-
-
-
-    public function updateMorph(MorphConfiguration $morphConfiguration)
-    {
-        $package = $this->packageManager->getPackage($morphConfiguration->getName());
-        $this->writeMorph($package, $morphConfiguration);
-    }
-
-
-
-    public function removeMorph(MorphConfiguration $morphConfiguration)
-    {
-        $this->packageManager->deletePackage($morphConfiguration->getName());
-    }
-
-
-
-    private function writeMorph(PackageInterface $package, MorphConfiguration $morphConfiguration)
-    {
-        $morphData = [
-            'sourceDirectory'       => $morphConfiguration->getSourceDirectory(),
-            'extensions'            => $this->exportExtensionMatcher($morphConfiguration->getExtensionMatcher()),
-            'tableStructureMode'    => $morphConfiguration->getTableStructureMode(),
-            'pibaseRefactoringMode' => $morphConfiguration->getPibaseRefactoringMode()
-        ];
-
-        $configurationPath = $package->getConfigurationPath();
-        $morphPath         = Files::concatenatePaths([$configurationPath, 'Metamorph', 'Morph.yml']);
-
-        Files::createDirectoryRecursively(dirname($morphPath));
-        file_put_contents($morphPath, Yaml::dump($morphData));
-
-        $this->packageMappingWriter->writeMorphPackageMapping($morphConfiguration);
-        $this->classMappingWriter->writeMorphClassMapping($morphConfiguration);
-        $this->resourceMappingWriter->writeMorphResourceMapping($morphConfiguration);
-    }
-
-
-
-    private function exportExtensionMatcher(ExtensionMatcher $matcher)
-    {
-        if ($matcher instanceof PatternExtensionMatcher)
-        {
-            return ['pattern' => $matcher->getPattern()];
-        }
-        else if ($matcher instanceof UnionMatcher)
-        {
-            return array_map(array($this, 'exportExtensionMatcher'), $matcher->getMatchers());
-        }
-        return NULL;
-    }
+	private function exportExtensionMatcher(ExtensionMatcher $matcher) {
+		if ($matcher instanceof PatternExtensionMatcher) {
+			return ['pattern' => $matcher->getPattern()];
+		} else if ($matcher instanceof UnionMatcher) {
+			return array_map(array($this, 'exportExtensionMatcher'), $matcher->getMatchers());
+		}
+		return NULL;
+	}
 
 } 

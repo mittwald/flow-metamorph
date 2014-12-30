@@ -1,16 +1,10 @@
 <?php
 namespace Mw\Metamorph\Domain\Model\Extension;
 
+class AllMatcher implements ExtensionMatcher {
 
-class AllMatcher implements ExtensionMatcher
-{
-
-
-
-    public function match($extensionKey)
-    {
-        return TRUE;
-    }
-
+	public function match($extensionKey) {
+		return TRUE;
+	}
 
 }

@@ -13,90 +13,69 @@ use TYPO3\Flow\Aop\JoinPointInterface;
  *
  * @Flow\Aspect
  */
-class ReviewAssertionAspect
-{
+class ReviewAssertionAspect {
 
+	/**
+	 * @Flow\Pointcut("within(Mw\Metamorph\Transformation\Transformation) && !classAnnotatedWith(Mw\Metamorph\Annotations\SkipPackageReview) && method(.*->execute())")
+	 */
+	public function packageMapReviewPointcut() { }
 
+	/**
+	 * @Flow\Pointcut("within(Mw\Metamorph\Transformation\Transformation) && !classAnnotatedWith(Mw\Metamorph\Annotations\SkipClassReview) && method(.*->execute())")
+	 */
+	public function classMapReviewPointcut() { }
 
-    /**
-     * @Flow\Pointcut("within(Mw\Metamorph\Transformation\Transformation) && !classAnnotatedWith(Mw\Metamorph\Annotations\SkipPackageReview) && method(.*->execute())")
-     */
-    public function packageMapReviewPointcut() { }
+	/**
+	 * @Flow\Pointcut("within(Mw\Metamorph\Transformation\Transformation) && !classAnnotatedWith(Mw\Metamorph\Annotations\SkipResourceReview) && method(.*->execute())")
+	 */
+	public function resourceMapReviewPointcut() { }
 
+	/**
+	 * @param JoinPointInterface $joinPoint
+	 * @throws HumanInterventionRequiredException
+	 *
+	 * @Flow\Before("Mw\Metamorph\Domain\Aspect\ReviewAssertionAspect->packageMapReviewPointcut")
+	 */
+	public function validatePackageMapReview(JoinPointInterface $joinPoint) {
+		$this->assertReviewableIsReviewed(
+			$joinPoint,
+			function (MorphConfiguration $config) { return $config->getPackageMappingContainer(); }
+		);
+	}
 
+	/**
+	 * @param JoinPointInterface $joinPoint
+	 * @throws HumanInterventionRequiredException
+	 *
+	 * @Flow\Before("Mw\Metamorph\Domain\Aspect\ReviewAssertionAspect->classMapReviewPointcut")
+	 */
+	public function validateClassMapReview(JoinPointInterface $joinPoint) {
+		$this->assertReviewableIsReviewed(
+			$joinPoint,
+			function (MorphConfiguration $config) { return $config->getClassMappingContainer(); }
+		);
+	}
 
-    /**
-     * @Flow\Pointcut("within(Mw\Metamorph\Transformation\Transformation) && !classAnnotatedWith(Mw\Metamorph\Annotations\SkipClassReview) && method(.*->execute())")
-     */
-    public function classMapReviewPointcut() { }
+	/**
+	 * @param JoinPointInterface $joinPoint
+	 * @throws HumanInterventionRequiredException
+	 *
+	 * @Flow\Before("Mw\Metamorph\Domain\Aspect\ReviewAssertionAspect->resourceMapReviewPointcut")
+	 */
+	public function validateResourceMapReview(JoinPointInterface $joinPoint) {
+		$this->assertReviewableIsReviewed(
+			$joinPoint,
+			function (MorphConfiguration $config) { return $config->getResourceMappingContainer(); }
+		);
+	}
 
-
-
-    /**
-     * @Flow\Pointcut("within(Mw\Metamorph\Transformation\Transformation) && !classAnnotatedWith(Mw\Metamorph\Annotations\SkipResourceReview) && method(.*->execute())")
-     */
-    public function resourceMapReviewPointcut() { }
-
-
-
-    /**
-     * @param JoinPointInterface $joinPoint
-     * @throws HumanInterventionRequiredException
-     *
-     * @Flow\Before("Mw\Metamorph\Domain\Aspect\ReviewAssertionAspect->packageMapReviewPointcut")
-     */
-    public function validatePackageMapReview(JoinPointInterface $joinPoint)
-    {
-        $this->assertReviewableIsReviewed(
-            $joinPoint,
-            function (MorphConfiguration $config) { return $config->getPackageMappingContainer(); }
-        );
-    }
-
-
-
-    /**
-     * @param JoinPointInterface $joinPoint
-     * @throws HumanInterventionRequiredException
-     *
-     * @Flow\Before("Mw\Metamorph\Domain\Aspect\ReviewAssertionAspect->classMapReviewPointcut")
-     */
-    public function validateClassMapReview(JoinPointInterface $joinPoint)
-    {
-        $this->assertReviewableIsReviewed(
-            $joinPoint,
-            function (MorphConfiguration $config) { return $config->getClassMappingContainer(); }
-        );
-    }
-
-
-
-    /**
-     * @param JoinPointInterface $joinPoint
-     * @throws HumanInterventionRequiredException
-     *
-     * @Flow\Before("Mw\Metamorph\Domain\Aspect\ReviewAssertionAspect->resourceMapReviewPointcut")
-     */
-    public function validateResourceMapReview(JoinPointInterface $joinPoint)
-    {
-        $this->assertReviewableIsReviewed(
-            $joinPoint,
-            function (MorphConfiguration $config) { return $config->getResourceMappingContainer(); }
-        );
-    }
-
-
-
-    private function assertReviewableIsReviewed(JoinPointInterface $joinPoint, callable $getter)
-    {
-        $configuration = array_values($joinPoint->getMethodArguments())[0];
-        if ($configuration instanceof MorphConfiguration)
-        {
-            /** @var Reviewable $reviewable */
-            $reviewable = call_user_func_array($getter, [$configuration]);
-            $reviewable->assertReviewed();
-        }
-    }
-
+	private function assertReviewableIsReviewed(JoinPointInterface $joinPoint, callable $getter) {
+		$configuration = array_values($joinPoint->getMethodArguments())[0];
+		if ($configuration instanceof MorphConfiguration) {
+			/** @var Reviewable $reviewable */
+			$reviewable = call_user_func_array($getter, [$configuration]);
+			$reviewable->assertReviewed();
+		}
+	}
 
 }

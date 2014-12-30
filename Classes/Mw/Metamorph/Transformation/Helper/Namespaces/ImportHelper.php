@@ -1,7 +1,6 @@
 <?php
 namespace Mw\Metamorph\Transformation\Helper\Namespaces;
 
-
 /*                                                                        *
  * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
  *                                                                        *
@@ -9,72 +8,57 @@ namespace Mw\Metamorph\Transformation\Helper\Namespaces;
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
 
-
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Use_;
 use PhpParser\Node\Stmt\UseUse;
 
-class ImportHelper
-{
+class ImportHelper {
 
+	public function importNamespaceIntoOtherNamespace(Namespace_ $namespaceNode, $importNamespace, $alias = NULL) {
+		$foundImports    = [];
+		$found           = FALSE;
+		$lastImportIndex = NULL;
 
+		$fqnn  = new FullyQualified($importNamespace);
+		$alias = $alias ?: $fqnn->getLast();
 
-    public function importNamespaceIntoOtherNamespace(Namespace_ $namespaceNode, $importNamespace, $alias = NULL)
-    {
-        $foundImports    = [];
-        $found           = FALSE;
-        $lastImportIndex = NULL;
+		foreach ($namespaceNode->stmts as $key => $stmt) {
+			if (!$stmt instanceof Use_) {
+				continue;
+			}
 
-        $fqnn  = new FullyQualified($importNamespace);
-        $alias = $alias ?: $fqnn->getLast();
+			$lastImportIndex = $key;
+			foreach ($stmt->uses as $use) {
+				$foundImports[] = [
+					'name'  => $use->name->toString(),
+					'alias' => $use->alias
+				];
 
-        foreach ($namespaceNode->stmts as $key => $stmt)
-        {
-            if (!$stmt instanceof Use_)
-            {
-                continue;
-            }
+				if ($alias == $use->alias && $use->name->toString() == $importNamespace) {
+					$found = TRUE;
+				}
+			}
+		}
 
-            $lastImportIndex = $key;
-            foreach ($stmt->uses as $use)
-            {
-                $foundImports[] = [
-                    'name'  => $use->name->toString(),
-                    'alias' => $use->alias
-                ];
+		if ($found) {
+			return $namespaceNode;
+		}
 
-                if ($alias == $use->alias && $use->name->toString() == $importNamespace)
-                {
-                    $found = TRUE;
-                }
-            }
-        }
+		$innerUse = new UseUse(new Name($importNamespace), $alias);
+		$outerUse = new Use_([$innerUse]);
 
-        if ($found)
-        {
-            return $namespaceNode;
-        }
+		$stmts = $namespaceNode->stmts;
 
-        $innerUse = new UseUse(new Name($importNamespace), $alias);
-        $outerUse = new Use_([$innerUse]);
+		if ($lastImportIndex) {
+			array_splice($stmts, $lastImportIndex + 1, 0, [$outerUse]);
+		} else {
+			$stmts = array_merge([$outerUse], $stmts);
+		}
 
-        $stmts = $namespaceNode->stmts;
-
-        if ($lastImportIndex)
-        {
-            array_splice($stmts, $lastImportIndex + 1, 0, [$outerUse]);
-        }
-        else
-        {
-            $stmts = array_merge([$outerUse], $stmts);
-        }
-
-        $namespaceNode->stmts = $stmts;
-        return $namespaceNode;
-    }
-
-
+		$namespaceNode->stmts = $stmts;
+		return $namespaceNode;
+	}
 
 }

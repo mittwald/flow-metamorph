@@ -1,122 +1,90 @@
 <?php
 namespace Mw\Metamorph\Transformation\Task\Builder;
 
-
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
 use Mw\Metamorph\Transformation\Task\AddPropertyToClassTask;
 
-class AddPropertyToClassTaskBuilder
-{
+class AddPropertyToClassTaskBuilder {
 
+	/** @var string */
+	private $targetClassName;
 
+	/** @var string */
+	private $propertyName;
 
-    /** @var string */
-    private $targetClassName;
+	/** @var string */
+	private $propertyType;
 
+	/** @var string */
+	private $propertyIsPublic;
 
-    /** @var string */
-    private $propertyName;
+	/** @var array */
+	private $propertyAnnotations = [];
 
+	/**
+	 * @param string|AnnotationRenderer $propertyAnnotation
+	 * @return self
+	 */
+	public function addAnnotation($propertyAnnotation) {
+		if ($propertyAnnotation instanceof AnnotationRenderer) {
+			$propertyAnnotation = $propertyAnnotation->render();
+		}
 
-    /** @var string */
-    private $propertyType;
+		$this->propertyAnnotations[] = $propertyAnnotation;
+		return $this;
+	}
 
+	/**
+	 * @return self
+	 */
+	public function setPublic() {
+		$this->propertyIsPublic = TRUE;
+		return $this;
+	}
 
-    /** @var string */
-    private $propertyIsPublic;
+	/**
+	 * @return self
+	 */
+	public function setProtected() {
+		$this->propertyIsPublic = FALSE;
+		return $this;
+	}
 
+	/**
+	 * @param string $propertyName
+	 * @return self
+	 */
+	public function setPropertyName($propertyName) {
+		$this->propertyName = $propertyName;
+		return $this;
+	}
 
-    /** @var array */
-    private $propertyAnnotations = [];
+	/**
+	 * @param string $propertyType
+	 * @return self
+	 */
+	public function setPropertyType($propertyType) {
+		$this->propertyType = $propertyType;
+		return $this;
+	}
 
+	/**
+	 * @param string $targetClassName
+	 * @return self
+	 */
+	public function setTargetClassName($targetClassName) {
+		$this->targetClassName = $targetClassName;
+		return $this;
+	}
 
-
-    /**
-     * @param string|AnnotationRenderer $propertyAnnotation
-     * @return self
-     */
-    public function addAnnotation($propertyAnnotation)
-    {
-        if ($propertyAnnotation instanceof AnnotationRenderer)
-        {
-            $propertyAnnotation = $propertyAnnotation->render();
-        }
-
-        $this->propertyAnnotations[] = $propertyAnnotation;
-        return $this;
-    }
-
-
-
-    /**
-     * @return self
-     */
-    public function setPublic()
-    {
-        $this->propertyIsPublic = TRUE;
-        return $this;
-    }
-
-
-
-    /**
-     * @return self
-     */
-    public function setProtected()
-    {
-        $this->propertyIsPublic = FALSE;
-        return $this;
-    }
-
-
-
-    /**
-     * @param string $propertyName
-     * @return self
-     */
-    public function setPropertyName($propertyName)
-    {
-        $this->propertyName = $propertyName;
-        return $this;
-    }
-
-
-
-    /**
-     * @param string $propertyType
-     * @return self
-     */
-    public function setPropertyType($propertyType)
-    {
-        $this->propertyType = $propertyType;
-        return $this;
-    }
-
-
-
-    /**
-     * @param string $targetClassName
-     * @return self
-     */
-    public function setTargetClassName($targetClassName)
-    {
-        $this->targetClassName = $targetClassName;
-        return $this;
-    }
-
-
-
-    public function buildTask()
-    {
-        return new AddPropertyToClassTask(
-            $this->targetClassName,
-            $this->propertyName,
-            $this->propertyType,
-            $this->propertyIsPublic,
-            $this->propertyAnnotations
-        );
-    }
-
-
+	public function buildTask() {
+		return new AddPropertyToClassTask(
+			$this->targetClassName,
+			$this->propertyName,
+			$this->propertyType,
+			$this->propertyIsPublic,
+			$this->propertyAnnotations
+		);
+	}
 
 }

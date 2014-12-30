@@ -1,7 +1,6 @@
 <?php
 namespace Mw\Metamorph\Domain\Event;
 
-
 /*                                                                        *
  * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
  *                                                                        *
@@ -9,54 +8,38 @@ namespace Mw\Metamorph\Domain\Event;
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
 
-
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 
+class MorphConfigurationFileModifiedEvent extends AbstractMorphConfigurationEvent {
 
-class MorphConfigurationFileModifiedEvent extends AbstractMorphConfigurationEvent
-{
+	/**
+	 * @var string
+	 */
+	private $relativeFilename;
 
+	/**
+	 * @var string
+	 */
+	private $purpose;
 
+	public function __construct(MorphConfiguration $configuration, $relativeFilename, $purpose) {
+		parent::__construct($configuration);
+		$this->relativeFilename = $relativeFilename;
+		$this->purpose          = $purpose;
+	}
 
-    /**
-     * @var string
-     */
-    private $relativeFilename;
+	/**
+	 * @return string
+	 */
+	public function getPurpose() {
+		return $this->purpose;
+	}
 
-
-    /**
-     * @var string
-     */
-    private $purpose;
-
-
-
-    public function __construct(MorphConfiguration $configuration, $relativeFilename, $purpose)
-    {
-        parent::__construct($configuration);
-        $this->relativeFilename = $relativeFilename;
-        $this->purpose          = $purpose;
-    }
-
-
-
-    /**
-     * @return string
-     */
-    public function getPurpose()
-    {
-        return $this->purpose;
-    }
-
-
-
-    /**
-     * @return string
-     */
-    public function getRelativeFilename()
-    {
-        return $this->relativeFilename;
-    }
-
+	/**
+	 * @return string
+	 */
+	public function getRelativeFilename() {
+		return $this->relativeFilename;
+	}
 
 }

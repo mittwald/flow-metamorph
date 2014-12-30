@@ -1,45 +1,29 @@
 <?php
 namespace Mw\Metamorph\Domain\Model\Definition;
 
+class PropertyDefinition {
 
-class PropertyDefinition
-{
+	private $name;
 
+	private $docComment;
 
+	public function __construct($name, $docComment = NULL) {
+		$this->name       = $name;
+		$this->docComment = $docComment;
+	}
 
-    private $name;
+	/**
+	 * @return mixed
+	 */
+	public function getDocComment() {
+		return $this->docComment;
+	}
 
-
-    private $docComment;
-
-
-
-    public function __construct($name, $docComment = NULL)
-    {
-        $this->name       = $name;
-        $this->docComment = $docComment;
-    }
-
-
-
-    /**
-     * @return mixed
-     */
-    public function getDocComment()
-    {
-        return $this->docComment;
-    }
-
-
-
-    /**
-     * @return mixed
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
-
-
+	/**
+	 * @return mixed
+	 */
+	public function getName() {
+		return $this->name;
+	}
 
 }

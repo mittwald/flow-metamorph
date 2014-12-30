@@ -1,14 +1,12 @@
 <?php
 namespace Mw\Metamorph\Domain\Service;
 
-
 /*                                                                        *
  * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
  *                                                                        *
  * (C) 2014 Martin Helmich <m.helmich@mittwald.de>                        *
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
-
 
 use Helmich\EventBroker\Annotations as Event;
 use Mw\Metamorph\Domain\Event\MorphConfigurationCreatedEvent;
@@ -24,84 +22,63 @@ use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\MetaData;
 
-
 /**
  * Class MorphService
  *
  * @package Mw\Metamorph\Domain\Service
  * @Flow\Scope("singleton")
  */
-class MorphService implements MorphServiceInterface
-{
+class MorphService implements MorphServiceInterface {
 
+	/**
+	 * @var MorphCreationConcern
+	 * @Flow\Inject
+	 */
+	protected $creationConcern;
 
+	/**
+	 * @var MorphResetConcern
+	 * @Flow\Inject
+	 */
+	protected $resetConcern;
 
-    /**
-     * @var MorphCreationConcern
-     * @Flow\Inject
-     */
-    protected $creationConcern;
+	/**
+	 * @var MorphExecutionConcern
+	 * @Flow\Inject
+	 */
+	protected $executionConcern;
 
+	public function reset(MorphConfiguration $configuration, OutputInterface $out) {
+		$this->resetConcern->reset($configuration, $out);
+	}
 
-    /**
-     * @var MorphResetConcern
-     * @Flow\Inject
-     */
-    protected $resetConcern;
+	public function create($packageKey, MorphCreationDto $data, OutputInterface $out) {
+		$morph = $this->creationConcern->create($packageKey, $data, $out);
+		$this->publishCreated(new MorphConfigurationCreatedEvent($morph, $data));
+	}
 
+	public function execute(MorphConfiguration $configuration, OutputInterface $out) {
+		$this->publishExecutionStart(new MorphConfigurationExecutionStartedEvent($configuration));
+		$this->executionConcern->execute($configuration, new DecoratedOutput($out));
+		$this->publishExecuted(new MorphConfigurationExecutedEvent($configuration));
+	}
 
-    /**
-     * @var MorphExecutionConcern
-     * @Flow\Inject
-     */
-    protected $executionConcern;
+	/**
+	 * @param MorphConfigurationCreatedEvent $event
+	 * @Event\Event
+	 */
+	protected function publishCreated(MorphConfigurationCreatedEvent $event) { }
 
+	/**
+	 * @param MorphConfigurationExecutedEvent $event
+	 * @Event\Event
+	 */
+	protected function publishExecuted(MorphConfigurationExecutedEvent $event) { }
 
-
-    public function reset(MorphConfiguration $configuration, OutputInterface $out)
-    {
-        $this->resetConcern->reset($configuration, $out);
-    }
-
-
-
-    public function create($packageKey, MorphCreationDto $data, OutputInterface $out)
-    {
-        $morph = $this->creationConcern->create($packageKey, $data, $out);
-        $this->publishCreated(new MorphConfigurationCreatedEvent($morph, $data));
-    }
-
-
-
-    public function execute(MorphConfiguration $configuration, OutputInterface $out)
-    {
-        $this->publishExecutionStart(new MorphConfigurationExecutionStartedEvent($configuration));
-        $this->executionConcern->execute($configuration, new DecoratedOutput($out));
-        $this->publishExecuted(new MorphConfigurationExecutedEvent($configuration));
-    }
-
-
-
-    /**
-     * @param MorphConfigurationCreatedEvent $event
-     * @Event\Event
-     */
-    protected function publishCreated(MorphConfigurationCreatedEvent $event) { }
-
-
-
-    /**
-     * @param MorphConfigurationExecutedEvent $event
-     * @Event\Event
-     */
-    protected function publishExecuted(MorphConfigurationExecutedEvent $event) { }
-
-
-
-    /**
-     * @param MorphConfigurationExecutionStartedEvent $event
-     * @Event\Event
-     */
-    protected function publishExecutionStart(MorphConfigurationExecutionStartedEvent $event) { }
+	/**
+	 * @param MorphConfigurationExecutionStartedEvent $event
+	 * @Event\Event
+	 */
+	protected function publishExecutionStart(MorphConfigurationExecutionStartedEvent $event) { }
 
 }
