@@ -32,8 +32,9 @@ class ClassInventory extends AbstractTransformation {
 
 	/**
 	 * @var \PhpParser\Parser
+	 * @Flow\Inject
 	 */
-	private $parser;
+	protected $parser;
 
 	/**
 	 * @var ObjectManagerInterface
@@ -46,10 +47,6 @@ class ClassInventory extends AbstractTransformation {
 	 * @Flow\Inject
 	 */
 	protected $morphRepository;
-
-	public function initializeObject() {
-		$this->parser = new Parser(new Lexer());
-	}
 
 	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
 		$this->classMappingContainer = $configuration->getClassMappingContainer();
@@ -108,7 +105,7 @@ class ClassInventory extends AbstractTransformation {
 				$visitorClassName = 'Mw\\Metamorph\\Transformation\\ClassInventory\\' . $visitorClassName;
 			}
 
-			$visitor = $this->objectManager->get($visitorClassName);
+			$visitor = new $visitorClassName();
 			if ($visitor instanceof NodeVisitor) {
 				$traverser->addVisitor($visitor);
 			}
@@ -119,12 +116,11 @@ class ClassInventory extends AbstractTransformation {
 
 	private function guessMorphedClassName($className, $filename, PackageMapping $packageMapping) {
 		$newPackageNamespace       = str_replace('.', '\\', $packageMapping->getPackageKey());
-		$filenameInferredNamespace = str_replace('/', '\\', str_replace(['class.', '.php'], '', $filename));
-
-		$actualNamespaceParts   = explode('\\', $className);
-		$inferredNamespaceParts = explode('\\', $filenameInferredNamespace);
-
-		$common = array_intersect($actualNamespaceParts, $inferredNamespaceParts);
-		return $newPackageNamespace . '\\' . implode('\\', $common);
+		return $this->classNameConversionStrategy->convertClassName(
+			$newPackageNamespace,
+			$className,
+			$filename,
+			$packageMapping->getExtensionKey()
+		);
 	}
 }
