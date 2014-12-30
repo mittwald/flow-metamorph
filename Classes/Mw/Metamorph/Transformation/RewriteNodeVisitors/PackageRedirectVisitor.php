@@ -1,10 +1,46 @@
 <?php
 namespace Mw\Metamorph\Transformation\RewriteNodeVisitors;
 
+/*                                                                        *
+ * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
+ *                                                                        *
+ * (C) 2014 Martin Helmich <m.helmich@mittwald.de>                        *
+ *          Mittwald CM Service GmbH & Co. KG                             *
+ *                                                                        */
+
 use Mw\Metamorph\Transformation\Helper\CommentHelper;
 use PhpParser\Node;
 use TYPO3\Flow\Annotations as Flow;
 
+/**
+ * Visitor class that replaces extension keys in redirect calls.
+ *
+ * This visitor replaces extension keys that are used in redirect calls with
+ * the respective package names.
+ *
+ * Example::
+ *
+ *     // Before
+ *     $this->redirect('action', 'MyController', 'my_extension');
+ *
+ *     // After
+ *     $this->redirect('action', 'MyController', 'My.Package');
+ *
+ * When a non-NULL expression is used as extension key, this transformation will
+ * insert a lookup construct here
+ *
+ * Example::
+ *
+ *     // Before
+ *     $this->redirect('action', 'MyController', magicFunction());
+ *
+ *     // After
+ *     $metamorphExtensions = ['my_extension' => 'My.Package'];
+ *     $this->redirect('action', 'MyController', $metamorphExtensions[magicFunction()]);
+ *
+ * @package    Mw\Metamorph
+ * @subpackage Transformation\RewriteNodeVisitors
+ */
 class PackageRedirectVisitor extends AbstractControllerVisitor {
 
 	/**
@@ -13,6 +49,12 @@ class PackageRedirectVisitor extends AbstractControllerVisitor {
 	 */
 	protected $commentHelper;
 
+	/**
+	 * Called when the visitor leaves a node inside an ActionController.
+	 *
+	 * @param Node $node The node to process
+	 * @return array|null|Node The node replacement
+	 */
 	public function leaveControllerNode(Node $node) {
 		if ($node instanceof Node\Expr\MethodCall) {
 			$var  = $node->var;
