@@ -51,14 +51,14 @@ class MorphCommandController extends CommandController {
 
 	/**
 	 * @var SymfonyConsoleOutput
-	 * @Flow\Inject(lazy=FALSE)
+	 * @Flow\Inject(lazy=false)
 	 */
 	protected $console;
 
 	private function initializeLogging() {
 		// Workaround; apparently, lazy dependency injection cannot be switched off here (perhaps a bug in Flow?)
 		if ($this->console instanceof DependencyProxy) {
-			$this->console->write('');
+			$this->console->_activateDependency();
 		}
 		$this->loggingWrapper->setOutput(new DecoratedOutput($this->console));
 	}
@@ -88,7 +88,7 @@ class MorphCommandController extends CommandController {
 			$prompt->setValuesOnCreateDto($data);
 		}
 
-		$this->morphService->create($packageKey, $data, $output);
+		$this->morphService->create($packageKey, $data);
 	}
 
 	/**
@@ -140,11 +140,11 @@ class MorphCommandController extends CommandController {
 		}
 
 		if (TRUE === $reset) {
-			$this->morphService->reset($morph, $this->console);
+			$this->morphService->reset($morph);
 		}
 
 		try {
-			$this->morphService->execute($morph, new DecoratedOutput($this->console));
+			$this->morphService->execute($morph);
 		} catch (HumanInterventionRequiredException $e) {
 		} catch (\Exception $e) {
 			$this->output->outputLine('<error>  UNCAUGHT EXCEPTION  </error>');

@@ -3,7 +3,6 @@ namespace Mw\Metamorph\Transformation;
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 
 class CleanupPackages extends AbstractTransformation {
@@ -14,7 +13,7 @@ class CleanupPackages extends AbstractTransformation {
 	 */
 	protected $packageManager;
 
-	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
+	public function execute(MorphConfiguration $configuration, MorphExecutionState $state) {
 		foreach ($configuration->getPackageMappingContainer()->getPackageMappings() as $packageMapping) {
 			$packageKey = $packageMapping->getPackageKey();
 			if ($this->packageManager->isPackageAvailable($packageKey)) {

@@ -8,7 +8,6 @@ use Mw\Metamorph\Domain\Model\State\ResourceMapping;
 use Mw\Metamorph\Domain\Model\State\ResourceMappingContainer;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 
 /**
@@ -31,7 +30,7 @@ class ResourceInventory extends AbstractTransformation {
 	 */
 	protected $morphRepository;
 
-	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
+	public function execute(MorphConfiguration $configuration, MorphExecutionState $state) {
 		$packageMappingContainer  = $configuration->getPackageMappingContainer();
 		$resourceMappingContainer = $configuration->getResourceMappingContainer();
 

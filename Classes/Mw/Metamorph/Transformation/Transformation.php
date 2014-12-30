@@ -9,6 +9,6 @@ interface Transformation {
 
 	public function setSettings(array $settings);
 
-	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out);
+	public function execute(MorphConfiguration $configuration, MorphExecutionState $state);
 
 }

@@ -4,14 +4,9 @@ namespace Mw\Metamorph\Transformation;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Mw\Metamorph\Transformation\Task\Queue;
 use Mw\Metamorph\Transformation\Task\TaskQueue;
 use PhpParser\Lexer;
-use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
-use PhpParser\Parser;
-use PhpParser\PrettyPrinter\Standard;
-use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 
 class PackageClassRewrite extends AbstractTransformation implements Progressible {
@@ -36,7 +31,7 @@ class PackageClassRewrite extends AbstractTransformation implements Progressible
 	 */
 	protected $traverser;
 
-	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
+	public function execute(MorphConfiguration $configuration, MorphExecutionState $state) {
 		$classMappingContainer = $configuration->getClassMappingContainer();
 		$taskQueue             = new TaskQueue();
 
@@ -59,7 +54,7 @@ class PackageClassRewrite extends AbstractTransformation implements Progressible
 
 		$this->startProgress('Refactoring classes', count($classMappingContainer->getClassMappings()));
 		foreach ($classMappingContainer->getClassMappings() as $classMapping) {
-			$this->refactorClass($classMapping, $out);
+			$this->refactorClass($classMapping);
 			$this->advanceProgress();
 		}
 		$this->finishProgress();
@@ -69,7 +64,7 @@ class PackageClassRewrite extends AbstractTransformation implements Progressible
 		$this->finishProgress();
 	}
 
-	private function refactorClass(ClassMapping $classMapping, OutputInterface $out) {
+	private function refactorClass(ClassMapping $classMapping) {
 		$filecontent = file_get_contents($classMapping->getTargetFile());
 		$syntaxTree  = $this->parser->parse($filecontent);
 

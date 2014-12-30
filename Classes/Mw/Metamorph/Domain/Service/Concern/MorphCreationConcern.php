@@ -13,7 +13,6 @@ use Mw\Metamorph\Domain\Model\Extension\UnionMatcher;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\Dto\MorphCreationDto;
-use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\MetaData;
 
@@ -28,7 +27,7 @@ class MorphCreationConcern {
 	 */
 	protected $morphRepository;
 
-	public function create($packageKey, MorphCreationDto $data, OutputInterface $out) {
+	public function create($packageKey, MorphCreationDto $data) {
 		$extensionMatchers = [];
 		foreach ($data->getExtensionPatterns() as $pattern) {
 			$extensionMatchers[] = new PatternExtensionMatcher($pattern);

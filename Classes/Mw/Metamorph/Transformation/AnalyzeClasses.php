@@ -10,7 +10,6 @@ use Mw\Metamorph\Transformation\Analyzer\AnalyzerVisitor;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
-use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 
 class AnalyzeClasses extends AbstractTransformation implements Progressible {
@@ -29,7 +28,7 @@ class AnalyzeClasses extends AbstractTransformation implements Progressible {
 	 */
 	protected $classDefinitionContainer;
 
-	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
+	public function execute(MorphConfiguration $configuration, MorphExecutionState $state) {
 		$classMappingContainer = $configuration->getClassMappingContainer();
 		$this->startProgress('Analyzing classes', count($classMappingContainer->getClassMappings()));
 		foreach ($classMappingContainer->getClassMappings() as $classMapping) {

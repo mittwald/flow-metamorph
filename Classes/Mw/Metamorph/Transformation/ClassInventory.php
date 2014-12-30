@@ -14,7 +14,6 @@ use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor;
 use PhpParser\NodeVisitor\NameResolver;
-use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 
 /**
@@ -47,7 +46,7 @@ class ClassInventory extends AbstractTransformation {
 	 */
 	protected $classNameConversionStrategy;
 
-	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
+	public function execute(MorphConfiguration $configuration, MorphExecutionState $state) {
 		$this->classMappingContainer = $configuration->getClassMappingContainer();
 
 		foreach ($configuration->getPackageMappingContainer()->getPackageMappings() as $packageMapping) {

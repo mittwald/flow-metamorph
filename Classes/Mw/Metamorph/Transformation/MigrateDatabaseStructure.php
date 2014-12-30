@@ -7,13 +7,12 @@ use Mw\Metamorph\Transformation\DatabaseMigration\Strategy\CompatibleMigrationSt
 use Mw\Metamorph\Transformation\DatabaseMigration\Strategy\FullMigrationStrategy;
 use Mw\Metamorph\Transformation\DatabaseMigration\Strategy\MigrationStrategyInterface;
 use Mw\Metamorph\Transformation\Task\TaskQueue;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class MigrateDatabaseStructure extends AbstractTransformation implements Progressible {
 
 	use ProgressibleTrait;
 
-	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
+	public function execute(MorphConfiguration $configuration, MorphExecutionState $state) {
 		/** @var MigrationStrategyInterface $migrator */
 		$migrator = NULL;
 

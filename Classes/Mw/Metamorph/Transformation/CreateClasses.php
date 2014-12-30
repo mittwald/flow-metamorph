@@ -6,7 +6,6 @@ use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\PackageInterface;
 use TYPO3\Flow\Utility\Files;
@@ -27,7 +26,7 @@ class CreateClasses extends AbstractTransformation implements Progressible {
 	 */
 	protected $morphRepository;
 
-	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
+	public function execute(MorphConfiguration $configuration, MorphExecutionState $state) {
 		$classMappingContainer = $configuration->getClassMappingContainer();
 		$packageClassCount     = [];
 

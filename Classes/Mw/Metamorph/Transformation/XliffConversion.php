@@ -5,7 +5,6 @@ use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ResourceMapping;
 use Mw\Metamorph\Domain\Model\State\ResourceMappingContainer;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\PackageManagerInterface;
 use TYPO3\Flow\Utility\Files;
@@ -20,7 +19,7 @@ class XliffConversion extends AbstractTransformation implements Progressible {
 	 */
 	protected $packageManager;
 
-	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
+	public function execute(MorphConfiguration $configuration, MorphExecutionState $state) {
 		$resourceMappingContainer = $configuration->getResourceMappingContainer();
 
 		$locallangFiles = $this->findLocallangXmlFiles($resourceMappingContainer);

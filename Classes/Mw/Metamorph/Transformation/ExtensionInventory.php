@@ -8,7 +8,6 @@ use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 
 /**
@@ -28,7 +27,7 @@ class ExtensionInventory extends AbstractTransformation {
 	 */
 	protected $morphRepository;
 
-	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
+	public function execute(MorphConfiguration $configuration, MorphExecutionState $state) {
 		$rootDirectory     = $configuration->getSourceDirectory() . '/typo3conf/ext';
 		$directoryIterator = new \DirectoryIterator($rootDirectory);
 		$matcher           = $configuration->getExtensionMatcher();
