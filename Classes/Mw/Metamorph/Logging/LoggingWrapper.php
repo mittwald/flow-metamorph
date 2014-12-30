@@ -147,11 +147,11 @@ class LoggingWrapper implements DecoratedOutputInterface {
 		return $this->output->getFormatter();
 	}
 
-	private function getNestingPrefix() {
+	public function getNestingPrefix() {
 		if ($this->nestingLevel > 0) {
-			return str_repeat('|  ', $this->nestingLevel) . '\\_ ';
+			return str_repeat('│ ', $this->nestingLevel - 1) . '├─◼ ';
 		}
-		return '- ';
+		return '◼ ';
 	}
 
 }

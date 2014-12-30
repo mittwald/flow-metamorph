@@ -10,7 +10,9 @@ use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\PackageManagerInterface;
 use TYPO3\Flow\Utility\Files;
 
-class XliffConversion extends AbstractTransformation {
+class XliffConversion extends AbstractTransformation implements Progressible {
+
+	use ProgressibleTrait;
 
 	/**
 	 * @var PackageManagerInterface
@@ -24,10 +26,13 @@ class XliffConversion extends AbstractTransformation {
 		$locallangFiles = $this->findLocallangXmlFiles($resourceMappingContainer);
 		$xliffFileCount = 0;
 
+		$this->startProgress('Converting LL files', count($locallangFiles));
 		foreach ($locallangFiles as $sourceFile => $data) {
 			$xliffFileCount += count($data['languages']);
 			$this->processLocallangFile($sourceFile, $data['languages'], $data['mapping']);
+			$this->advanceProgress();
 		}
+		$this->finishProgress();
 
 		$this->log(
 			'Converted <comment>' . count($locallangFiles) . '</comment> locallang files into <comment>' .

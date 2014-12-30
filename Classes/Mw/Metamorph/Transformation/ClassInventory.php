@@ -56,17 +56,14 @@ class ClassInventory extends AbstractTransformation {
 
 		foreach ($configuration->getPackageMappingContainer()->getPackageMappings() as $packageMapping) {
 			if ($packageMapping->getAction() === PackageMapping::ACTION_MORPH) {
-				$this->readClassesFromExtension($packageMapping, $out);
+				$this->readClassesFromExtension($packageMapping);
 			}
 		}
 
 		$this->morphRepository->update($configuration);
 	}
 
-	private function readClassesFromExtension(
-		PackageMapping $packageMapping,
-		OutputInterface $out
-	) {
+	private function readClassesFromExtension(PackageMapping $packageMapping) {
 		$directoryIterator = new \RecursiveDirectoryIterator($packageMapping->getFilePath());
 		$iteratorIterator  = new \RecursiveIteratorIterator($directoryIterator);
 		$regexIterator     = new \RegexIterator($iteratorIterator, '/^.+\.php$/i', \RecursiveRegexIterator::GET_MATCH);
@@ -75,7 +72,7 @@ class ClassInventory extends AbstractTransformation {
 
 		foreach ($regexIterator as $match) {
 			$filename = $match[0];
-			$this->readClassesFromFile($filename, $classList, $out);
+			$this->readClassesFromFile($filename, $classList);
 		}
 
 		$this->log(
@@ -87,10 +84,10 @@ class ClassInventory extends AbstractTransformation {
 			if (FALSE === $this->classMappingContainer->hasClassMapping($className)) {
 				$classMapping = new ClassMapping(
 					$filename, $className, $this->guessMorphedClassName(
-					$className,
-					$filename,
-					$packageMapping
-				), $packageMapping->getPackageKey()
+						$className,
+						$filename,
+						$packageMapping
+					), $packageMapping->getPackageKey()
 				);
 
 				$this->classMappingContainer->addClassMapping($classMapping);
@@ -98,7 +95,7 @@ class ClassInventory extends AbstractTransformation {
 		}
 	}
 
-	private function readClassesFromFile($filename, \ArrayAccess $classList, OutputInterface $out) {
+	private function readClassesFromFile($filename, \ArrayAccess $classList) {
 		$fileContent = file_get_contents($filename);
 		$syntaxTree  = $this->parser->parse($fileContent);
 

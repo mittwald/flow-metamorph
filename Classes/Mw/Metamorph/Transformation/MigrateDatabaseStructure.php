@@ -6,11 +6,12 @@ use Mw\Metamorph\Domain\Service\MorphExecutionState;
 use Mw\Metamorph\Transformation\DatabaseMigration\Strategy\CompatibleMigrationStrategy;
 use Mw\Metamorph\Transformation\DatabaseMigration\Strategy\FullMigrationStrategy;
 use Mw\Metamorph\Transformation\DatabaseMigration\Strategy\MigrationStrategyInterface;
-use Mw\Metamorph\Transformation\Task\Queue;
 use Mw\Metamorph\Transformation\Task\TaskQueue;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class MigrateDatabaseStructure extends AbstractTransformation {
+class MigrateDatabaseStructure extends AbstractTransformation implements Progressible {
+
+	use ProgressibleTrait;
 
 	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
 		/** @var MigrationStrategyInterface $migrator */
@@ -32,6 +33,8 @@ class MigrateDatabaseStructure extends AbstractTransformation {
 		$migrator->setDeferredTaskQueue($queue);
 		$migrator->execute($configuration);
 
-		$queue->executeAll($configuration, function ($m) { $this->log($m); });
+		$this->startProgress('Cleaning up', 0);
+		$queue->executeAll($configuration, function ($m) { $this->advanceProgress(); });
+		$this->finishProgress();
 	}
 }

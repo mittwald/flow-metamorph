@@ -8,7 +8,9 @@ use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\PackageManagerInterface;
 use TYPO3\Flow\Utility\Files;
 
-class CreateResources extends AbstractTransformation {
+class CreateResources extends AbstractTransformation implements Progressible {
+
+	use ProgressibleTrait;
 
 	/**
 	 * @var PackageManagerInterface
@@ -17,6 +19,11 @@ class CreateResources extends AbstractTransformation {
 	protected $packageManager;
 
 	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
+		$this->startProgress(
+			'Migrating resources',
+			count($configuration->getResourceMappingContainer()->getResourceMappings())
+		);
+
 		foreach ($configuration->getResourceMappingContainer()->getResourceMappings() as $resourceMapping) {
 			$package = $this->packageManager->getPackage($resourceMapping->getPackage());
 
@@ -27,6 +34,11 @@ class CreateResources extends AbstractTransformation {
 
 			Files::createDirectoryRecursively($targetDirectory);
 			copy($resourceMapping->getSourceFile(), $targetFilePath);
+
+			$this->advanceProgress();
 		}
+
+		$this->finishProgress();
 	}
+
 }

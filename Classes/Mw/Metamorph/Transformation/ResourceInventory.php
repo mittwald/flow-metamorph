@@ -32,7 +32,7 @@ class ResourceInventory extends AbstractTransformation {
 	protected $morphRepository;
 
 	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
-		$packageMappingContainer = $configuration->getPackageMappingContainer();
+		$packageMappingContainer  = $configuration->getPackageMappingContainer();
 		$resourceMappingContainer = $configuration->getResourceMappingContainer();
 
 		foreach ($packageMappingContainer->getPackageMappings() as $packageMapping) {

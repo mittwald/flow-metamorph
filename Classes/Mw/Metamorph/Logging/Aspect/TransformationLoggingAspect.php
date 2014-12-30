@@ -13,6 +13,7 @@ use TYPO3\Flow\Aop\JoinPointInterface;
  *
  * @package    Mw\Metamorph
  * @subpackage Logging\Aspect
+ *
  * @Flow\Aspect
  */
 class TransformationLoggingAspect {
@@ -82,25 +83,12 @@ class TransformationLoggingAspect {
 			$i = str_repeat(" ", 2);
 			(new String($exception->getMessage()))
 				->split("\n")
-				->map(function ($l) use ($i, $out) { $out->writeln($i . $l); });
+				->map(function ($l) use ($i, $out) { $out->writeFormatted($l, 2); });
 
 			$out->writeln('');
 
 			throw $exception;
 		}
-	}
-
-	private function indent($text, $indent = 2) {
-		$i = str_repeat(" ", $indent);
-		return (new String($text))
-			->split("\n")
-			->map(
-				function ($l) use ($i) {
-					var_dump($i . $l);
-					return $i . $l;
-				}
-			)
-			->join("\n");
 	}
 
 	/**

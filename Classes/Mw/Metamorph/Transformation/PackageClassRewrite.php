@@ -14,7 +14,9 @@ use PhpParser\PrettyPrinter\Standard;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 
-class PackageClassRewrite extends AbstractTransformation {
+class PackageClassRewrite extends AbstractTransformation implements Progressible {
+
+	use ProgressibleTrait;
 
 	/**
 	 * @var \TYPO3\Flow\Object\ObjectManagerInterface
@@ -58,11 +60,16 @@ class PackageClassRewrite extends AbstractTransformation {
 			$this->log('Adding node visitor <info>%s</info>.', [$visitorClass]);
 		}
 
+		$this->startProgress('Refactoring classes', count($classMappingContainer->getClassMappings()));
 		foreach ($classMappingContainer->getClassMappings() as $classMapping) {
 			$this->refactorClass($classMapping, $out);
+			$this->advanceProgress();
 		}
+		$this->finishProgress();
 
-		$taskQueue->executeAll($configuration, function ($m) { $this->log($m); });
+		$this->startProgress('Cleaning up', 0);
+		$taskQueue->executeAll($configuration, function ($m) { $this->advanceProgress(); });
+		$this->finishProgress();
 	}
 
 	private function refactorClass(ClassMapping $classMapping, OutputInterface $out) {

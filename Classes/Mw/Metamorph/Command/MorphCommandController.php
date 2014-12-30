@@ -19,6 +19,7 @@ use Mw\Metamorph\Logging\LoggingWrapper;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Console\Helper\QuestionHelper;
+use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\ConsoleOutput as SymfonyConsoleOutput;
 use TYPO3\Flow\Annotations as Flow;
@@ -93,26 +94,30 @@ class MorphCommandController extends CommandController {
 	/**
 	 * List available morphs.
 	 *
+	 * @param bool $quiet Set this flag to generate less verbose (and machine-readable) output.
 	 * @return void
 	 */
-	public function listCommand() {
+	public function listCommand($quiet = FALSE) {
 		$this->initializeLogging();
 		$morphs = $this->morphConfigurationRepository->findAll();
 
 		if (count($morphs)) {
-			$this->outputLine('Found <comment>%d</comment> morph configurations:', [count($morphs)]);
-			$this->outputLine();
+			$table = new Table($this->console);
+			$table->setHeaders(['Name', 'Source directory']);
 
 			foreach ($morphs as $morph) {
-				$this->outputFormatted($morph->getName(), [], 4);
+				$table->addRow([$morph->getName(), $morph->getSourceDirectory()]);
 			}
 
-			$this->outputLine();
-		} else {
+			if ($quiet) {
+				$table->setStyle('compact');
+			}
+
+			$table->render();
+		} elseif (!$quiet) {
 			$this->outputLine('Found <comment>no</comment> morph configurations.');
 			$this->outputLine('Use <comment>./flow morph:create</comment> to create a morph configuration.');
 		}
-
 	}
 
 	/**
