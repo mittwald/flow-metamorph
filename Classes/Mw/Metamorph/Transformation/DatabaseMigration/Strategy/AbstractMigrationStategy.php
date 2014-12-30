@@ -47,23 +47,20 @@ abstract class AbstractMigrationStategy implements MigrationStrategyInterface, P
 
 	/**
 	 * @var Parser
+	 * @Flow\Inject
 	 */
-	private $parser;
+	protected $parser;
 
 	/**
 	 * @var PrettyPrinterAbstract
+	 * @Flow\Inject
 	 */
-	private $printer;
+	protected $printer;
 
 	/**
 	 * @var TaskQueue
 	 */
 	protected $taskQueue;
-
-	public function __construct() {
-		$this->parser  = new Parser(new Lexer());
-		$this->printer = new Standard();
-	}
 
 	public function execute(MorphConfiguration $configuration) {
 		$this->tca = new Tca();

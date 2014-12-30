@@ -10,6 +10,50 @@ Mw\Metamorph\Transformation\ClassInventory:
       object:
         name: Mw\Metamorph\Transformation\ClassNameConversion\CompoundConversionStrategy
 
+Mw\Metamorph\Transformation\PackageClassRewrite:
+  properties:
+    printer:
+      object:
+        name: PhpParser\PrettyPrinter\Standard
+
+Mw\Metamorph\Transformation\DatabaseMigration\Strategy\CompatibleMigrationStrategy:
+  properties:
+    printer:
+      object:
+        name: PhpParser\PrettyPrinter\Standard
+
+Mw\Metamorph\Transformation\DatabaseMigration\Strategy\FullMigrationStrategy:
+  properties:
+    printer:
+      object:
+        name: PhpParser\PrettyPrinter\Standard
+
+PhpParser\Parser:
+  className: PhpParser\Parser
+  scope: prototype
+  autowiring: off
+  arguments:
+    1:
+      object:
+        name: PhpParser\Lexer
+
+PhpParser\Lexer:
+  className: PhpParser\Lexer
+  scope: singleton
+  autowiring: off
+
+PhpParser\NodeTraverser:
+  className: PhpParser\NodeTraverser
+  scope: prototype
+
+PhpParser\PrettyPrinterAbstract:
+  className: PhpParser\PrettyPrinterAbstract
+  scope: singleton
+
+PhpParser\PrettyPrinter\Standard:
+  className: PhpParser\PrettyPrinter\Standard
+  scope: singleton
+
 Symfony\Component\Console\Output\ConsoleOutput:
   className: Symfony\Component\Console\Output\ConsoleOutput
   scope: prototype

@@ -44,6 +44,7 @@ Mw:
             - RewriteSingletonsVisitor
             - ReplaceAnnotationsVisitor
             - InjectUtilitiesVisitor
+            - FlashMessageVisitor
       transformLocallang:
         name: XliffConversion
         position: 90

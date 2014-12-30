@@ -19,31 +19,27 @@ class PackageClassRewrite extends AbstractTransformation implements Progressible
 	use ProgressibleTrait;
 
 	/**
-	 * @var \TYPO3\Flow\Object\ObjectManagerInterface
+	 * @var \PhpParser\Parser
 	 * @Flow\Inject
 	 */
-	protected $objectManager;
+	protected $parser;
 
-	/** @var \PhpParser\Parser */
-	private $parser;
+	/**
+	 * @var \PhpParser\PrettyPrinterAbstract
+	 * @Flow\Inject
+	 */
+	protected $printer;
 
-	/** @var \PhpParser\PrettyPrinterAbstract */
-	private $printer;
-
-	/** @var \PhpParser\NodeTraverser */
-	private $traverser;
-
-	public function initializeObject() {
-		$this->parser  = new Parser(new Lexer());
-		$this->printer = new Standard();
-	}
+	/**
+	 * @var \PhpParser\NodeTraverser
+	 * @Flow\Inject
+	 */
+	protected $traverser;
 
 	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
 		$classMappingContainer = $configuration->getClassMappingContainer();
+		$taskQueue             = new TaskQueue();
 
-		$taskQueue = new TaskQueue();
-
-		$this->traverser = new NodeTraverser();
 		$this->traverser->addVisitor(new NameResolver());
 
 		foreach ($this->settings['visitors'] as $visitorClass) {
@@ -52,7 +48,7 @@ class PackageClassRewrite extends AbstractTransformation implements Progressible
 			}
 
 			/** @var \Mw\Metamorph\Transformation\RewriteNodeVisitors\AbstractVisitor $visitor */
-			$visitor = $this->objectManager->get($visitorClass);
+			$visitor = new $visitorClass();
 			$visitor->setClassMap($classMappingContainer);
 			$visitor->setDeferredTaskQueue($taskQueue);
 

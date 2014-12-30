@@ -7,7 +7,6 @@ use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
 use Mw\Metamorph\Transformation\Analyzer\AnalyzerVisitor;
-use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
@@ -20,18 +19,15 @@ class AnalyzeClasses extends AbstractTransformation implements Progressible {
 
 	/**
 	 * @var Parser
+	 * @Flow\Inject
 	 */
-	private $parser;
+	protected $parser;
 
 	/**
 	 * @var ClassDefinitionContainer
 	 * @Flow\Inject
 	 */
 	protected $classDefinitionContainer;
-
-	public function __construct() {
-		$this->parser = new Parser(new Lexer());
-	}
 
 	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
 		$classMappingContainer = $configuration->getClassMappingContainer();
