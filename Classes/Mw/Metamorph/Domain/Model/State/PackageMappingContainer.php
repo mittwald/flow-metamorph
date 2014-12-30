@@ -34,6 +34,10 @@ class PackageMappingContainer {
 		return NULL !== $this->getPackageMapping($extensionKey);
 	}
 
+	/**
+	 * @param $extensionKey
+	 * @return PackageMapping
+	 */
 	public function getPackageMapping($extensionKey) {
 		return $this->getPackageMappingByFilter(
 			function (PackageMapping $mapping) use ($extensionKey) {
