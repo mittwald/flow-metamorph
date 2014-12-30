@@ -8,7 +8,7 @@ use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\PackageManagerInterface;
 use TYPO3\Flow\Utility\Files;
 
-class CreateResources extends AbstractTransformation {
+class CreateResources extends AbstractTransformation implements Progressible {
 
 	use ProgressibleTrait;
 

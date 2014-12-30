@@ -14,7 +14,9 @@ use PhpParser\Parser;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 
-class AnalyzeClasses extends AbstractTransformation {
+class AnalyzeClasses extends AbstractTransformation implements Progressible {
+
+	use ProgressibleTrait;
 
 	/**
 	 * @var Parser
@@ -33,9 +35,12 @@ class AnalyzeClasses extends AbstractTransformation {
 
 	public function execute(MorphConfiguration $configuration, MorphExecutionState $state, OutputInterface $out) {
 		$classMappingContainer = $configuration->getClassMappingContainer();
+		$this->startProgress('Analyzing classes', count($classMappingContainer->getClassMappings()));
 		foreach ($classMappingContainer->getClassMappings() as $classMapping) {
 			$this->analyzeClass($classMapping, $classMappingContainer);
+			$this->advanceProgress();
 		}
+		$this->finishProgress();
 	}
 
 	private function analyzeClass(ClassMapping $mapping, ClassMappingContainer $container) {

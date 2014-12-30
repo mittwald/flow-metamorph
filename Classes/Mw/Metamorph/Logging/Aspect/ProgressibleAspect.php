@@ -9,7 +9,7 @@ namespace Mw\Metamorph\Logging\Aspect;
  *                                                                        */
 
 use Mw\Metamorph\Logging\LoggingWrapper;
-use Symfony\Component\Console\Helper\ProgressBar;
+use Mw\Metamorph\View\ProgressView;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Aop\JoinPointInterface;
 
@@ -30,50 +30,21 @@ class ProgressibleAspect {
 	protected $loggingWrapper;
 
 	/**
-	 * @param JoinPointInterface $joinPoint
-	 * @return mixed
-	 *
-	 * @Flow\AfterReturning("method(.*->startProgress())")
+	 * @var ProgressView
+	 * @Flow\Inject(lazy=false)
 	 */
-	public function progressStartAdvice(JoinPointInterface $joinPoint) {
-		list($message, $max) = array_values($joinPoint->getMethodArguments());
-
-		$progress = new ProgressBar($this->loggingWrapper, $max);
-		$progress->setFormat(
-			$this->loggingWrapper->getNestingPrefix() . ($max
-				? '%message:-20s% <comment>%current:4s%</comment>/<comment>%max:-4s%</comment> [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s%'
-				: '%message:-20s% <comment>%current:4s%</comment>/<comment>%max:-4s%</comment> [%bar%]'
-			)
-		);
-		$progress->setBarCharacter('<comment>=</comment>');
-		$progress->setMessage($message);
-		$progress->display();
-
-		$joinPoint->getProxy()->__metamorphProgress = $progress;
-	}
+	protected $view;
 
 	/**
 	 * @param JoinPointInterface $joinPoint
-	 * @return mixed
-	 *
-	 * @Flow\AfterReturning("method(.*->advanceProgress())")
+	 * @Flow\Before("within(Mw\Metamorph\Transformation\Progressible) && method(.*->startProgress())")
 	 */
-	public function progressAdvanceAdvice(JoinPointInterface $joinPoint) {
-		if (isset($joinPoint->getProxy()->__metamorphProgress)) {
-			$joinPoint->getProxy()->__metamorphProgress->advance();
+	public function addProgressViewAdvice(JoinPointInterface $joinPoint) {
+		$addListenerFn = [$joinPoint->getProxy(), 'addProgressListener'];
+
+		if (is_callable($addListenerFn)) {
+			call_user_func($addListenerFn, $this->view);
 		}
 	}
 
-	/**
-	 * @param JoinPointInterface $joinPoint
-	 * @return mixed
-	 *
-	 * @Flow\AfterReturning("method(.*->finishProgress())")
-	 */
-	public function progressFinishAdvice(JoinPointInterface $joinPoint) {
-		if (isset($joinPoint->getProxy()->__metamorphProgress)) {
-			$joinPoint->getProxy()->__metamorphProgress->finish();
-		}
-		$this->loggingWrapper->write("\n");
-	}
-} 
+}

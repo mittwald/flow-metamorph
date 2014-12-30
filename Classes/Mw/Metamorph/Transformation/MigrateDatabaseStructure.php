@@ -9,7 +9,7 @@ use Mw\Metamorph\Transformation\DatabaseMigration\Strategy\MigrationStrategyInte
 use Mw\Metamorph\Transformation\Task\TaskQueue;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class MigrateDatabaseStructure extends AbstractTransformation {
+class MigrateDatabaseStructure extends AbstractTransformation implements Progressible {
 
 	use ProgressibleTrait;
 

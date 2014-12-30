@@ -10,7 +10,7 @@ use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\PackageManagerInterface;
 use TYPO3\Flow\Utility\Files;
 
-class XliffConversion extends AbstractTransformation {
+class XliffConversion extends AbstractTransformation implements Progressible {
 
 	use ProgressibleTrait;
 

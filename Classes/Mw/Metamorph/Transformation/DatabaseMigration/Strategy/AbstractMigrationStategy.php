@@ -6,6 +6,7 @@ use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Transformation\DatabaseMigration\Tca\Tca;
 use Mw\Metamorph\Transformation\DatabaseMigration\Tca\TcaLoader;
+use Mw\Metamorph\Transformation\Progressible;
 use Mw\Metamorph\Transformation\ProgressibleTrait;
 use Mw\Metamorph\Transformation\Task\TaskQueue;
 use PhpParser\Lexer;
@@ -23,9 +24,9 @@ use TYPO3\Flow\Annotations as Flow;
  * @package    Mw\Metamorph
  * @subpackage Transformation\DatabaseMigration\Strategy
  */
-abstract class AbstractMigrationStategy implements MigrationStrategyInterface {
+abstract class AbstractMigrationStategy implements MigrationStrategyInterface, Progressible {
 
-//	use ProgressibleTrait;
+	use ProgressibleTrait;
 
 	/**
 	 * @var TcaLoader
@@ -118,12 +119,4 @@ abstract class AbstractMigrationStategy implements MigrationStrategyInterface {
 	 */
 	abstract protected function getMigrationVisitor();
 
-	protected function startProgress($message, $max) {
-	}
-
-	protected function advanceProgress() {
-	}
-
-	protected function finishProgress() {
-	}
 }

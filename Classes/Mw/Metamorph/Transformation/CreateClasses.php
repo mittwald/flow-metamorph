@@ -11,7 +11,7 @@ use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\PackageInterface;
 use TYPO3\Flow\Utility\Files;
 
-class CreateClasses extends AbstractTransformation {
+class CreateClasses extends AbstractTransformation implements Progressible {
 
 	use ProgressibleTrait;
 

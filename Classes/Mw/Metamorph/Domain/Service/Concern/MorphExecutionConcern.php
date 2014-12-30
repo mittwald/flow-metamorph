@@ -24,12 +24,6 @@ class MorphExecutionConcern {
 	protected $packageManager;
 
 	/**
-	 * @var \TYPO3\Flow\Object\ObjectManagerInterface
-	 * @Flow\Inject
-	 */
-	protected $objectManager;
-
-	/**
 	 * @var array
 	 * @Flow\Inject(setting="transformations")
 	 */
@@ -51,7 +45,7 @@ class MorphExecutionConcern {
 			}
 
 			/** @var \Mw\Metamorph\Transformation\Transformation $transformation */
-			$transformation = $this->objectManager->get($name);
+			$transformation = new $name();
 			$transformation->setSettings(isset($item['settings']) ? $item['settings'] : []);
 
 			$transformation->execute($configuration, $state, $out);

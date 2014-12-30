@@ -14,7 +14,7 @@ use PhpParser\PrettyPrinter\Standard;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 
-class PackageClassRewrite extends AbstractTransformation {
+class PackageClassRewrite extends AbstractTransformation implements Progressible {
 
 	use ProgressibleTrait;
 
