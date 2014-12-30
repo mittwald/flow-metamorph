@@ -49,6 +49,7 @@ class PackageClassRewrite extends AbstractTransformation implements Progressible
 
 			/** @var \Mw\Metamorph\Transformation\RewriteNodeVisitors\AbstractVisitor $visitor */
 			$visitor = new $visitorClass();
+			$visitor->setMorphConfiguration($configuration);
 			$visitor->setClassMap($classMappingContainer);
 			$visitor->setDeferredTaskQueue($taskQueue);
 
