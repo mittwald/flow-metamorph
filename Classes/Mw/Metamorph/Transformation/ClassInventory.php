@@ -8,9 +8,10 @@ use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Mw\Metamorph\Transformation\ClassInventory\ClassFinderVisitor;
 use Mw\Metamorph\Transformation\ClassNameConversion\ClassNameConversionStrategy;
+use Mw\Metamorph\Transformation\Helper\ClosureVisitor;
 use PhpParser\Lexer;
+use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor;
 use PhpParser\NodeVisitor\NameResolver;
@@ -99,7 +100,7 @@ class ClassInventory extends AbstractTransformation {
 
 		$traverser = new NodeTraverser();
 		$traverser->addVisitor(new NameResolver());
-		$traverser->addVisitor(new ClassFinderVisitor($classList, $filename));
+		$traverser->addVisitor($this->buildClassFinderVisitor($filename, $classList));
 
 		foreach ($this->settings['visitors'] as $visitorClassName) {
 			if (FALSE === class_exists($visitorClassName)) {
@@ -123,5 +124,21 @@ class ClassInventory extends AbstractTransformation {
 			$filename,
 			$packageMapping->getExtensionKey()
 		);
+	}
+
+	/**
+	 * @param              $filename
+	 * @param \ArrayAccess $classList
+	 * @return ClosureVisitor
+	 */
+	private function buildClassFinderVisitor($filename, \ArrayAccess $classList) {
+		$visitor = new ClosureVisitor();
+		$visitor->setOnEnter(function (Node $node) use ($filename, $classList) {
+			if ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Interface_) {
+				$name             = $node->namespacedName->toString();
+				$classList[$name] = $filename;
+			}
+		});
+		return $visitor;
 	}
 }
