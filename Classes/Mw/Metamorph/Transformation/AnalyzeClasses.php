@@ -30,8 +30,12 @@ class AnalyzeClasses extends AbstractTransformation implements Progressible {
 
 	public function execute(MorphConfiguration $configuration, MorphExecutionState $state) {
 		$classMappingContainer = $configuration->getClassMappingContainer();
-		$this->startProgress('Analyzing classes', count($classMappingContainer->getClassMappings()));
-		foreach ($classMappingContainer->getClassMappings() as $classMapping) {
+		$classMappings = $classMappingContainer->getClassMappingsByFilter(function(ClassMapping $c) {
+			return $c->getAction() === ClassMapping::ACTION_MORPH;
+		});
+
+		$this->startProgress('Analyzing classes', count($classMappings));
+		foreach ($classMappings as $classMapping) {
 			$this->analyzeClass($classMapping, $classMappingContainer);
 			$this->advanceProgress();
 		}

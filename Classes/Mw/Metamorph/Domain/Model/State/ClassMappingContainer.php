@@ -61,4 +61,14 @@ class ClassMappingContainer {
 		return NULL;
 	}
 
+	public function getClassMappingsByFilter(callable $filter) {
+		$found = [];
+		foreach ($this->classMappings as $classMapping) {
+			if (call_user_func($filter, $classMapping)) {
+				$found[] = $classMapping;
+			}
+		}
+		return $found;
+	}
+
 }

@@ -4,6 +4,8 @@ namespace Mw\Metamorph\Transformation;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
+use Mw\Metamorph\Exception\HumanInterventionRequiredException;
+use Mw\Metamorph\Parser\ParserInterface;
 use Mw\Metamorph\Transformation\Task\TaskQueue;
 use PhpParser\Lexer;
 use PhpParser\NodeVisitor\NameResolver;
@@ -14,7 +16,7 @@ class PackageClassRewrite extends AbstractTransformation implements Progressible
 	use ProgressibleTrait;
 
 	/**
-	 * @var \PhpParser\Parser
+	 * @var ParserInterface
 	 * @Flow\Inject
 	 */
 	protected $parser;
@@ -52,8 +54,12 @@ class PackageClassRewrite extends AbstractTransformation implements Progressible
 			$this->log('Adding node visitor <info>%s</info>.', [$visitorClass]);
 		}
 
-		$this->startProgress('Refactoring classes', count($classMappingContainer->getClassMappings()));
-		foreach ($classMappingContainer->getClassMappings() as $classMapping) {
+		$classMappings = $classMappingContainer->getClassMappingsByFilter(function(ClassMapping $c) {
+			return $c->getAction() === ClassMapping::ACTION_MORPH;
+		});
+
+		$this->startProgress('Refactoring classes', count($classMappings));
+		foreach ($classMappings as $classMapping) {
 			$this->refactorClass($classMapping);
 			$this->advanceProgress();
 		}
@@ -65,9 +71,11 @@ class PackageClassRewrite extends AbstractTransformation implements Progressible
 	}
 
 	private function refactorClass(ClassMapping $classMapping) {
-		$filecontent = file_get_contents($classMapping->getTargetFile());
-		$syntaxTree  = $this->parser->parse($filecontent);
+		if (FALSE == $classMapping->getTargetFile()) {
+			throw new HumanInterventionRequiredException("No target file was set for class <comment>{$classMapping->getOldClassName()}</comment>.");
+		}
 
+		$syntaxTree = $this->parser->parseFile($classMapping->getTargetFile());
 		$syntaxTree = $this->traverser->traverse($syntaxTree);
 
 		file_put_contents($classMapping->getTargetFile(), $this->printer->prettyPrintFile($syntaxTree));
