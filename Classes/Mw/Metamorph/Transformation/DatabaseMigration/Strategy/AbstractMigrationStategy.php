@@ -66,11 +66,7 @@ abstract class AbstractMigrationStategy implements MigrationStrategyInterface, P
 		$this->tca = new Tca();
 
 		$this->loadTca($configuration);
-		$this->processClasses($configuration);
-	}
-
-	public function setDeferredTaskQueue(TaskQueue $queue) {
-		$this->taskQueue = $queue;
+		$this->processClasses();
 	}
 
 	private function loadTca(MorphConfiguration $configuration) {
@@ -85,12 +81,10 @@ abstract class AbstractMigrationStategy implements MigrationStrategyInterface, P
 		$this->finishProgress();
 	}
 
-	private function processClasses(MorphConfiguration $configuration) {
-		/** @var ClassDefinition[] $classes */
-		$classes = array_merge(
-			$this->classDefinitionContainer->findByFact('isEntity', TRUE),
-			$this->classDefinitionContainer->findByFact('isValueObject', TRUE)
-		);
+	private function processClasses() {
+		$classes = $this->classDefinitionContainer->findByFilter(function(ClassDefinition $c) {
+			return $c->getFact('isEntity') || $c->getFact('isValueObject');
+		});
 
 		$this->startProgress('Refactoring classes', count($classes));
 		foreach ($classes as $class) {
@@ -115,5 +109,9 @@ abstract class AbstractMigrationStategy implements MigrationStrategyInterface, P
 	 * @return NodeVisitor
 	 */
 	abstract protected function getMigrationVisitor();
+
+	public function setDeferredTaskQueue(TaskQueue $queue) {
+		$this->taskQueue = $queue;
+	}
 
 }
