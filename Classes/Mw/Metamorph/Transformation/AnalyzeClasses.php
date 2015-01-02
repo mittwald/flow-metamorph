@@ -6,10 +6,10 @@ use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
+use Mw\Metamorph\Parser\ParserInterface;
 use Mw\Metamorph\Transformation\Analyzer\AnalyzerVisitor;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
-use PhpParser\Parser;
 use TYPO3\Flow\Annotations as Flow;
 
 class AnalyzeClasses extends AbstractTransformation implements Progressible {
@@ -17,7 +17,7 @@ class AnalyzeClasses extends AbstractTransformation implements Progressible {
 	use ProgressibleTrait;
 
 	/**
-	 * @var Parser
+	 * @var ParserInterface
 	 * @Flow\Inject
 	 */
 	protected $parser;
@@ -39,8 +39,7 @@ class AnalyzeClasses extends AbstractTransformation implements Progressible {
 	}
 
 	private function analyzeClass(ClassMapping $mapping, ClassMappingContainer $container) {
-		$code  = file_get_contents($mapping->getTargetFile());
-		$stmts = $this->parser->parse($code);
+		$stmts = $this->parser->parseFile($mapping->getTargetFile());
 
 		$traverser = new NodeTraverser();
 		$traverser->addVisitor(new NameResolver());

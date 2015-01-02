@@ -8,6 +8,7 @@ use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
+use Mw\Metamorph\Parser\ParserInterface;
 use Mw\Metamorph\Transformation\ClassNameConversion\ClassNameConversionStrategy;
 use Mw\Metamorph\Transformation\Helper\ClosureVisitor;
 use PhpParser\Node;
@@ -29,7 +30,7 @@ class ClassInventory extends AbstractTransformation {
 	private $classMappingContainer = NULL;
 
 	/**
-	 * @var \PhpParser\Parser
+	 * @var ParserInterface
 	 * @Flow\Inject
 	 */
 	protected $parser;
@@ -91,8 +92,7 @@ class ClassInventory extends AbstractTransformation {
 	}
 
 	private function readClassesFromFile($filename, \ArrayAccess $classList) {
-		$fileContent = file_get_contents($filename);
-		$syntaxTree  = $this->parser->parse($fileContent);
+		$syntaxTree  = $this->parser->parseFile($filename);
 
 		$traverser = new NodeTraverser();
 		$traverser->addVisitor(new NameResolver());

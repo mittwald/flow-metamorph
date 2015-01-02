@@ -9,12 +9,36 @@ Mw\Metamorph\Transformation\ClassInventory:
     classNameConversionStrategy:
       object:
         name: Mw\Metamorph\Transformation\ClassNameConversion\CompoundConversionStrategy
+    parser:
+      object:
+        name: Mw\Metamorph\Parser\CachingDecorator
+        arguments:
+          1:
+            object:
+              name: Mw\Metamorph\Parser\PHP\PHPParser
 
 Mw\Metamorph\Transformation\PackageClassRewrite:
   properties:
     printer:
       object:
         name: PhpParser\PrettyPrinter\Standard
+    parser:
+      object:
+        name: Mw\Metamorph\Parser\CachingDecorator
+        arguments:
+          1:
+            object:
+              name: Mw\Metamorph\Parser\PHP\PHPParser
+
+Mw\Metamorph\Transformation\AnalyzeClasses:
+  properties:
+    parser:
+      object:
+        name: Mw\Metamorph\Parser\CachingDecorator
+        arguments:
+          1:
+            object:
+              name: Mw\Metamorph\Parser\PHP\PHPParser
 
 Mw\Metamorph\Transformation\DatabaseMigration\Strategy\CompatibleMigrationStrategy:
   properties:
@@ -27,6 +51,29 @@ Mw\Metamorph\Transformation\DatabaseMigration\Strategy\FullMigrationStrategy:
     printer:
       object:
         name: PhpParser\PrettyPrinter\Standard
+
+Mw\Metamorph\Parser\CachingDecorator:
+  properties:
+    cache:
+      object:
+        factoryObjectName: TYPO3\Flow\Cache\CacheManager
+        factoryMethodName: getCache
+        arguments:
+          1:
+            value: Metamorph_Parser_SyntaxTreeCache
+
+Mw\Metamorph\Transformation\Helper\ASTBasedFileRefactoring:
+  properties:
+    printer:
+      object:
+        name: PhpParser\PrettyPrinter\Standard
+    parser:
+      object:
+        name: Mw\Metamorph\Parser\CachingDecorator
+        arguments:
+          1:
+            object:
+              name: Mw\Metamorph\Parser\PHP\PHPParser
 
 PhpParser\Parser:
   className: PhpParser\Parser
