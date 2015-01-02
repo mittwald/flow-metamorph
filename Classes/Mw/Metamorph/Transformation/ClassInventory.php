@@ -9,6 +9,8 @@ use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
 use Mw\Metamorph\Parser\ParserInterface;
+use Mw\Metamorph\Parser\PHP\EarlyStoppingTraverser;
+use Mw\Metamorph\Parser\PHP\SkipTraversalException;
 use Mw\Metamorph\Transformation\ClassNameConversion\ClassNameConversionStrategy;
 use Mw\Metamorph\Transformation\Helper\ClosureVisitor;
 use PhpParser\Node;
@@ -94,7 +96,7 @@ class ClassInventory extends AbstractTransformation {
 	private function readClassesFromFile($filename, \ArrayAccess $classList) {
 		$syntaxTree  = $this->parser->parseFile($filename);
 
-		$traverser = new NodeTraverser();
+		$traverser = new EarlyStoppingTraverser();
 		$traverser->addVisitor(new NameResolver());
 		$traverser->addVisitor($this->buildClassFinderVisitor($filename, $classList));
 
@@ -133,6 +135,8 @@ class ClassInventory extends AbstractTransformation {
 			if ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Interface_) {
 				$name             = $node->namespacedName->toString();
 				$classList[$name] = $filename;
+
+				throw new SkipTraversalException();
 			}
 		});
 		return $visitor;
