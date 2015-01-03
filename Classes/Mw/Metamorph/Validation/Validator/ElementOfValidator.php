@@ -20,13 +20,13 @@ use TYPO3\Flow\Validation\Validator\AbstractValidator;
  *
  * @Flow\Scope("prototype")
  */
-class ActionValidator extends AbstractValidator {
+class ElementOfValidator extends AbstractValidator {
 
 	/**
 	 * @var array
 	 */
 	protected $supportedOptions = array(
-		'actions' => array([], 'Known actions', 'array'),
+		'set' => array([], 'Known elements', 'array'),
 	);
 
 	protected $acceptsEmptyValues = FALSE;
@@ -40,14 +40,14 @@ class ActionValidator extends AbstractValidator {
 	 * @throws \TYPO3\Flow\Validation\Exception\InvalidValidationOptionsException if invalid validation options have been specified in the constructor
 	 */
 	protected function isValid($value) {
-		if (count($this->options['actions']) === 0) {
-			throw new InvalidValidationOptionsException('"actions" must have at least one value!');
+		if (count($this->options['set']) === 0) {
+			throw new InvalidValidationOptionsException('"set" must have at least one value!');
 		}
 
-		if (FALSE === in_array($value, $this->options['actions'])) {
+		if (FALSE === in_array($value, $this->options['set'])) {
 			$this->addError(
-				"'{$value}' is not a valid action. Must be one of the following: "
-				. implode(', ', $this->options['actions']),
+				"'{$value}' is not a valid value. Must be one of the following: "
+				. implode(', ', $this->options['set']),
 				1420300462
 			);
 		}

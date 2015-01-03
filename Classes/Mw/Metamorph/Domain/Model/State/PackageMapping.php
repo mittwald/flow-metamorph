@@ -37,8 +37,8 @@ class PackageMapping {
 	/**
 	 * @var string
 	 * @Flow\Validate(
-	 *   type="Mw.Metamorph:Action",
-	 *   options={"actions"={PackageMapping::ACTION_MORPH, PackageMapping::ACTION_IGNORE}}
+	 *   type="Mw.Metamorph:ElementOf",
+	 *   options={"set"={PackageMapping::ACTION_MORPH, PackageMapping::ACTION_IGNORE}}
 	 * )
 	 */
 	protected $action = self::ACTION_MORPH;

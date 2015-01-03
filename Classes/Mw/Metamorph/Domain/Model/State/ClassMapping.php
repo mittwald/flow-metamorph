@@ -36,8 +36,8 @@ class ClassMapping {
 	/**
 	 * @var string
 	 * @Flow\Validate(
-	 *   type="Mw.Metamorph:Action",
-	 *   options={"actions"={ClassMapping::ACTION_MORPH, ClassMapping::ACTION_IGNORE}}
+	 *   type="Mw.Metamorph:ElementOf",
+	 *   options={"set"={ClassMapping::ACTION_MORPH, ClassMapping::ACTION_IGNORE}}
 	 * )
 	 */
 	protected $action = self::ACTION_MORPH;
