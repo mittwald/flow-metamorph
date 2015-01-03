@@ -10,6 +10,8 @@ namespace Mw\Metamorph\Domain\Service\Concern;
 
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
+use Mw\Metamorph\Transformation\Sorting\TopologicalTransformationSorter;
+use Mw\Metamorph\Transformation\Sorting\TransformationGraphBuilder;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Utility\Files;
 use TYPO3\Flow\Utility\PositionalArraySorter;
@@ -35,17 +37,15 @@ class MorphExecutionConcern {
 
 		Files::createDirectoryRecursively($state->getWorkingDirectory());
 
-		$transformationConfig = (new PositionalArraySorter($this->transformations))->toArray();
+		$nodes = (new TransformationGraphBuilder($this->transformations))->build();
+		$nodes = (new TopologicalTransformationSorter())->sort($nodes);
 
-		foreach ($transformationConfig as $item) {
-			$name = $item['name'];
-			if (!class_exists($name)) {
-				$name = 'Mw\\Metamorph\\Transformation\\' . $name;
-			}
+		foreach ($nodes as $item) {
+			$class = $item->getClassName();
 
 			/** @var \Mw\Metamorph\Transformation\Transformation $transformation */
-			$transformation = new $name();
-			$transformation->setSettings(isset($item['settings']) ? $item['settings'] : []);
+			$transformation = new $class();
+			$transformation->setSettings($item->getSettings());
 
 			$transformation->execute($configuration, $state);
 		}

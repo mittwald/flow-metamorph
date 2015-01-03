@@ -3,39 +3,49 @@ Mw:
     transformations:
       extensionInventory:
         name: ExtensionInventory
-        position: 10
       classInventory:
         name: ClassInventory
-        position: 20
+        dependsOn:
+          - extensionInventory
         settings:
           visitors: []
       resourceInventory:
         name: ResourceInventory
-        position: after classInventory
+        dependsOn:
+          - extensionInventory
       cleanupPackages:
         name: CleanupPackages
-        position: 30
+        dependsOn:
+          - extensionInventory
       createPackages:
         name: CreatePackages
-        position: 40
+        dependsOn:
+          - cleanupPackages
       createClasses:
         name: CreateClasses
-        position: 50
+        dependsOn:
+          - createPackages
+          - classInventory
       createResources:
         name: CreateResources
-        position: 55
+        dependsOn:
+          - createPackages
+          - resourceInventory
       rewritePackageClasses:
         name: PackageClassRewrite
-        position: 60
+        dependsOn:
+          - createClasses
         settings:
           visitors:
             - ClassNamespaceRewriterVisitor
       analyzeClasses:
         name: AnalyzeClasses
-        position: 70
+        dependsOn:
+          - rewritePackageClasses
       refactorClasses:
         name: PackageClassRewrite
-        position: 80
+        dependsOn:
+          - analyzeClasses
         settings:
           visitors:
             - ExtbaseClassReplacementVisitor
@@ -48,13 +58,16 @@ Mw:
             - PackageRedirectVisitor
       transformLocallang:
         name: XliffConversion
-        position: 90
+        dependsOn:
+          - createResources
       migrateDatabase:
         name: MigrateDatabaseStructure
-        position: 100
+        dependsOn:
+          - refactorClasses
       createDoctrineMigrations:
         name: CreateDoctrineMigrations
-        position: 110
+        dependsOn:
+          - migrateDatabase
     staticReplacements:
       TYPO3\CMS\Extbase\Mvc\Controller\ActionController: TYPO3\Flow\Mvc\Controller\ActionController
       TYPO3\CMS\Core\Utility\GeneralUtility: Mw\T3Compat\Utility\GeneralUtility
