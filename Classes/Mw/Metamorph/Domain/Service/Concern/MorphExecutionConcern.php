@@ -44,8 +44,7 @@ class MorphExecutionConcern {
 
 		Files::createDirectoryRecursively($state->getWorkingDirectory());
 
-		$nodes = $this->transformationBuilder->build();
-		$nodes = $this->transformationSorter->sort($nodes);
+		$nodes = $this->transformationSorter->sort($this->transformationBuilder->build());
 
 		foreach ($nodes as $item) {
 			$class = $item->getClassName();
