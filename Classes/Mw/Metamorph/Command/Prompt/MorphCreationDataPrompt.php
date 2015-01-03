@@ -153,7 +153,4 @@ class MorphCreationDataPrompt {
 		return array_search($choiceLabel, $allowedValues);
 	}
 
-	private function promptBoolean($prompt) {
-		return $this->promptChoice($prompt, ['y', 'n']) === 'y';
-	}
 }
