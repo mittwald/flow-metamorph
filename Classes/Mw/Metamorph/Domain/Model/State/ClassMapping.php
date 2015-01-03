@@ -35,13 +35,16 @@ class ClassMapping {
 
 	/**
 	 * @var string
-	 * @Flow\Validate(type="NotEmpty")
+	 * @Flow\Validate(
+	 *   type="Mw.Metamorph:Action",
+	 *   options={"actions"={ClassMapping::ACTION_MORPH, ClassMapping::ACTION_IGNORE}}
+	 * )
 	 */
 	protected $action = self::ACTION_MORPH;
 
 	/**
 	 * @var string
-	 * @Flow\Validate(type="NotEmpty")
+	 * @Flow\Validate(type="Mw.Metamorph:PackageKey")
 	 */
 	protected $package;
 

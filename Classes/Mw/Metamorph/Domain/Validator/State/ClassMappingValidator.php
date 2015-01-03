@@ -1,5 +1,5 @@
 <?php
-namespace Mw\Metamorph\Validation\Validator;
+namespace Mw\Metamorph\Domain\Validator\State;
 
 /*                                                                        *
  * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
@@ -9,15 +9,19 @@ namespace Mw\Metamorph\Validation\Validator;
  *                                                                        */
 
 use Helmich\Scalars\Types\String;
+use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Validation\Validator\AbstractValidator;
 
 /**
+ * Validator for validating class mappings.
+ *
+ * @package    Mw\Metamorph
+ * @subpackage Domain\Validator\State
+ *
  * @Flow\Scope("singleton")
  */
-class PackageKeyValidator extends AbstractValidator {
-
-	protected $acceptsEmptyValues = FALSE;
+class ClassMappingValidator extends AbstractValidator {
 
 	/**
 	 * Check if $value is valid. If it is not valid, needs to add an error
@@ -28,12 +32,16 @@ class PackageKeyValidator extends AbstractValidator {
 	 * @throws \TYPO3\Flow\Validation\Exception\InvalidValidationOptionsException if invalid validation options have been specified in the constructor
 	 */
 	protected function isValid($value) {
-		$hasVendorNamespace = (new String($value))->split('.')->length() >= 2;
-		if (FALSE === $hasVendorNamespace) {
-			$this->addError(
-				'"' . $value . '" is not a valid package key, because there is no vendor namespace!',
-				1416158223
-			);
+		if ($value instanceof ClassMapping) {
+			$classname = (new String($value->getNewClassName()));
+			$namespace = (new String($value->getPackage()))->replace('.', '\\')->append('\\');
+
+			if (FALSE === $classname->startWith($namespace)) {
+				$this->addError(
+					"New class name of class {$value->getOldClassName()} must be in namespace {$namespace}.",
+					1420301232
+				);
+			}
 		}
 	}
 }

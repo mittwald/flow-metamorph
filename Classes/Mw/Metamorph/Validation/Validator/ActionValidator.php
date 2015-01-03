@@ -8,14 +8,26 @@ namespace Mw\Metamorph\Validation\Validator;
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
 
-use Helmich\Scalars\Types\String;
 use TYPO3\Flow\Annotations as Flow;
+use TYPO3\Flow\Validation\Exception\InvalidValidationOptionsException;
 use TYPO3\Flow\Validation\Validator\AbstractValidator;
 
 /**
- * @Flow\Scope("singleton")
+ * Validator for validating action values.
+ *
+ * @package    Mw\Metamorph
+ * @subpackage Validation\Validator
+ *
+ * @Flow\Scope("prototype")
  */
-class PackageKeyValidator extends AbstractValidator {
+class ActionValidator extends AbstractValidator {
+
+	/**
+	 * @var array
+	 */
+	protected $supportedOptions = array(
+		'actions' => array([], 'Known actions', 'array'),
+	);
 
 	protected $acceptsEmptyValues = FALSE;
 
@@ -28,11 +40,15 @@ class PackageKeyValidator extends AbstractValidator {
 	 * @throws \TYPO3\Flow\Validation\Exception\InvalidValidationOptionsException if invalid validation options have been specified in the constructor
 	 */
 	protected function isValid($value) {
-		$hasVendorNamespace = (new String($value))->split('.')->length() >= 2;
-		if (FALSE === $hasVendorNamespace) {
+		if (count($this->options['actions']) === 0) {
+			throw new InvalidValidationOptionsException('"actions" must have at least one value!');
+		}
+
+		if (FALSE === in_array($value, $this->options['actions'])) {
 			$this->addError(
-				'"' . $value . '" is not a valid package key, because there is no vendor namespace!',
-				1416158223
+				"'{$value}' is not a valid action. Must be one of the following: "
+				. implode(', ', $this->options['actions']),
+				1420300462
 			);
 		}
 	}
