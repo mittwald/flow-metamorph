@@ -27,13 +27,8 @@ class PHPParser implements ParserInterface {
 	public function parseCode($code, $filename = NULL) {
 		try {
 			return $this->actualParser->parse($code);
-		} catch (\PhpParser\Error $error) {
-			var_dump($filename);
+		} catch (PhpParserError $error) {
 			throw new ParseError($error->getMessage(), $filename);
-		} catch(\Exception $foo) {
-			var_dump($filename);
-			var_dump($foo);
-			throw $foo;
 		}
 	}
 }
