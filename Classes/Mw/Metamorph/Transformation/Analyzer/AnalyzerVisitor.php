@@ -76,6 +76,10 @@ class AnalyzerVisitor extends NodeVisitorAbstract {
 			$this->currentNamespace . '\\' . $node->name
 		);
 
+		if (NULL === $mapping) {
+			throw new \Exception("No class mapping found for class {$this->currentNamespace}\\{$node->name}!");
+		}
+
 		$classDef = new ClassDefinition($node->name, $this->currentNamespace);
 		$classDef->setClassMapping($mapping);
 
