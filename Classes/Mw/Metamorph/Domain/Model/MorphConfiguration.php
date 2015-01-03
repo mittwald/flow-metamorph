@@ -25,11 +25,13 @@ class MorphConfiguration {
 
 	/**
 	 * @var string
+	 * @Flow\Validate(type="Mw.Metamorph:PackageKey")
 	 */
 	protected $name;
 
 	/**
 	 * @var string
+	 * @Flow\Validate(type="NotEmpty")
 	 */
 	protected $sourceDirectory;
 
