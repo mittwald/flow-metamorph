@@ -1,6 +1,21 @@
 <?php
 namespace Mw\Metamorph\Transformation\Sorting;
 
+/*                                                                        *
+ * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
+ *                                                                        *
+ * (C) 2015 Martin Helmich <m.helmich@mittwald.de>                        *
+ *          Mittwald CM Service GmbH & Co. KG                             *
+ *                                                                        */
+
+/**
+ * Helper class for building the transformation graph.
+ *
+ * Models a single node with it's edges in the transformation graph.
+ *
+ * @package    Mw\Metamorph
+ * @subpackage Transformation\Sorting
+ */
 class TransformationNode {
 
 	/** @var string */
@@ -14,6 +29,8 @@ class TransformationNode {
 
 	/** @var TransformationNode[] */
 	private $predecessors = [];
+
+	/** @var TransformationNode[] */
 	private $successors = [];
 
 	public function __construct($name, $className, array $settings = []) {
@@ -39,14 +56,25 @@ class TransformationNode {
 	}
 
 	public function addPredecessor(TransformationNode $predecessor) {
-		$predecessor->addSuccessor($this);
-		$this->predecessors[] = $predecessor;
+		$hash = spl_object_hash($predecessor);
+		if (!isset($this->predecessors[$hash])) {
+			$this->predecessors[$hash] = $predecessor;
+			$predecessor->addSuccessor($this);
+		}
+	}
+
+	public function addSuccessor(TransformationNode $successor) {
+		$hash = spl_object_hash($successor);
+		if (!isset($this->successors[$hash])) {
+			$this->successors[$hash] = $successor;
+			$successor->addPredecessor($this);
+		}
 	}
 
 	public function removePredecessor(TransformationNode $predecessor) {
-		$key = array_search($predecessor, $this->predecessors, TRUE);
-		if (FALSE !== $key) {
-			unset($this->predecessors[$key]);
+		$hash = spl_object_hash($predecessor);
+		if (isset($this->predecessors[$hash])) {
+			unset($this->predecessors[$hash]);
 		}
 	}
 
@@ -54,21 +82,17 @@ class TransformationNode {
 	 * @return TransformationNode[]
 	 */
 	public function getPredecessors() {
-		return $this->predecessors;
+		return array_values($this->predecessors);
 	}
 
 	public function getPredecessorCount() {
 		return count($this->predecessors);
 	}
 
-	public function addSuccessor(TransformationNode $successor) {
-		$this->successors[] = $successor;
-	}
-
 	/**
 	 * @return TransformationNode[]
 	 */
 	public function getSuccessors() {
-		return $this->successors;
+		return array_values($this->successors);
 	}
 }

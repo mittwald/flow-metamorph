@@ -1,15 +1,31 @@
 <?php
 namespace Mw\Metamorph\Transformation\Sorting;
 
+/**
+ * Builds the transformation graph from the package settings.
+ *
+ * @package Mw\Metamorph
+ * @subpackage Transformation\Sorting
+ */
 class TransformationGraphBuilder {
 
 	/** @var array */
 	private $settings;
 
+	/**
+	 * Creates a new transformation graph builder.
+	 *
+	 * @param array $transformationSettings The transformation settings
+	 */
 	public function __construct(array $transformationSettings) {
 		$this->settings = $transformationSettings;
 	}
 
+	/**
+	 * Builds the transformation graph.
+	 *
+	 * @return TransformationNode[] The transformation graph as list of nodes.
+	 */
 	public function build() {
 		/** @var TransformationNode[] $nodes */
 		$nodes = [];
