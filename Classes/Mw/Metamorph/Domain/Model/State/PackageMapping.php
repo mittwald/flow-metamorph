@@ -24,7 +24,7 @@ class PackageMapping {
 
 	/**
 	 * @var string
-	 * @Flow\Validate(type="Mw\Metamorph\Domain\Validator\PackageKeyValidator")
+	 * @Flow\Validate(type="Mw.Metamorph:PackageKey")
 	 */
 	protected $packageKey;
 

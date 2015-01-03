@@ -1,5 +1,5 @@
 <?php
-namespace Mw\Metamorph\Domain\Validator;
+namespace Mw\Metamorph\Validation\Validator;
 
 use Helmich\Scalars\Types\String;
 use TYPO3\Flow\Annotations as Flow;
