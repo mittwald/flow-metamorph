@@ -4,6 +4,14 @@ Mw\Metamorph\Command\MorphCommandController:
       object:
         name: Symfony\Component\Console\Output\ConsoleOutput
 
+Mw\Metamorph\Transformation\Sorting\TransformationGraphBuilder:
+  arguments:
+    1:
+      setting: Mw.Metamorph.transformations
+
+Mw\Metamorph\Transformation\Sorting\TransformationSorter:
+  className: Mw\Metamorph\Transformation\Sorting\TopologicalTransformationSorter
+
 Mw\Metamorph\Transformation\ClassInventory:
   properties:
     classNameConversionStrategy:

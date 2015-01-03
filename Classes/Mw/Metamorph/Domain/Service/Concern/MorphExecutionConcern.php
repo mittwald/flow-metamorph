@@ -12,6 +12,7 @@ use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
 use Mw\Metamorph\Transformation\Sorting\TopologicalTransformationSorter;
 use Mw\Metamorph\Transformation\Sorting\TransformationGraphBuilder;
+use Mw\Metamorph\Transformation\Sorting\TransformationSorter;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Utility\Files;
 use TYPO3\Flow\Utility\PositionalArraySorter;
@@ -25,10 +26,16 @@ class MorphExecutionConcern {
 	protected $packageManager;
 
 	/**
-	 * @var array
-	 * @Flow\Inject(setting="transformations")
+	 * @var TransformationGraphBuilder
+	 * @Flow\Inject
 	 */
-	protected $transformations;
+	protected $transformationBuilder;
+
+	/**
+	 * @var TransformationSorter
+	 * @Flow\Inject
+	 */
+	protected $transformationSorter;
 
 	public function execute(MorphConfiguration $configuration) {
 		$package    = $this->packageManager->getPackage($configuration->getName());
@@ -37,8 +44,8 @@ class MorphExecutionConcern {
 
 		Files::createDirectoryRecursively($state->getWorkingDirectory());
 
-		$nodes = (new TransformationGraphBuilder($this->transformations))->build();
-		$nodes = (new TopologicalTransformationSorter())->sort($nodes);
+		$nodes = $this->transformationBuilder->build();
+		$nodes = $this->transformationSorter->sort($nodes);
 
 		foreach ($nodes as $item) {
 			$class = $item->getClassName();
