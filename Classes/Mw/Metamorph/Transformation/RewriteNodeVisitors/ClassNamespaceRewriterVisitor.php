@@ -41,15 +41,6 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor {
 	}
 
 	public function leaveNode(Node $node) {
-		if ($node instanceof Node\Stmt\Class_) {
-			$this->currentClassNode = NULL;
-			if ($this->currentNamespaceNode === NULL && $this->newNamespace !== NULL) {
-				$uses = $this->getUseStatements();
-
-				$namespaceNode = new Node\Stmt\Namespace_($this->newNamespace, array_merge($uses, [$node]));
-				return $namespaceNode;
-			}
-		}
 		if ($node instanceof Node\Stmt\Namespace_) {
 			$this->currentNamespaceNode = NULL;
 			if ($this->newNamespace !== NULL) {
@@ -61,6 +52,16 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor {
 				$this->newNamespace = NULL;
 				return $node;
 			}
+		}
+		return NULL;
+	}
+
+	public function afterTraverse(array $nodes) {
+		if (NULL !== $this->newNamespace) {
+			$useNodes      = $this->getUseStatements();
+			$namespaceNode = new Node\Stmt\Namespace_($this->newNamespace, array_merge($useNodes, $nodes));
+
+			return [$namespaceNode];
 		}
 		return NULL;
 	}
@@ -94,10 +95,11 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor {
 		$text = $node->getDocComment()->getText();
 
 		foreach ($this->classMap->getClassMappings() as $classMapping) {
-			$new = $classMapping->getNewClassName();
+			$new = '\\' . $classMapping->getNewClassName();
 			$old = $classMapping->getOldClassName();
 
 			if (strpos($text, $old) !== FALSE) {
+				$text = str_replace('\\' . $old, $new, $text);
 				$text = str_replace($old, $new, $text);
 			}
 		}
