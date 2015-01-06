@@ -33,7 +33,7 @@ class ReplaceMakeInstanceCallsVisitor extends AbstractVisitor {
 				} else if ($className instanceof Node\Expr\Variable) {
 					// Do nothing, pass variable name as class name
 				} else {
-					$variableName = '_' . sha1(serialize($className));
+					$variableName       = '_' . sha1(serialize($className));
 					$variable           = new Node\Expr\Variable($variableName);
 					$variableAssignment = new Node\Expr\Assign(
 						$variable,
@@ -47,12 +47,18 @@ class ReplaceMakeInstanceCallsVisitor extends AbstractVisitor {
 				return new Node\Expr\New_($className, $args);
 			}
 		} else if ($node instanceof Node\Stmt && $this->addBeforeStmt !== NULL) {
-			$stmt = $this->addBeforeStmt;
+			$stmt                = $this->addBeforeStmt;
 			$this->addBeforeStmt = NULL;
-			return new Node\Stmt\If_(
-				new Node\Expr\ConstFetch(new Node\Name('TRUE')),
-				['stmts' => [$stmt, $node]]
-			);
+
+			if ($node instanceof Node\Stmt\ClassMethod) {
+				$node->stmts = array_merge([$stmt, $node->stmts]);
+				return $node;
+			} else {
+				return new Node\Stmt\If_(
+					new Node\Expr\ConstFetch(new Node\Name('TRUE')),
+					['stmts' => [$stmt, $node]]
+				);
+			}
 		}
 		return NULL;
 	}
