@@ -11,6 +11,8 @@ class ReplaceMakeInstanceCallsVisitor extends AbstractVisitor {
 	 */
 	private $currentClass;
 
+	private $addBeforeStmt = NULL;
+
 	public function enterNode(Node $node) {
 		if ($node instanceof Node\Stmt\Class_) {
 			$this->currentClass = $node;
@@ -28,9 +30,38 @@ class ReplaceMakeInstanceCallsVisitor extends AbstractVisitor {
 				$className = array_shift($args)->value;
 				if ($className instanceof Node\Scalar\String) {
 					$className = new Node\Name\FullyQualified($className->value);
+				} else if ($className instanceof Node\Expr\Variable) {
+					// Do nothing, pass variable name as class name
+				} else {
+					$variableName       = '_' . sha1(serialize($className));
+					$variable           = new Node\Expr\Variable($variableName);
+					$variableAssignment = new Node\Expr\Assign(
+						$variable,
+						$className
+					);
+
+					// Usually, we could simply return an array of nodes here to insert the assignment
+					// statement directly before the `new` statement. However, if multiple visitors are
+					// assigned to the same NodeTraverser, these will have their `leaveNode` method
+					// called with an array of nodes, creating a fatal error.
+					$this->addBeforeStmt = $variableAssignment;
+					return new Node\Expr\New_($variable, $args);
 				}
 
 				return new Node\Expr\New_($className, $args);
+			}
+		} else if ($node instanceof Node\Stmt && $this->addBeforeStmt !== NULL) {
+			$stmt                = $this->addBeforeStmt;
+			$this->addBeforeStmt = NULL;
+
+			if ($node instanceof Node\Stmt\ClassMethod) {
+				$node->stmts = array_merge([$stmt, $node->stmts]);
+				return $node;
+			} else {
+				return new Node\Stmt\If_(
+					new Node\Expr\ConstFetch(new Node\Name('TRUE')),
+					['stmts' => [$stmt, $node]]
+				);
 			}
 		}
 		return NULL;
