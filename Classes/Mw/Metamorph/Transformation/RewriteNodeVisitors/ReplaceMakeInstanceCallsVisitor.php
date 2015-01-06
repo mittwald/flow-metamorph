@@ -40,6 +40,10 @@ class ReplaceMakeInstanceCallsVisitor extends AbstractVisitor {
 						$className
 					);
 
+					// Usually, we could simply return an array of nodes here to insert the assignment
+					// statement directly before the `new` statement. However, if multiple visitors are
+					// assigned to the same NodeTraverser, these will have their `leaveNode` method
+					// called with an array of nodes, creating a fatal error.
 					$this->addBeforeStmt = $variableAssignment;
 					return new Node\Expr\New_($variable, $args);
 				}
