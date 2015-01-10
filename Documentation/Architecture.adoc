@@ -15,10 +15,10 @@ line call:
 asciidoctor -r asciidoctor-diagram Architecture.adoc
 ----
 
-Build the PDF using the `asciidoctor-pdf` gem with the following command line call:
+Build the PDF using `wkhtmltopdf` with the following command line call:
 
 ----
-asciidoctor-pdf -r asciidoctor-diagram Architecture.adoc
+wkhtmltopdf -T 20 -B 20 Architecture.html foo.pdf
 ----
 ****
 
@@ -474,9 +474,551 @@ These are actually two steps: `Mw\Metamorph\Transformation\CreateClasses` and `M
 
 Classes are stored in the target package's _Classes/_ directory according to their class name (this is required, because they need to be auto-loadable). Resource files are simply placed in the target directory that is specified in the _resource mapping_.
 
+=== Rename classes
+
+This step renames all classes that were copied in the previous step according to the _class mapping_ configuration. The PHP class for this transformation is actually generic (`Mw\Metamorph\Transformation\GenericAstVisitorTransformation`) and is used again in later steps. This transformation class does the following:
+
+[options="compact"]
+. Parse each PHP class file into a syntax tree
+. Traverse the syntax tree and apply a configurable set of node visitors
+. Dump the modified syntax tree back into the target file
+
+See <<Modifying source code inside transformations>> for more information.
+
+In this case, this transformation step specifically does the following:
+
+. Resolve class imports. This means that everytime, a class is imported with a `use` statement and then used with it's relative name somewhere in the code, this usage will simply be replaced with the fully-qualified class name.
++
+[cols="1a,1a"]
+|===
+|Before | After
+
+|
+
+[source,php]
+----
+use Foo\Bar;
+use Bar\Baz;
+
+class Baz extends Bar {
+    protected $foo;
+    public function __construct() {
+        $this->baz = new Baz();
+    }
+}
+----
+
+|
+
+[source,php]
+----
+use Foo\Bar;
+use Bar\Baz;
+
+class Baz extends \Foo\Bar {
+    protected $foo;
+    public function __construct() {
+        $this->baz = new \Bar\Baz();
+    }
+}
+----
+|===
++
+. For each class definition, look for the fully-qualified class name in the _class mapping_. Then replace the class definition with the new class name. When the class definition is inside a namespace statement, change the namespace name accordingly. When the class definition is **not inside a namespace statement**, wrap the entire file in a namespace statement according to the new class name.
++
+[cols="1a,1a"]
+|===
+|Before | After
+
+|
+
+[source,php]
+----
+class Old_Baz extends \Foo\Bar {
+    protected $foo;
+    public function __construct() {
+        $this->baz = new \Bar\Baz();
+    }
+}
+----
+
+|
+
+[source,php]
+----
+namespace New;
+class UberBaz extends \Foo\Bar {
+    protected $foo;
+    public function __construct() {
+        $this->baz = new \Bar\Baz();
+    }
+}
+----
+
+|
+
+[source,php]
+----
+namespace Old;
+class Baz extends \Foo\Bar {
+    protected $foo;
+    public function __construct() {
+        $this->baz = new \Bar\Baz();
+    }
+}
+----
+
+|
+
+[source,php]
+----
+namespace New;
+class UberBaz extends \Foo\Bar {
+    protected $foo;
+    public function __construct() {
+        $this->baz = new \Bar\Baz();
+    }
+}
+----
+
+|===
++
+. For each **class usage** like constructor calls, static method calls, inheritance and constant usages, replace the class name when a class mapping is defined.
++
+[cols="1a,1a"]
+|===
+|Before | After
+
+|
+
+[source,php]
+----
+namespace New;
+class Baz extends \Old\Bar {
+    protected $foo;
+    public function __construct() {
+        $this->baz = new \Old\Baz();
+    }
+}
+----
+
+|
+
+[source,php]
+----
+namespace New;
+class Baz extends \New\Bar {
+    protected $foo;
+    public function __construct() {
+        $this->baz = new \New\Baz();
+    }
+}
+----
+|===
++
+. Look for the class name in strings and doc comments. Replace the class name when a class mapping for this class is defined.
++
+[cols="1a,1a"]
+|===
+|Before | After
+
+|
+
+[source,php]
+----
+namespace New;
+class Baz extends \New\Bar {
+    /** @var \Old\Baz */
+    protected $foo;
+    public function __construct() {
+        $class = "Old\\Baz";
+        $this->baz = new $class();
+    }
+}
+----
+
+|
+
+[source,php]
+----
+namespace New;
+class Baz extends \New\Bar {
+    /** @var \New\Baz */
+    protected $foo;
+    public function __construct() {
+        $class = "New\\Baz";
+        $this->baz = new $class();
+    }
+}
+----
+|===
+
+
 === Analyzing the class definitions
 
 The `Mw\Metamorph\Transformation\AnalyzeClasses` step will iterate over each class from the _class mapping_ and analyze the class' inheritance structure and properties. This information is then stored in the _class definition container_. See <<Using the class definition container>> for more information on the _class definition container_.
+
+=== Refactorings
+
+This is the main transformation step. It uses the `Mw\Metamorph\Transformation\GenericAstVisitorTransformation` class already introduced in <<Rename classes>>. This step applies a number of transformation visitors to the syntax tree of each class. The following list briefly outlines the purpose of each node visitor (all classnames in the `Mw\Metamorph\Transformation\RewriteNodeVisitors` namespace):
+
+ExtbaseClassReplacementVisitor::
+    Replaces extbase classes with their TYPO3 Flow equivalents. An example would be the `TYPO3\CMS\Extbase\Mvc\Controller\ActionController` class which is replaced by the `TYPO3\Flow\Mvc\Controller\ActionController` class. The classes that should be replaced can be configured in the configuration setting `Mw.Metamorph.staticReplacements`.
+
+EntityDoctrineMigrationVisitor::
+    Migrates entity and value object classes to _Doctrine_. This affects all classes that (*directly or indirectly*) inherit `TYPO3\CMS\Extbase\DomainObject\AbstractEntity` or `TYPO3\CMS\Extbase\DomainObject\AbstractValueObject` (or their legacy `Tx_`-style equivalents). Classes that directly inherit one of these classes will have this inheritance removed, as Doctrine works with plain objects. Instead, appropriate `@Flow\Entity` annotations will be added.
++
+IMPORTANT: Metamorph will convert Extbase value objects (inheriting `TYPO3\CMS\Extbase\DomainObject\AbstractValueObject`) to *entity classes*. The reason for this is that Flow puts much stricter constraints on value objects than Extbase. For example, value objects must be truly *immutable* in Flow (all properties need to be set using constructor arguments, and setter methods are not allowed). Extbase is much more lenient on this and actually allows value objects to be mutable. Because of this, it makes more sense to convert them into entities, instead.
+
+ReplaceMakeInstanceCallsVisitor::
+    This visitor replaces calls to `TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance`. For singleton objects (these always implement the `TYPO3\CMS\Core\SingletonInterface`), these calls are replaced with a dependency injection. For prototype-scoped objects, the `makeInstance` call is replaced by a simple constructor call.
++
+.Example: Simple string argument, prototype-scoped
+[cols="1a,1a"]
+|===
+|Before | After
+
+|
+[source,php]
+----
+class Foo {
+  public function foo() {
+    $bar = t3lib_div::makeInstance('Bar');
+  }
+}
+----
+|
+[source,php]
+----
+class Foo {
+  public function foo() {
+    $bar = new Bar();
+  }
+}
+----
+|===
++
+.Example: Simple string argument, singleton-scoped
+[cols="1a,1a"]
+|===
+|Before | After
+
+|
+[source,php]
+----
+class Foo {
+  public function foo() {
+    $bar = t3lib_div::makeInstance('Bar');
+  }
+}
+----
+|
+
+[source,php]
+----
+class Foo {
+  /** @var Bar
+    * @Flow\Inject */
+  protected $bar;
+  public function foo() {
+    $bar = $this->bar;
+  }
+}
+----
+
+|===
++
+.Example: Complex expression argument, prototype-scoped
+[cols="1a,1a"]
+|===
+|Before | After
+
+|
+[source,php]
+----
+class Foo {
+  public function foo($baz) {
+    $bar = t3lib_div::makeInstance(
+      $baz . 'Object');
+  }
+}
+----
+|
+
+[source,php]
+----
+class Foo {
+  public function foo($baz) {
+    $_b7c620c5 = $baz . 'Object'; // <1>
+    $bar = new $_b7c620c5();
+  }
+}
+----
+<1> A temporary variable is really necessary here. The expression `$bar = new $baz . 'Object'()` is syntactically *really* wrong.
+
+|===
++
+.Example: Complex expression argument, singleton-scoped
+[cols="1a,1a"]
+|===
+|Before | After
+
+|
+[source,php]
+----
+class Foo {
+  public function foo($baz) {
+    $bar = t3lib_div::makeInstance(
+      $baz . 'Object');
+  }
+}
+----
+|
+
+[source,php]
+----
+class Foo {
+  /** @var ObjectManager
+   *  @Flow\Inject */
+  protected $objectManager;
+  public function foo($baz) {
+    $bar = $this->objectManager->get(
+      $baz . 'Object');
+  }
+}
+----
+
+|===
++
+RewriteSingletonsVisitor::
+    This visitor affects all classes that implement the `TYPO3\CMS\Core\SingletonInterface` interface (or it's legacy variant `t3lib_Singleton`). The interface implementation will be removed, and a `@Flow\Scope("singleton")` annotation added to the class.
+
+ReplaceAnnotationsVisitor::
+    This visitor replaces all Extbase annotations with their Flow equivalents; this is mostly search&replace (for example `@inject` becomes to `@Flow\Inject`). Some annotations require some more logic; for example `@validate StringLength(minLength=3)` needs to be converted to `@Flow\Validate(type="StringLength", options={"minLength"=3})`. Currently, these replacements are hardcoded in the `ReplaceAnnotationsVisitor` class. Have a look there for more information.
+
+InjectUtilitiesVisitor::
+    This visitor replaces all kinds of utility calls (most prominently the infamous `GeneralUtility` class). Although Metamorph does provide a compatibility layer for these classes (actually, the package `Mw.T3Compat` does), these classes do not allow their methods to be called statically. This is because the compatibility classes themselves depend on Flow APIs that do not allow static method calls. To fix this issue, all static utility calls are replaced with instance calls on a utility instance that is injected via dependency injection.
++
+.Example: GeneralUtility instance being injected
+[cols="1a,1a"]
+|===
+|Before | After
+
+|
+[source,php]
+----
+class Foo {
+  public function foo($baz) {
+    $bar = GeneralUtility::trimExplode(
+      $baz);
+  }
+}
+----
+|
+
+[source,php]
+----
+class Foo {
+  /** @var GeneralUtility
+   *  @Flow\Inject */
+  protected $generalUtility;
+  public function foo($baz) {
+    $bar = $this->generalUtility
+      ->trimExplode($baz);
+  }
+}
+----
+
+|===
++
+FlashMessageVisitor::
+    This visitor fixes some outdated usages of the `FlashMessageContainer` class. Basically, all this visitor does is converting `$this->flashMessages->add('foo')` to `$this->addFlashMessage('foo')`. That's it.
+
+PackageRedirectVisitor::
+    This visitor fixes usages of `redirect` method offered by the `ActionController`. Upon calling this method, you can specify an extension key. When this method is called with an extension key, this extension key needs to be replaced with the corresponding TYPO3 Flow package key. This key can easily be retrieved from the _package mapping_, if set. It becomes more difficult, when the extension key parameter is not a string literal, but a dynamic expression. In this case, Metamorph will create a lookup table from the package mapping.
++
+.Example: `redirect` call with string literal argument
+[cols="1a,1a"]
+|===
+|Before | After
+
+|
+[source,php]
+----
+public function fooAction() {
+  $this->redirect(
+    'show',
+    'Controller',
+    'my_extension'
+  );
+}
+----
+|
+
+[source,php]
+----
+public function fooAction() {
+  $this->redirect(
+    'show',
+    'Controller',
+    'My.Package'
+  );
+}
+----
+
+|===
++
+.Example: `redirect` call with dynamic expression argument
+[cols="1a,1a"]
+|===
+|Before | After
+
+|
+[source,php]
+----
+public function fooAction($target) {
+  $this->redirect(
+    'show',
+    'Controller',
+    $target
+  );
+}
+----
+|
+
+[source,php]
+----
+public function fooAction($target) {
+  $metamorphExtensions = [
+    'my_extension' => 'My.Package'
+  ];
+  $this->redirect(
+    'show',
+    'Controller',
+    $metamorphExtensions[$target]
+  );
+}
+----
+
+|===
+
+=== Locallang transformation
+
+Extbase still allows using locallang XML files for translation handling. This is a TYPO3-proprietary format that is not supported by TYPO3 Flow. These files will be converted into the XLIFF format (which is an OASIS standard). This is done by a XSLT transformation that is executed in the `Mw\Metamorph\Transformation\MigrateDatabaseStructure` step. Have a look at the XSLT stylesheet in `Resources/Xslt` if you are interested in further details.
+
+=== Database migration
+
+In this step, Metamorph will enrich the migrated domain entity classes by the necessary doctrine annotations. For this, Metamorph parses the source extension's _Table Configuration Array_ (short _TCA_) and extracts all necessary mapping information. Depending on your configuration, the following things will happen:
+
+. The domain models will be extended by Doctrine anntations for http://doctrine-orm.readthedocs.org/en/latest/reference/association-mapping.html[association mapping] (like for example `@ORM\OneToMany(inversedBy="foo")`.
++
+.Example on association mapping
+****
+Consider an entity class `My\Example\Domain\Model\Product` with the following _TCA_:
+
+[source,php]
+----
+$TCA['tx_example_domain_model_product']['columns']['inventory_changes'] = [
+    'config' => [
+        'type'          => 'inline',
+        'maxitems'      => 9999,
+        'foreign_table' => 'tx_example_domain_model_inventorychange',
+        'foreign_field' => 'product'
+    ]
+];
+----
+
+IMPORTANT: Remember that Extbase expects database columns to be `under_scored`, and entity attribute names to be `camelCased`. Extbase automatically converts between these two notations, and so does Metamorph. This means that whenever you see a _database column_ like `inventory_changes`, this will be actually mapped to a property named `inventoryChanges`.
+
+Altough it is not specifically labeled as such, an `inline` relation in the TCA is actually a 1:n relation. This relation is stored in the `inventoryChanges` property of the `Product` class. Metamorph would now add the following annotations to this property:
+
+[source,php]
+----
+class Product {
+    /**
+     * @ORM\OneToMany(mappedBy="product") // <1>
+     * @var Collection<InventoryChange>
+     */
+    protected $inventoryChanges;
+}
+----
+<1> Here, `product` is the `foreign_field` value from the TCA.
+
+Furthermore, Metamorph will adjust the inverse property, too. Typically, the `InventoryChange` class should have a `product` property.
+
+IMPORTANT: If there is no inverse property for an 1:n relationship, Metamorph will add one!
+
+[source,php]
+----
+class InventoryChange {
+    /**
+     * @ORM\ManyToOne(inversedBy="inventoryChanges") // <1>
+     * @var Product
+     */
+    protected $product;
+}
+----
+<1> Here, `inventoryChanges` is the name of the property in the target entity.
+****
++
+. Optionally, Metamorph will add Doctrine annotations so that table and column names match the old Extbase mapping! This includes adding a `uid` column to all tables and declaring it as identifier.
++
+.Example on compatibility mapping
+****
+Consider the following entity class:
+
+[source,php]
+----
+/**
+ * @Flow\Entity
+ */
+class Product {
+    /**
+     * @var string
+     */
+    protected $longDescription;
+
+    /**
+     * @var Collection<InventoryChange>
+     * @ORM\OneToMany(mappedBy="product")
+     */
+    protected $inventoryChanges;
+}
+----
+
+In compatibility mode, Metamorph would modify this class as follows:
+
+[source,php]
+----
+/**
+ * @Flow\Entity
+ * @ORM\Table(name="tx_example_domain_model_product") <1>
+ */
+class Product {
+    /**
+     * @var int
+     * @Flow\Identity
+     * @ORM\GeneratedValue
+     */
+    protected $uid; // <2>
+
+    /**
+     * @var string
+     * @ORM\Column(name="long_description") <3>
+     */
+    protected $longDescription;
+
+    /**
+     * @var Collection<InventoryChange>
+     * @ORM\OneToMany(mappedBy="product")
+     */
+    protected $inventoryChanges;
+}
+----
+<1> Here, Metamorph will insert the original table name. Without this annotation, Flow would auto-generate a table name like `my_example_domain_model_product` (note the different namespace).
+<2> This attribute is added automatically, because TYPO3 Extbase adds a `uid` column to all entities by convention. The `@Flow\Identity` marks this attribute as the primary key and the `@ORM\GeneratedValue` causes Doctrine to rely on the DBMS' auto-incrementing key. Without this attribute, Flow would auto-generate a `persistence_object_identifier` property with UUID values.
+<3> The value `long_description` is loaded from the original TCA. By default, Flow would use `longdescription` as column name.
+****
 
 == Using the class definition container
 
