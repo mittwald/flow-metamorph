@@ -206,6 +206,56 @@ IMPORTANT: Usually, you should never use these classes! Access to the persistenc
 
 As the `MorphConfiguration` class is always the aggregate root, the `MorphConfigurationWriter` class should always be used for persisting morph configurations. The writer will dump the entire aggregate into YAML files and store these in a TYPO3 Flow package. The morph configuration name will be used as package name.
 
+==== Morph configurations
+
+The following example shows a persisted morph configuration:
+
+[source,yaml]
+----
+sourceDirectory: /home/mhelmich/dev/typo3-extbasefluid-examplesite/html
+extensions:
+    - { pattern: /^helmich_/ }
+    - { pattern: /^mittwald_/ }
+tableStructureMode: MIGRATE
+pibaseRefactoringMode: PROGRESSIVE
+----
+
+==== Class mapping
+
+The following example shows a persisted class mapping configuration:
+
+[source,yaml]
+----
+reviewed: true
+classes:
+  Sjr\SjrOffers\Controller\OrganizationController:
+    source: typo3conf/ext/sjr_offers/Classes/Controller/OrganizationController.php
+    newClassname: Sjr\Offers\Controller\OrganizationController
+    package: Sjr.Offers
+    action: MORPH
+    target: Classes/Sjr/Offers/Controller/OrganizationController.php
+  Sjr\SjrOffers\Controller\OfferController:
+    source: typo3conf/ext/sjr_offers/Classes/Controller/OfferController.php
+    newClassname: Sjr\Offers\Controller\OfferController
+    package: Sjr.Offers
+    action: MORPH
+    target: Classes/Sjr/Offers/Controller/OfferController.php
+  Sjr\SjrOffers\Domain\Model\Region:
+    source: typo3conf/ext/sjr_offers/Classes/Domain/Model/Region.php
+    newClassname: Sjr\Offers\Domain\Model\Region
+    package: Sjr.Offers
+    action: MORPH
+    target: Classes/Sjr/Offers/Domain/Model/Region.php
+  Sjr\SjrOffers\Service\AccessControlService:
+    source: typo3conf/ext/sjr_offers/Classes/Service/AccessControlService.php
+    newClassname: Sjr\Offers\Service\AccessControlService
+    package: Sjr.Offers
+    action: MORPH
+    target: Classes/Sjr/Offers/Service/AccessControlService.php
+
+# ...
+----
+
 === Constraints
 
 There are some constraints that the current state of the domain model entities must always fulfil. Since the transformation steps may change the domain entities, these constraints are checked before and after each transformation step. This is done using aspects of Flow's AOP framework.
@@ -230,8 +280,7 @@ use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
 use Symfony\Component\Console\Output\OutputInterface;
 
-interface Transformation
-{
+interface Transformation {
     public function setSettings(array $settings);
     public function execute(
         MorphConfiguration $configuration,
@@ -255,18 +304,20 @@ Mw:
     transformations:
       extensionInventory:
         name: ExtensionInventory # <1>
-        position: 10 # <2>
       classInventory:
         name: ClassInventory
-        position: 20
+        dependsOn: [extensionInventory] # <2>
         settings: # <3>
           visitors: []
       resourceInventory:
         name: ResourceInventory
-        position: after classInventory # <2>
+        dependsOn: [extensionInventory]
+      createPackages:
+        name: CreatePackages:
+        dependsOn: [extensionInventory, classInventory, resourceInventory]
 ----
 <1> This is a class name. If you specify an unqualified class name, Metamorph will assume the namespace `Mw\Metamorph\Transformation` for this class.
-<2> You can position elements using FLOW's _positional array sorter_.
+<2> You can specify dependencies for each transformation step. Metamorph will determine the final execution order of all transformation steps using _topological sorting_.
 <3> Some transformations allow you to pass custom settings. These will be passed into the `setSettings` method of the transformation class.
 
 As you may have guessed, you are free to add additional transformation steps to this list in the settings of your own packages. This allows you to extend and modify Metamorph's default transformation process according to your own custom requirements.
@@ -390,7 +441,83 @@ Mw:
         extensions: [css, sass, less, scss]
 ----
 
+=== Clean up packages
+
+When you are migrating continuously, it is entirely possible that your local TYPO3 Flow instance already contains some of the packages that would be created during migration. This step, modelled by the class `Mw\Metamorph\Transformation\CleanupPackages`, will clean up each target package so that migration is easily possible:
+
+. If you are using a source control system like Git, Metamorph will checkout the `metamorph` branch before actually doing anything. When the migration was completed, Metamorph will try to merge the `metamorph` branch back into your `master` branch.
+. Otherwise, Metamorph will delete the package and have the next transformation step re-create it.
+
+=== Create packages
+
+The `Mw\Metamorph\Transformation\CreatePackages` step will now create all TYPO3 Flow packages that are specified in the _package mapping_. For this, Metamorph will use TYPO3 Flow's http://typo3.org/api/flow/TYPO3/Flow/Package/class-PackageManager.html[APIs for package management]:
+
+[source,php]
+----
+foreach ($packageMappingContainer->getPackageMappings() as $packageMapping) {
+    if (FALSE === $this->packageManager->isPackageAvailable($packageMapping->getPackageKey())) {
+        $this->packageManager->createPackage(
+            $packageMapping->getPackageKey(),
+            $this->createPackageMetaData($packageMapping),
+            NULL,
+            'typo3-flow-package'
+        );
+    }
+}
+----
+
+The package meta data (description, authors) will be migrated from the source extension.
+
+=== Migrate classes and resources
+
+These are actually two steps: `Mw\Metamorph\Transformation\CreateClasses` and `Mw\Metamorph\Transformation\CreatePackages`. Each of these steps walks the _class mapping_ (or _resource mapping_, respectively) and copies each file to the target location in the new TYPO3 Flow site.
+
+Classes are stored in the target package's _Classes/_ directory according to their class name (this is required, because they need to be auto-loadable). Resource files are simply placed in the target directory that is specified in the _resource mapping_.
+
 === Analyzing the class definitions
+
+The `Mw\Metamorph\Transformation\AnalyzeClasses` step will iterate over each class from the _class mapping_ and analyze the class' inheritance structure and properties. This information is then stored in the _class definition container_. See <<Using the class definition container>> for more information on the _class definition container_.
+
+== Using the class definition container
+
+You have access to the class definitions after the _class analyzation step_ has been run. You can then inject an instance of the `Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer` class into your own class and use this class to find class definitions that match certain constraints.
+
+The following code example gets all class definitions that inherit from one of Extbase's _FrontendUser_ classes:
+
+[source,php]
+----
+use Mw\Metamorph\Transformation\AbstractTransformation;
+use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer;
+use TYPO3\Flow\Annotations as Flow;
+
+class MyTransformation extends AbstractTransformation {
+
+    /**
+     * @var ClassDefinitionContainer
+     * @Flow\Inject
+     */
+    protected $container;
+
+    public function execute(MorphConfiguration $configuration, MorphExecutionState $state) {
+        $userClasses = $this->container->findByFilter(function(ClassDefinition $c) {
+            return
+                $c->doesInherit('Tx_Extbase_Domain_Model_FrontendUser') ||
+                $c->doesInherit('TYPO3\\CMS\\Extbase\\Domain\\Model\\FrontendUser');
+        }); // <1>
+
+        foreach ($userClasses as $userClass) {
+            $classMapping = $userClass->getClassMapping(); // <2>
+
+            foreach ($userClass->getProperties() as $property) { // <3>
+                // Do some magic.
+            }
+        }
+    }
+}
+----
+<1> Use the `findByFilter` function with a callback to execute arbitrary queries.
+<2> Each class definition is associated to the respective class mapping.
+<3> Each class definition is associated to property definitions.
 
 == Modifying source code inside transformations
 
