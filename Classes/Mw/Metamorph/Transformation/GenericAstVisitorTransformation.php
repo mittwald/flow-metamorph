@@ -11,7 +11,7 @@ use PhpParser\Lexer;
 use PhpParser\NodeVisitor\NameResolver;
 use TYPO3\Flow\Annotations as Flow;
 
-class PackageClassRewrite extends AbstractTransformation implements Progressible {
+class GenericAstVisitorTransformation extends AbstractTransformation implements Progressible {
 
 	use ProgressibleTrait;
 
