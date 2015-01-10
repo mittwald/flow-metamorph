@@ -49,7 +49,7 @@ Mw:
         settings:
           visitors:
             - ExtbaseClassReplacementVisitor
-            - ExtbaseClassEliminationVisitor
+            - EntityDoctrineMigrationVisitor
             - ReplaceMakeInstanceCallsVisitor
             - RewriteSingletonsVisitor
             - ReplaceAnnotationsVisitor

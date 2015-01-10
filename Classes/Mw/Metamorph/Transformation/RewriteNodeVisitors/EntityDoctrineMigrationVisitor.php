@@ -10,7 +10,7 @@ use PhpParser\Comment\Doc;
 use PhpParser\Node;
 use TYPO3\Flow\Annotations as Flow;
 
-class ExtbaseClassEliminationVisitor extends AbstractVisitor {
+class EntityDoctrineMigrationVisitor extends AbstractVisitor {
 
 	/** @var Node\Stmt\Namespace_ */
 	private $currentNamespace = NULL;
@@ -110,11 +110,6 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor {
 					return FALSE;
 				}
 			}
-		} else if ($node instanceof Node\Stmt\ClassMethod) {
-//            if ($this->currentClass->getFact('isValueObjectSuperclass') && substr($node->name, 0, 3) === 'set')
-//            {
-//                return FALSE;
-//            }
 		} else if ($node instanceof Node\Stmt\Class_) {
 			$classDefinition = $this->currentClass;
 			$annotation      = NULL;
@@ -122,7 +117,6 @@ class ExtbaseClassEliminationVisitor extends AbstractVisitor {
 			$isValueObject   = $classDefinition->getFact('isValueObject');
 
 			if ($isEntity || $isValueObject) {
-//                $annotation = new AnnotationRenderer('Flow', $isEntity ? 'Entity' : 'ValueObject');
 				$annotation = new AnnotationRenderer('Flow', 'Entity');
 			}
 
