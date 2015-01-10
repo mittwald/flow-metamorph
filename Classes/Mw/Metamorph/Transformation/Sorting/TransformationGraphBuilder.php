@@ -1,11 +1,22 @@
 <?php
 namespace Mw\Metamorph\Transformation\Sorting;
 
+/*                                                                        *
+ * This script belongs to the TYPO3 Flow package "Mw.Metamorph".          *
+ *                                                                        *
+ * (C) 2015 Martin Helmich <m.helmich@mittwald.de>                        *
+ *          Mittwald CM Service GmbH & Co. KG                             *
+ *                                                                        */
+
+use TYPO3\Flow\Annotations;
+
 /**
  * Builds the transformation graph from the package settings.
  *
- * @package Mw\Metamorph
+ * @package    Mw\Metamorph
  * @subpackage Transformation\Sorting
+ *
+ * @Flow\Scope("prototype")
  */
 class TransformationGraphBuilder {
 
@@ -31,7 +42,7 @@ class TransformationGraphBuilder {
 		$nodes = [];
 		foreach ($this->settings as $name => $configuration) {
 			$settings     = isset($configuration['settings']) ? $configuration['settings'] : [];
-			$nodes[$name] = new TransformationNode($name, $configuration['name'], $settings);
+			$nodes[$name] = new TransformationNode($configuration['name'], $settings);
 		}
 
 		foreach ($this->settings as $name => $configuration) {
