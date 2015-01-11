@@ -32,7 +32,7 @@ Mw:
           - createPackages
           - resourceInventory
       rewritePackageClasses:
-        name: GenericAstVisitorTransformation
+        name: Mw\Metamorph\Transformation\GenericAstVisitorTransformation
         dependsOn:
           - createClasses
         settings:
@@ -43,7 +43,7 @@ Mw:
         dependsOn:
           - rewritePackageClasses
       refactorClasses:
-        name: GenericAstVisitorTransformation
+        name: Mw\Metamorph\Transformation\GenericAstVisitorTransformation
         dependsOn:
           - analyzeClasses
         settings:

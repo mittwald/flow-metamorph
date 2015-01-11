@@ -25,7 +25,7 @@ Mw\Metamorph\Step\ClassInventory:
             object:
               name: Mw\Metamorph\Parser\PHP\PHPParser
 
-Mw\Metamorph\Transformation\PackageClassRewrite:
+Mw\Metamorph\Transformation\GenericAstVisitorTransformation:
   properties:
     printer:
       object:
