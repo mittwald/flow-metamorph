@@ -27,21 +27,10 @@ class RewriteSingletonsVisitor extends AbstractVisitor {
 	protected $importHelper;
 
 	/**
-	 * @var Node\Stmt\Namespace_
-	 */
-	private $currentNamespace;
-
-	/**
 	 * @var DocCommentModifier
 	 * @Flow\Inject
 	 */
 	protected $commentModifier;
-
-	public function enterNode(Node $node) {
-		if ($node instanceof Node\Stmt\Namespace_) {
-			$this->currentNamespace = $node;
-		}
-	}
 
 	public function leaveNode(Node $node) {
 		if (!$node instanceof Node\Stmt\Class_) {
