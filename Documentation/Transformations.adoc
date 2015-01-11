@@ -719,3 +719,7 @@ class Product {
 <2> This attribute is added automatically, because TYPO3 Extbase adds a `uid` column to all entities by convention. The `@Flow\Identity` marks this attribute as the primary key and the `@ORM\GeneratedValue` causes Doctrine to rely on the DBMS' auto-incrementing key. Without this attribute, Flow would auto-generate a `persistence_object_identifier` property with UUID values.
 <3> The value `long_description` is loaded from the original TCA. By default, Flow would use `longdescription` as column name.
 ****
+
+== Further reading
+
+Have a look at the link:TechnicalManual.adoc[technical manual] to learn the architectural concepts behind these transformations and how to add your own transformation to Metamorph's migration process.
