@@ -68,5 +68,6 @@ Alternatively, you can require it using composer:
 == Further reading
 
 - link:Documentation/GettingStarted.adoc["Getting started" guide]
+- link:Documentation/Transformations.adoc[Transformation reference]
 - link:Documentation/TechnicalManual.adoc[In-depth technical manual]
 
