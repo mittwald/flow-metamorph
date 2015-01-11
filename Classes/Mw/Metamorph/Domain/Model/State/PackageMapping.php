@@ -24,7 +24,7 @@ class PackageMapping {
 
 	/**
 	 * @var string
-	 * @Flow\Validate(type="Mw\Metamorph\Domain\Validator\PackageKeyValidator")
+	 * @Flow\Validate(type="Mw.Metamorph:PackageKey")
 	 */
 	protected $packageKey;
 
@@ -36,7 +36,10 @@ class PackageMapping {
 
 	/**
 	 * @var string
-	 * @Flow\Validate(type="NotEmpty")
+	 * @Flow\Validate(
+	 *   type="Mw.Metamorph:ElementOf",
+	 *   options={"set"={PackageMapping::ACTION_MORPH, PackageMapping::ACTION_IGNORE}}
+	 * )
 	 */
 	protected $action = self::ACTION_MORPH;
 

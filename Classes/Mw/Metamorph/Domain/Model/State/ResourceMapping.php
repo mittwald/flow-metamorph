@@ -25,7 +25,7 @@ class ResourceMapping {
 
 	/**
 	 * @var string
-	 * @Flow\Validate(type="NotEmpty")
+	 * @Flow\Validate(type="Mw.Metamorph:PackageKey")
 	 */
 	protected $package;
 

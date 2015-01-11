@@ -3,7 +3,7 @@ namespace Mw\Metamorph\Persistence\Mapping\State;
 
 use Helmich\EventBroker\Annotations as Event;
 use Mw\Metamorph\Domain\Event\MorphConfigurationFileModifiedEvent;
-use Mw\Metamorph\Exception\HumanInterventionRequiredException;
+use Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException;
 use Symfony\Component\Yaml\Yaml;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Utility\Files;

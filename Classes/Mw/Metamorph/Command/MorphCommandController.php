@@ -8,14 +8,14 @@ namespace Mw\Metamorph\Command;
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
 
-use Mw\Metamorph\Command\Prompt\MorphCreationDataPrompt;
+use Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException;
+use Mw\Metamorph\Domain\Exception\MorphNotFoundException;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\Dto\MorphCreationDto;
 use Mw\Metamorph\Domain\Service\MorphServiceInterface;
-use Mw\Metamorph\Exception\HumanInterventionRequiredException;
-use Mw\Metamorph\Exception\MorphNotFoundException;
-use Mw\Metamorph\Io\DecoratedOutput;
 use Mw\Metamorph\Logging\LoggingWrapper;
+use Mw\Metamorph\View\DecoratedOutput;
+use Mw\Metamorph\View\Prompt\MorphCreationDataPrompt;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -51,14 +51,14 @@ class MorphCommandController extends CommandController {
 
 	/**
 	 * @var SymfonyConsoleOutput
-	 * @Flow\Inject(lazy=FALSE)
+	 * @Flow\Inject(lazy=false)
 	 */
 	protected $console;
 
 	private function initializeLogging() {
 		// Workaround; apparently, lazy dependency injection cannot be switched off here (perhaps a bug in Flow?)
 		if ($this->console instanceof DependencyProxy) {
-			$this->console->write('');
+			$this->console->_activateDependency();
 		}
 		$this->loggingWrapper->setOutput(new DecoratedOutput($this->console));
 	}
@@ -88,7 +88,7 @@ class MorphCommandController extends CommandController {
 			$prompt->setValuesOnCreateDto($data);
 		}
 
-		$this->morphService->create($packageKey, $data, $output);
+		$this->morphService->create($packageKey, $data);
 	}
 
 	/**
@@ -125,7 +125,7 @@ class MorphCommandController extends CommandController {
 	 *
 	 * @param string $morphConfigurationName The name of the morph configuration to execute.
 	 * @param bool   $reset                  Completely reset stored state before beginning.
-	 * @throws \Mw\Metamorph\Exception\MorphNotFoundException
+	 * @throws \Mw\Metamorph\Domain\Exception\MorphNotFoundException
 	 * @return void
 	 */
 	public function executeCommand($morphConfigurationName, $reset = FALSE) {
@@ -140,11 +140,11 @@ class MorphCommandController extends CommandController {
 		}
 
 		if (TRUE === $reset) {
-			$this->morphService->reset($morph, $this->console);
+			$this->morphService->reset($morph);
 		}
 
 		try {
-			$this->morphService->execute($morph, new DecoratedOutput($this->console));
+			$this->morphService->execute($morph);
 		} catch (HumanInterventionRequiredException $e) {
 		} catch (\Exception $e) {
 			$this->output->outputLine('<error>  UNCAUGHT EXCEPTION  </error>');

@@ -1,45 +1,56 @@
 Mw:
   Metamorph:
+
     transformations:
       extensionInventory:
         name: ExtensionInventory
-        position: 10
       classInventory:
         name: ClassInventory
-        position: 20
+        dependsOn:
+          - extensionInventory
         settings:
           visitors: []
       resourceInventory:
         name: ResourceInventory
-        position: after classInventory
+        dependsOn:
+          - extensionInventory
       cleanupPackages:
         name: CleanupPackages
-        position: 30
+        dependsOn:
+          - extensionInventory
       createPackages:
         name: CreatePackages
-        position: 40
+        dependsOn:
+          - cleanupPackages
       createClasses:
         name: CreateClasses
-        position: 50
+        dependsOn:
+          - createPackages
+          - classInventory
       createResources:
         name: CreateResources
-        position: 55
+        dependsOn:
+          - createPackages
+          - resourceInventory
       rewritePackageClasses:
-        name: PackageClassRewrite
-        position: 60
+        name: Mw\Metamorph\Transformation\GenericAstVisitorTransformation
+        dependsOn:
+          - createClasses
         settings:
           visitors:
             - ClassNamespaceRewriterVisitor
       analyzeClasses:
         name: AnalyzeClasses
-        position: 70
+        dependsOn:
+          - rewritePackageClasses
       refactorClasses:
-        name: PackageClassRewrite
-        position: 80
+        name: Mw\Metamorph\Transformation\GenericAstVisitorTransformation
+        dependsOn:
+          - analyzeClasses
         settings:
           visitors:
             - ExtbaseClassReplacementVisitor
-            - ExtbaseClassEliminationVisitor
+            - EntityDoctrineMigrationVisitor
             - ReplaceMakeInstanceCallsVisitor
             - RewriteSingletonsVisitor
             - ReplaceAnnotationsVisitor
@@ -48,13 +59,17 @@ Mw:
             - PackageRedirectVisitor
       transformLocallang:
         name: XliffConversion
-        position: 90
+        dependsOn:
+          - createResources
       migrateDatabase:
         name: MigrateDatabaseStructure
-        position: 100
+        dependsOn:
+          - refactorClasses
       createDoctrineMigrations:
         name: CreateDoctrineMigrations
-        position: 110
+        dependsOn:
+          - migrateDatabase
+
     staticReplacements:
       TYPO3\CMS\Extbase\Mvc\Controller\ActionController: TYPO3\Flow\Mvc\Controller\ActionController
       TYPO3\CMS\Core\Utility\GeneralUtility: Mw\T3Compat\Utility\GeneralUtility
@@ -84,12 +99,42 @@ Mw:
       Tx_Extbase_Validation_Validator_AbstractValidator: TYPO3\Flow\Validation\Validator\AbstractValidator
       t3lib_div: Mw\T3Compat\Utility\GeneralUtility
       t3lib_extMgm: Mw\T3Compat\Utility\ExtensionManagementUtility
+
     resourceExtensions:
       templates: {targetPath: Private/Templates, extensions: [html, htm]}
       languageFiles: {targetPath: Private/Language, extensions: [xml, xlf]}
       images: {targetPath: Public/Images, extensions: [jpeg, jpg, gif, tif, svg, eps, png]}
       javascript: {targetPath: Public/JavaScript, extensions: [js, coffee, ts]}
       css: {targetPath: Public/Stylesheets, extensions: [css, sass, less, scss]}
+
+    facts:
+      isSingleton:
+        expr: |
+          class.doesImplement('TYPO3\\CMS\\Core\\SingletonInterface') ||
+          class.doesImplement('t3lib_Singleton') ||
+          class.doesInherit('TYPO3\\CMS\\Extbase\\Persistence\\Repository') ||
+          class.doesInherit('Tx_Extbase_Persistence_Repository')
+      isEntity:
+        expr: |
+          class.doesInherit('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity') ||
+          class.doesInherit('Tx_Extbase_DomainObject_AbstractEntity')
+      isValueObject:
+        expr: |
+          class.doesInherit('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject') ||
+          class.doesInherit('Tx_Extbase_DomainObject_AbstractValueObject')
+      isEntityOrValueObject:
+        expr: class.getFact('isEntity') || class.getFact('isValueObject')
+      isDirectEntityDescendant:
+        expr: |
+          class.getParentClass().getFullyQualifiedName() == 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity' ||
+          class.getParentClass().getFullyQualifiedName() == 'Tx_Extbase_DomainObject_AbstractEntity'
+      isDirectValueObjectDescendant:
+        expr: |
+          class.getParentClass().getFullyQualifiedName() == 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity' ||
+          class.getParentClass().getFullyQualifiedName() == 'Tx_Extbase_DomainObject_AbstractEntity'
+      isDirectEntityOrValueObjectDescendant:
+        expr: class.getFact('isDirectEntityDescendant') || class.getFact('isDirectValueObjectDescendant')
+
     classNameStrategies:
       extbase:
         name: ExtbaseNamespacedConversionStrategy
@@ -103,6 +148,10 @@ Mw:
       generic:
         name: GenericConversionStrategy
         position: end
+
+    defaults:
+      transformationVisitorNamespace: Mw\Metamorph\Step\TransformationVisitor\
+      factNamespace: Mw\Metamorph\Domain\Model\Fact\
 
 TYPO3:
   Flow:

@@ -25,10 +25,17 @@ class ClassMappingContainer {
 		return $this->classMappings;
 	}
 
+	/**
+	 * @param string $oldClassName
+	 * @return bool
+	 */
 	public function hasClassMapping($oldClassName) {
 		return NULL !== $this->getClassMapping($oldClassName);
 	}
 
+	/**
+	 * @param ClassMapping $classMapping
+	 */
 	public function addClassMapping(ClassMapping $classMapping) {
 		if (FALSE === $this->hasClassMapping($classMapping->getOldClassName())) {
 			$this->reviewed        = FALSE;
@@ -36,6 +43,10 @@ class ClassMappingContainer {
 		}
 	}
 
+	/**
+	 * @param string $oldClassName
+	 * @return ClassMapping
+	 */
 	public function getClassMapping($oldClassName) {
 		return $this->getClassMappingByFilter(
 			function (ClassMapping $mapping) use ($oldClassName) {
@@ -44,6 +55,10 @@ class ClassMappingContainer {
 		);
 	}
 
+	/**
+	 * @param string $newClassName
+	 * @return ClassMapping
+	 */
 	public function getClassMappingByNewClassName($newClassName) {
 		return $this->getClassMappingByFilter(
 			function (ClassMapping $mapping) use ($newClassName) {
@@ -52,6 +67,10 @@ class ClassMappingContainer {
 		);
 	}
 
+	/**
+	 * @param callable $filter
+	 * @return ClassMapping
+	 */
 	public function getClassMappingByFilter(callable $filter) {
 		foreach ($this->classMappings as $classMapping) {
 			if (call_user_func($filter, $classMapping)) {
@@ -59,6 +78,20 @@ class ClassMappingContainer {
 			}
 		}
 		return NULL;
+	}
+
+	/**
+	 * @param callable $filter
+	 * @return ClassMapping[]
+	 */
+	public function getClassMappingsByFilter(callable $filter) {
+		$found = [];
+		foreach ($this->classMappings as $classMapping) {
+			if (call_user_func($filter, $classMapping)) {
+				$found[] = $classMapping;
+			}
+		}
+		return $found;
 	}
 
 }

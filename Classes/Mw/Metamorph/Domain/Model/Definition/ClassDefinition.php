@@ -2,8 +2,15 @@
 namespace Mw\Metamorph\Domain\Model\Definition;
 
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
+use TYPO3\Flow\Annotations as Flow;
 
 class ClassDefinition {
+
+	/**
+	 * @var FactContainer
+	 * @Flow\Inject
+	 */
+	protected $factContainer;
 
 	private $name;
 
@@ -29,35 +36,8 @@ class ClassDefinition {
 		$this->namespace = $namespace;
 	}
 
-	public function setParentClass(ClassDefinition $parentClass) {
-		$this->parentClass = $parentClass;
-	}
-
 	public function addInterface(ClassDefinition $interface) {
 		$this->interfaces[] = $interface;
-	}
-
-	public function getFullyQualifiedName() {
-		return ltrim($this->namespace . '\\' . $this->name, '\\');
-	}
-
-	public function getParentClass() {
-		return $this->parentClass;
-	}
-
-	public function getInterfaces() {
-		return $this->interfaces;
-	}
-
-	public function doesInherit($fullyQualifiedName) {
-		if ($this->getParentClass() !== NULL) {
-			if ($fullyQualifiedName == $this->getParentClass()->getFullyQualifiedName()) {
-				return TRUE;
-			} else {
-				return $this->getParentClass()->doesInherit($fullyQualifiedName);
-			}
-		}
-		return FALSE;
 	}
 
 	public function doesImplement($fullyQualifiedName) {
@@ -77,10 +57,57 @@ class ClassDefinition {
 		return FALSE;
 	}
 
-	public function getFact($name) {
-		return array_key_exists($name, $this->facts) ? $this->facts[$name] : NULL;
+	public function getInterfaces() {
+		return $this->interfaces;
 	}
 
+	public function getFullyQualifiedName() {
+		return ltrim($this->namespace . '\\' . $this->name, '\\');
+	}
+
+	public function doesInherit($fullyQualifiedName) {
+		if ($this->getParentClass() !== NULL) {
+			if ($fullyQualifiedName == $this->getParentClass()->getFullyQualifiedName()) {
+				return TRUE;
+			} else {
+				return $this->getParentClass()->doesInherit($fullyQualifiedName);
+			}
+		}
+		return FALSE;
+	}
+
+	public function getParentClass() {
+		return $this->parentClass;
+	}
+
+	public function setParentClass(ClassDefinition $parentClass) {
+		$this->parentClass = $parentClass;
+	}
+
+	/**
+	 * Gets a custom fact about this class.
+	 *
+	 * If this fact is not directly known for this class, the fact will be
+	 * looked up in the FactContainer and the evaluated for this class.
+	 *
+	 * @param string $name The fact name.
+	 * @return mixed The fact value. Might really be anything.
+	 */
+	public function getFact($name) {
+		if (array_key_exists($name, $this->facts)) {
+			return $this->facts[$name];
+		}
+
+		return $this->factContainer->getFact($name)->evaluate($this);
+	}
+
+	/**
+	 * Sets a custom fact about this class.
+	 *
+	 * @param string $name The fact name.
+	 * @param mixed  $fact The fact value. Can be anything.
+	 * @return void
+	 */
 	public function setFact($name, $fact) {
 		$this->facts[$name] = $fact;
 	}
@@ -109,18 +136,18 @@ class ClassDefinition {
 
 	/**
 	 * @param string $name
-	 * @return bool
-	 */
-	public function hasProperty($name) {
-		return array_key_exists("$name", $this->properties);
-	}
-
-	/**
-	 * @param string $name
 	 * @return PropertyDefinition
 	 */
 	public function getProperty($name) {
 		return $this->hasProperty($name) ? $this->properties[$name] : NULL;
+	}
+
+	/**
+	 * @param string $name
+	 * @return bool
+	 */
+	public function hasProperty($name) {
+		return array_key_exists("$name", $this->properties);
 	}
 
 }

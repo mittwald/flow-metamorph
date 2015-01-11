@@ -1,8 +1,8 @@
 <?php
 namespace Mw\Metamorph\Domain\Model\State;
 
+use Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
-use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 
 /**
  * @package    Mw\Metamorph
