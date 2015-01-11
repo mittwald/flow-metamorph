@@ -114,6 +114,8 @@ Mw:
           class.doesImplement('t3lib_Singleton') ||
           class.doesInherit('TYPO3\\CMS\\Extbase\\Persistence\\Repository') ||
           class.doesInherit('Tx_Extbase_Persistence_Repository')
+      isPrototype:
+        expr: !class.getFact('isSingleton')
       isEntity:
         expr: |
           class.doesInherit('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity') ||

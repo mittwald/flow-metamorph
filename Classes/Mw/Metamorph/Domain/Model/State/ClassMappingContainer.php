@@ -62,7 +62,10 @@ class ClassMappingContainer {
 	public function getClassMappingByNewClassName($newClassName) {
 		return $this->getClassMappingByFilter(
 			function (ClassMapping $mapping) use ($newClassName) {
-				return $mapping->getNewClassName() === $newClassName;
+				$newClassName = ltrim($newClassName, '\\');
+				return
+					$mapping->getNewClassName() === $newClassName ||
+					$mapping->getNewClassName() === '\\' . $newClassName;
 			}
 		);
 	}
