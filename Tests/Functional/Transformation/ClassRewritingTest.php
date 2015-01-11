@@ -3,8 +3,8 @@ namespace Mw\Metamorph\Tests\Functional\Transformation;
 
 
 use Mw\Metamorph\Domain\Model\State\ClassMappingContainer;
-use Mw\Metamorph\Transformation\Analyzer\AnalyzerVisitor;
-use Mw\Metamorph\Transformation\RewriteNodeVisitors\AbstractVisitor;
+use Mw\Metamorph\Step\Analyzer\AnalyzerVisitor;
+use Mw\Metamorph\Transformation\TransformationVisitor\AbstractVisitor;
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
@@ -14,7 +14,6 @@ use PhpParser\PrettyPrinterAbstract;
 use Symfony\Component\Yaml\Yaml;
 use TYPO3\Flow\Reflection\ReflectionService;
 use TYPO3\Flow\Tests\FunctionalTestCase;
-
 
 class ClassRewritingTest extends FunctionalTestCase
 {
@@ -67,7 +66,7 @@ class ClassRewritingTest extends FunctionalTestCase
         $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
 
-        $visitorClasses = $this->reflectionService->getAllSubClassNamesForClass('Mw\\Metamorph\\Transformation\\RewriteNodeVisitors\\AbstractVisitor');
+        $visitorClasses = $this->reflectionService->getAllSubClassNamesForClass('Mw\\Metamorph\\Transformation\\TransformationVisitor\\AbstractVisitor');
         foreach($visitorClasses as $visitorClass)
         {
             /** @var AbstractVisitor $visitor */

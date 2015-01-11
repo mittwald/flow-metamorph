@@ -25,11 +25,13 @@ class MorphConfiguration {
 
 	/**
 	 * @var string
+	 * @Flow\Validate(type="Mw.Metamorph:PackageKey")
 	 */
 	protected $name;
 
 	/**
 	 * @var string
+	 * @Flow\Validate(type="NotEmpty")
 	 */
 	protected $sourceDirectory;
 
@@ -40,18 +42,31 @@ class MorphConfiguration {
 
 	/**
 	 * @var ExtensionMatcher
+	 * @Flow\Validate(type="NotEmpty")
 	 */
 	protected $extensionMatcher;
 
 	/**
 	 * What to do with existing database structures.
+	 *
 	 * @var string
+	 * @Flow\Validate(
+	 *     type    = "Mw.Metamorph:ElementOf",
+	 *     options = {"set" = {MorphConfiguration::TABLE_STRUCTURE_KEEP,
+	 *                         MorphConfiguration::TABLE_STRUCTURE_MIGRATE}}
+	 * )
 	 */
 	protected $tableStructureMode = self::TABLE_STRUCTURE_KEEP;
 
 	/**
 	 * How aggressively to refactor piBase extensions.
+	 *
 	 * @var string
+	 * @Flow\Validate(
+	 *     type    = "Mw.Metamorph:ElementOf",
+	 *     options = {"set" = {MorphConfiguration::PIBASE_REFACTOR_CONSERVATIVE,
+	 *                         MorphConfiguration::PIBASE_REFACTOR_PROGRESSIVE}}
+	 * )
 	 */
 	protected $pibaseRefactoringMode = self::PIBASE_REFACTOR_CONSERVATIVE;
 

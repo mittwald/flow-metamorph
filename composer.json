@@ -5,6 +5,7 @@
     "license": "MIT",
     "require": {
         "typo3/flow": ">= 2.3.0",
+        "typo3/eel": ">= 2.3.0",
         "nikic/php-parser": "dev-master",
         "symfony/console": ">= 2.5",
         "gitonomy/gitlib": "dev-master",

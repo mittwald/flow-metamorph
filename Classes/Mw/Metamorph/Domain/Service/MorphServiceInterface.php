@@ -14,18 +14,17 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 interface MorphServiceInterface {
 
-	public function reset(MorphConfiguration $configuration, OutputInterface $out);
+	public function reset(MorphConfiguration $configuration);
 
 	/**
 	 * Creates a new morph package.
 	 *
 	 * @param string           $packageKey The package key to use.
 	 * @param MorphCreationDto $data       Data necessary for package creation.
-	 * @param OutputInterface  $out        Output stream.
 	 * @return MorphConfiguration The created morph configuration.
 	 */
-	public function create($packageKey, MorphCreationDto $data, OutputInterface $out);
+	public function create($packageKey, MorphCreationDto $data);
 
-	public function execute(MorphConfiguration $configuration, OutputInterface $out);
+	public function execute(MorphConfiguration $configuration);
 
 }

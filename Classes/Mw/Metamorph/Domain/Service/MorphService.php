@@ -17,8 +17,6 @@ use Mw\Metamorph\Domain\Service\Concern\MorphCreationConcern;
 use Mw\Metamorph\Domain\Service\Concern\MorphExecutionConcern;
 use Mw\Metamorph\Domain\Service\Concern\MorphResetConcern;
 use Mw\Metamorph\Domain\Service\Dto\MorphCreationDto;
-use Mw\Metamorph\Io\DecoratedOutput;
-use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\MetaData;
 
@@ -48,18 +46,18 @@ class MorphService implements MorphServiceInterface {
 	 */
 	protected $executionConcern;
 
-	public function reset(MorphConfiguration $configuration, OutputInterface $out) {
-		$this->resetConcern->reset($configuration, $out);
+	public function reset(MorphConfiguration $configuration) {
+		$this->resetConcern->reset($configuration);
 	}
 
-	public function create($packageKey, MorphCreationDto $data, OutputInterface $out) {
-		$morph = $this->creationConcern->create($packageKey, $data, $out);
+	public function create($packageKey, MorphCreationDto $data) {
+		$morph = $this->creationConcern->create($packageKey, $data);
 		$this->publishCreated(new MorphConfigurationCreatedEvent($morph, $data));
 	}
 
-	public function execute(MorphConfiguration $configuration, OutputInterface $out) {
+	public function execute(MorphConfiguration $configuration) {
 		$this->publishExecutionStart(new MorphConfigurationExecutionStartedEvent($configuration));
-		$this->executionConcern->execute($configuration, new DecoratedOutput($out));
+		$this->executionConcern->execute($configuration);
 		$this->publishExecuted(new MorphConfigurationExecutedEvent($configuration));
 	}
 

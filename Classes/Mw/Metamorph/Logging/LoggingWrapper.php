@@ -1,8 +1,8 @@
 <?php
 namespace Mw\Metamorph\Logging;
 
-use Mw\Metamorph\Io\DecoratedOutput;
-use Mw\Metamorph\Io\DecoratedOutputInterface;
+use Mw\Metamorph\View\DecoratedOutput;
+use Mw\Metamorph\View\DecoratedOutputInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Output\NullOutput;
 use TYPO3\Flow\Annotations as Flow;
