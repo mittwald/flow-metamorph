@@ -1,7 +1,6 @@
 <?php
 namespace Mw\Metamorph\Step\TransformationVisitor;
 
-use Mw\Metamorph\Domain\Model\Definition\ClassDefinition;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer;
 use Mw\Metamorph\Step\Task\Builder\AddImportToClassTaskBuilder;
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
@@ -41,11 +40,11 @@ class RewriteSingletonsVisitor extends AbstractVisitor {
 		$name       = $node->namespacedName->toString();
 		$definition = $this->classDefinitionContainer->get($name);
 
-		if ($definition && $this->isSingleton($definition)) {
+		if ($definition && $definition->getFact('isSingleton')) {
 			$implementsList = $node->implements;
 			foreach ($implementsList as $key => $implements) {
-				if ($implements->toString() === 't3lib_Singleton' || $implements->toString(
-					) === 'TYPO3\\CMS\\Core\\SingletonInterface'
+				if ($implements->toString() === 't3lib_Singleton' ||
+					$implements->toString() === 'TYPO3\\CMS\\Core\\SingletonInterface'
 				) {
 					unset($implementsList[$key]);
 				}
@@ -77,13 +76,6 @@ class RewriteSingletonsVisitor extends AbstractVisitor {
 		}
 
 		return NULL;
-	}
-
-	private function isSingleton(ClassDefinition $classDefinition) {
-		return
-			$classDefinition->doesImplement('t3lib_Singleton') ||
-			$classDefinition->doesImplement('TYPO3\\CMS\\Core\\SingletonInterface') ||
-			$classDefinition->doesInherit('TYPO3\\CMS\\Extbase\\Persistence\\Repository');
 	}
 
 }

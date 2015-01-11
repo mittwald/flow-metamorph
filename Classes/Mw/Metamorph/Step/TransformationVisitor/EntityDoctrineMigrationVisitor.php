@@ -13,16 +13,6 @@ use TYPO3\Flow\Annotations as Flow;
 
 class EntityDoctrineMigrationVisitor extends AbstractVisitor {
 
-	/** @var Node\Stmt\Namespace_ */
-	private $currentNamespace = NULL;
-
-	/**
-	 * @var ClassDefinition
-	 */
-	private $currentClass;
-
-	private $neededNamespaceImports = [];
-
 	/**
 	 * @var ImportHelper
 	 * @Flow\Inject
@@ -41,61 +31,23 @@ class EntityDoctrineMigrationVisitor extends AbstractVisitor {
 	 */
 	protected $classDefinitionContainer;
 
+	/**
+	 * @var ClassDefinition
+	 */
+	private $currentClass;
+
+	private $neededNamespaceImports = [];
+
 	public function enterNode(Node $node) {
 		if ($node instanceof Node\Stmt\Namespace_) {
-			$this->currentNamespace       = $node;
 			$this->neededNamespaceImports = [];
 		}
 		if ($node instanceof Node\Stmt\Class_) {
-			$classDefinition = $this->classDefinitionContainer->get($node->namespacedName->toString());
-			$isEntity        = $this->classIsEntity($node);
-			$isValueObject   = $this->classIsValueObject($node);
-
-			$classDefinition->setFact('isEntity', $isEntity);
-			$classDefinition->setFact('isValueObject', $isValueObject);
-			$classDefinition->setFact('isEntitySuperclass', $this->classIsEntitySuperclass($node));
-			$classDefinition->setFact('isValueObjectSuperclass', $this->classIsValueObjectSuperclass($node));
-
+			$classDefinition    = $this->classDefinitionContainer->get($node->namespacedName->toString());
 			$this->currentClass = $classDefinition;
 		}
 
 		return NULL;
-	}
-
-	private function classIsDirectEntityOrValueObjectDescendant(Node\Stmt\Class_ $node) {
-		$definition = $this->classDefinitionContainer->get($node->namespacedName->toString());
-		$parentName = $definition->getParentClass() ? $definition->getParentClass()->getFullyQualifiedName() : '';
-		return
-			$parentName === 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity' ||
-			$parentName === 'Tx_Extbase_DomainObject_AbstractEntity' ||
-			$parentName === 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject' ||
-			$parentName === 'Tx_Extbase_DomainObject_AbstractValueObject';
-	}
-
-	private function classIsEntity(Node\Stmt\Class_ $node) {
-		return /*!$node->isAbstract() &&*/
-			$this->classIsEntitySuperclass($node);
-	}
-
-	private function classIsValueObject(Node\Stmt\Class_ $node) {
-		return /*!$node->isAbstract() &&*/
-			$this->classIsValueObjectSuperclass($node);
-	}
-
-	private function classIsValueObjectSuperclass(Node\Stmt\Class_ $node) {
-		$definition = $this->classDefinitionContainer->get($node->namespacedName->toString());
-		return $definition && (
-			$definition->doesInherit('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject') ||
-			$definition->doesInherit('Tx_Extbase_DomainObject_AbstractValueObject')
-		);
-	}
-
-	private function classIsEntitySuperclass(Node\Stmt\Class_ $node) {
-		$definition = $this->classDefinitionContainer->get($node->namespacedName->toString());
-		return $definition && (
-			$definition->doesInherit('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity') ||
-			$definition->doesInherit('Tx_Extbase_DomainObject_AbstractEntity')
-		);
 	}
 
 	public function leaveNode(Node $node) {
@@ -112,16 +64,15 @@ class EntityDoctrineMigrationVisitor extends AbstractVisitor {
 				}
 			}
 		} else if ($node instanceof Node\Stmt\Class_) {
-			$classDefinition = $this->currentClass;
-			$annotation      = NULL;
-			$isEntity        = $classDefinition->getFact('isEntity');
-			$isValueObject   = $classDefinition->getFact('isValueObject');
+			$classDefinition       = $this->currentClass;
+			$annotation            = NULL;
+			$isEntityOrValueObject = $classDefinition->getFact('isEntityOrValueObject');
 
-			if ($isEntity || $isValueObject) {
+			if ($isEntityOrValueObject) {
 				$annotation = new AnnotationRenderer('Flow', 'Entity');
 			}
 
-			if ($this->classIsDirectEntityOrValueObjectDescendant($node)) {
+			if ($classDefinition->getFact('isDirectValueObjectDescendant')) {
 				$node->extends = NULL;
 			}
 
@@ -132,7 +83,7 @@ class EntityDoctrineMigrationVisitor extends AbstractVisitor {
 				$this->commentModifier->addAnnotationToDocComment($comment, $annotation);
 			}
 
-			if (($isEntity || $isValueObject) && $classDefinition->getFact('isAbstract')) {
+			if ($isEntityOrValueObject && $classDefinition->getFact('isAbstract')) {
 				$comment = $this->getCommentForNode($node);
 
 				$annotation = new AnnotationRenderer('ORM', 'InheritanceType');
