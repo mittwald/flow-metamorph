@@ -1,6 +1,6 @@
-= Metamorph architecture documentation
+= Metamorph technical manual
 Martin Helmich <m.helmich@mittwald.de>
-2014-12-23
+2015-01-11
 :source-highlighter: coderay
 :icons: font
 :toc:
@@ -12,13 +12,13 @@ This is an *ASCIIdoc* document. To render it, you will need the `asciidoctor` an
 line call:
 
 ----
-asciidoctor -r asciidoctor-diagram Architecture.adoc
+asciidoctor -r asciidoctor-diagram TechnicalManual.adoc
 ----
 
 Build the PDF using `wkhtmltopdf` with the following command line call:
 
 ----
-wkhtmltopdf -T 20 -B 20 Architecture.html foo.pdf
+wkhtmltopdf -T 20 -B 20 TechnicalManual.html TechnicalManual.pdf
 ----
 ****
 
