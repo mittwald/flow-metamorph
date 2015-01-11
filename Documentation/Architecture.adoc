@@ -291,7 +291,7 @@ interface Transformation {
 ----
 <1> Don't depend on the `$out` parameter. It's likely to be deprecated.
 
-Metamorph comes with a set of bundled transformations, that _should_ handle most of the issues that arise when migrating Extbase or pibase extensions. These will be looked at in more detail in a later section of this document.
+Metamorph comes with a set of bundled transformations, that _should_ handle most of the issues that arise when migrating Extbase or pibase extensions. These are organized in the `Mw\Metamorph\Step` namespace. They will be looked at in more detail in a later section of this document.
 
 The transformations that are executed are specified in the settings, in special in the `Mw.Metamorph.transformations` property. Have a look at the following listing to see how the transformations and their execution order is specified:
 
@@ -328,7 +328,7 @@ TIP: When overwriting/extending another package's settings, remember to add the 
 
 === Building the package map
 
-The `Mw\Metamorph\Transformation\ExtensionInventory` step should be the first transformation to be executed (although it does not actually transform anything, yet). It will perform the following actions:
+The `Mw\Metamorph\Step\ExtensionInventory` step should be the first transformation to be executed (although it does not actually transform anything, yet). It will perform the following actions:
 
 - Go into the source directory of the current morph configuration (remember, the source directory is the root directory of a TYPO3 CMS installation) and scan the `typo3conf/ext` directory for TYPO3 extensions.
 - Apply the _extension matcher_ (see <<Extension selection>> for more information) of the current configuration *on each extension* to check whether the extension should be migrated to the current TYPO3 Flow installation.
@@ -377,7 +377,7 @@ The table below contains some examples on how extension keys are converted to pa
 
 === Building the class map
 
-The `Mw\Metamorph\Transformation\ClassInventory` step should be executed *after* the package map generation. It will perform the following actions:
+The `Mw\Metamorph\Step\ClassInventory` step should be executed *after* the package map generation. It will perform the following actions:
 
 - *For each* package from the package mapping,
 
@@ -409,7 +409,7 @@ Metamorph tries to automatically determine a class name (and namespace) that fit
 
 === Building the resource map
 
-The `Mw\Metamorph\Transformation\ResourceInventory` step should be executed *after* the package map generation. It will perform the following actions:
+The `Mw\Metamorph\Step\ResourceInventory` step should be executed *after* the package map generation. It will perform the following actions:
 
 - *For each* package from the package mapping,
 
@@ -443,14 +443,14 @@ Mw:
 
 === Clean up packages
 
-When you are migrating continuously, it is entirely possible that your local TYPO3 Flow instance already contains some of the packages that would be created during migration. This step, modelled by the class `Mw\Metamorph\Transformation\CleanupPackages`, will clean up each target package so that migration is easily possible:
+When you are migrating continuously, it is entirely possible that your local TYPO3 Flow instance already contains some of the packages that would be created during migration. This step, modelled by the class `Mw\Metamorph\Step\CleanupPackages`, will clean up each target package so that migration is easily possible:
 
 . If you are using a source control system like Git, Metamorph will checkout the `metamorph` branch before actually doing anything. When the migration was completed, Metamorph will try to merge the `metamorph` branch back into your `master` branch.
 . Otherwise, Metamorph will delete the package and have the next transformation step re-create it.
 
 === Create packages
 
-The `Mw\Metamorph\Transformation\CreatePackages` step will now create all TYPO3 Flow packages that are specified in the _package mapping_. For this, Metamorph will use TYPO3 Flow's http://typo3.org/api/flow/TYPO3/Flow/Package/class-PackageManager.html[APIs for package management]:
+The `Mw\Metamorph\Step\CreatePackages` step will now create all TYPO3 Flow packages that are specified in the _package mapping_. For this, Metamorph will use TYPO3 Flow's http://typo3.org/api/flow/TYPO3/Flow/Package/class-PackageManager.html[APIs for package management]:
 
 [source,php]
 ----
@@ -470,7 +470,7 @@ The package meta data (description, authors) will be migrated from the source ex
 
 === Migrate classes and resources
 
-These are actually two steps: `Mw\Metamorph\Transformation\CreateClasses` and `Mw\Metamorph\Transformation\CreatePackages`. Each of these steps walks the _class mapping_ (or _resource mapping_, respectively) and copies each file to the target location in the new TYPO3 Flow site.
+These are actually two steps: `Mw\Metamorph\Step\CreateClasses` and `Mw\Metamorph\Step\CreatePackages`. Each of these steps walks the _class mapping_ (or _resource mapping_, respectively) and copies each file to the target location in the new TYPO3 Flow site.
 
 Classes are stored in the target package's _Classes/_ directory according to their class name (this is required, because they need to be auto-loadable). Resource files are simply placed in the target directory that is specified in the _resource mapping_.
 
@@ -656,11 +656,11 @@ class Baz extends \New\Bar {
 
 === Analyzing the class definitions
 
-The `Mw\Metamorph\Transformation\AnalyzeClasses` step will iterate over each class from the _class mapping_ and analyze the class' inheritance structure and properties. This information is then stored in the _class definition container_. See <<Using the class definition container>> for more information on the _class definition container_.
+The `Mw\Metamorph\Step\AnalyzeClasses` step will iterate over each class from the _class mapping_ and analyze the class' inheritance structure and properties. This information is then stored in the _class definition container_. See <<Using the class definition container>> for more information on the _class definition container_.
 
 === Refactorings
 
-This is the main transformation step. It uses the `Mw\Metamorph\Transformation\GenericAstVisitorTransformation` class already introduced in <<Rename classes>>. This step applies a number of transformation visitors to the syntax tree of each class. The following list briefly outlines the purpose of each node visitor (all classnames in the `Mw\Metamorph\Transformation\RewriteNodeVisitors` namespace):
+This is the main transformation step. It uses the `Mw\Metamorph\Transformation\GenericAstVisitorTransformation` class already introduced in <<Rename classes>>. This step applies a number of transformation visitors to the syntax tree of each class. The following list briefly outlines the purpose of each node visitor (all classnames in the `Mw\Metamorph\Step\TransformationVisitor` namespace):
 
 ExtbaseClassReplacementVisitor::
     Replaces extbase classes with their TYPO3 Flow equivalents. An example would be the `TYPO3\CMS\Extbase\Mvc\Controller\ActionController` class which is replaced by the `TYPO3\Flow\Mvc\Controller\ActionController` class. The classes that should be replaced can be configured in the configuration setting `Mw.Metamorph.staticReplacements`.
@@ -739,7 +739,7 @@ class Foo {
 class Foo {
   public function foo($baz) {
     $bar = t3lib_div::makeInstance(
-      $baz . 'Object');
+      $baz . 'Object', 123);
   }
 }
 ----
@@ -750,7 +750,7 @@ class Foo {
 class Foo {
   public function foo($baz) {
     $_b7c620c5 = $baz . 'Object'; // <1>
-    $bar = new $_b7c620c5();
+    $bar = new $_b7c620c5(123);
   }
 }
 ----
@@ -904,7 +904,7 @@ public function fooAction($target) {
 
 === Locallang transformation
 
-Extbase still allows using locallang XML files for translation handling. This is a TYPO3-proprietary format that is not supported by TYPO3 Flow. These files will be converted into the XLIFF format (which is an OASIS standard). This is done by a XSLT transformation that is executed in the `Mw\Metamorph\Transformation\MigrateDatabaseStructure` step. Have a look at the XSLT stylesheet in `Resources/Xslt` if you are interested in further details.
+Extbase still allows using locallang XML files for translation handling. This is a TYPO3-proprietary format that is not supported by TYPO3 Flow. These files will be converted into the XLIFF format (which is an OASIS standard). This is done by a XSLT transformation that is executed in the `Mw\Metamorph\Step\MigrateDatabaseStructure` step. Have a look at the XSLT stylesheet in `Resources/Xslt` if you are interested in further details.
 
 === Database migration
 
@@ -1060,6 +1060,138 @@ class MyTransformation extends AbstractTransformation {
 <1> Use the `findByFilter` function with a callback to execute arbitrary queries.
 <2> Each class definition is associated to the respective class mapping.
 <3> Each class definition is associated to property definitions.
+
+== Facts
+
+After the class analyzation step (see <<Analyzing the class definitions>>), Metamorph will offer access to a series of _facts_ about each class that can be used in subsequent transformation steps.
+
+You can query facts about a specific class definition by calling the `getFact` method on any `ClassDefinition` object:
+
+.Retrieving facts from class definitions
+[source,php]
+----
+$classDefinition = $this->classDefinitionContainer->get('My\\Example\\Class');
+if ($classDefinition->getFact('isSingleton')) {
+    // ...
+}
+----
+
+You can also set you own facts for existing class definitions by calling the `setFact` method at any time:
+
+.Setting facts for individual class definitions
+[source,php]
+----
+$classDefinition = $this->classDefinitionContainer->get('My\\Example\\Class');
+$classDefinition->setFact('myFactName', TRUE); // <1>
+----
+<1> The second parameter can be an arbitrary value.
+
+=== Predefined facts
+
+The following list presents a list of the predefined facts that can be used without further configuration:
+
+isAbstract::
+	_True_ for abstract classes.
+isFinal::
+	_True_ for final classes.
+isEntity::
+	Is _true_ when the class inherits from the `TYPO3\CMS\Extbase\DomainObject\AbstractEntity` class (or it's legacy variant `Tx_Extbase_DomainObject_AbstractEntity`). This is also true for transitive inheritance.
+isValueObject::
+	Same as `isEntity`, except for value objects (inheriting the `TYPO3\CMS\Extbase\DomainObject\AbstractValueObject` class or it's legacy variant).
+isEntityOrValueObject::
+	Should be self-explanatory.
+isSingleton::
+	Is _true_ when the class is marked as _singleton-scoped_. This is the case when the class or any of it's parent classes implement the `TYPO3\CMS\Core\SingletonInterface` or it's legacy variant `t3lib_Singleton`.
+isPrototype::
+	Negation of `isSingleton`.
+isDirectEntityDescendant::
+	_True_ when the class directly inherits `TYPO3\CMS\Extbase\DomainObject\AbstractEntity` (or it's legacy variant).
+isDirectValueObjectDescendant::
+	_True_ when the class directly inherits `TYPO3\CMS\Extbase\DomainObject\AbstractValueObject` (or it's legacy variant).
+isDirectEntityOrValueObjectDescendant::
+	Should be self-explanatory.
+
+=== Defining new facts
+
+==== As PHP classes
+
+Facts are defined by configuration in the `Mw.Metamorph.facts` setting. Dynamic facts are described by the `Mw\Metamorph\Domain\Model\Definition\Fact` interface, which needs to be implemented by custom facts:
+
+.The `Fact` interface
+[source,php]
+----
+<?php
+namespace Mw\Metamorph\Domain\Model\Definition;
+
+interface Fact {
+    public function evaluate(ClassDefinition $classDefinition);
+}
+----
+
+As you can see, each dynamic fact operates on a single class definition. You can implement a new fact using this interface:
+
+.Example for a custom fact implementation
+[source,php]
+----
+class IsFrontendUserFact implements Fact {
+    public function evaluate(ClassDefinition $class) {
+        return
+            $class->doesInherit('TYPO3\\CMS\\Extbase\\Domain\\Model\\FrontendUser') ||
+            $class->doesInherit('Tx_Extbase_Domain_Model_FrontendUser');
+    }
+}
+----
+
+You can then register this fact in the settings:
+
+.Example for registering new fact classes
+[source,yaml]
+----
+Mw:
+  Metamorph:
+    facts:
+      isFrontendUser: # <1>
+        class: My\Example\Facts\IsFrontendUserFact
+----
+<1> This is the actual name of the fact that you will have to supply later-on when retrieving the fact by the `getFact` method.
+
+When your fact is registered like this, you can access it at any time after the _class analyzation_ step, by simply calling `getFact` on any class definition:
+
+[source,php]
+----
+$class = $this->classDefinitionContainer->get('My\\Example\\Class');
+$class->getFact('isFrontendUser');
+----
+
+==== As EEL expression
+
+As you may have noticed, many of the existing facts follow more or less the same pattern: checking for certain inheritance or implememtation patterns on the given classes. Since most facts only re-use some of the already-known facts about each class, there is an easier way to define these kinds of facts.
+
+You can declare a fact as an EEL expression (not much reading on this subject, the best I could find is from the http://docs.typo3.org/neos/TYPO3NeosDocumentation/IntegratorGuide/EelFlowQuery.html[TYPO3 Neos manual]). In an EEL expression, you have access to the class definition object inside the `class` variable and can then call any method you like.
+
+For example, the _isSingleton_ fact that you saw in <<Predefined facts>> is actually an EEL expression:
+
+[source,eel]
+----
+class.doesImplement('TYPO3\\CMS\\Core\\SingletonInterface') ||
+class.doesImplement('t3lib_Singleton') ||
+(class.getParentClass() != null && class.getParentClass().getFact('isSingleton')) ||
+class.doesInherit('TYPO3\\CMS\\Extbase\\Persistence\\Repository') ||
+class.doesInherit('Tx_Extbase_Persistence_Repository')
+----
+
+You can declare EEL-based facts just as easily in the configuration settings. Let's stay with the frontend user example from the previous section:
+
+[source,yaml]
+----
+Mw:
+  Metamorph:
+    facts:
+      isFrontendUser:
+        expr: |
+          class.doesInherit('TYPO3\\CMS\\Extbase\\Domain\\Model\\FrontendUser') ||
+          class.doesInherit('Tx_Extbase_Domain_Model_FrontendUser')
+----
 
 == Modifying source code inside transformations
 
