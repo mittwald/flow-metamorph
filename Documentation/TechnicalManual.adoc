@@ -1,0 +1,558 @@
+= Metamorph technical manual
+Martin Helmich <m.helmich@mittwald.de>
+2015-01-11
+:source-highlighter: coderay
+:icons: font
+:toc:
+
+.Building this document
+****
+
+This is an *ASCIIdoc* document. To render it, you will need the `asciidoctor` and `pygments.rb` gems. You can then render it into an HTML document with the following command
+line call:
+
+----
+asciidoctor -r asciidoctor-diagram TechnicalManual.adoc
+----
+
+Build the PDF using `wkhtmltopdf` with the following command line call:
+
+----
+wkhtmltopdf -T 20 -B 20 TechnicalManual.html TechnicalManual.pdf
+----
+****
+
+== The domain model explained
+
+=== Basic entities
+
+["plantuml", "asciidoctor-diagram-classes", "png"]
+---------------------------------------------------------------------
+class MorphConfiguration {
+	# name : string
+	# sourceDirectory : string
+	# tableStructureMode : enum[KEEP, MIGRATE]
+}
+
+interface ExtensionMatcher {
+	match (extensionKey : string)
+}
+
+class AllMatcher
+class UnionMatcher
+class PatternMatcher {
+	# pattern : string
+}
+
+AllMatcher --|> ExtensionMatcher
+UnionMatcher --|> ExtensionMatcher
+UnionMatcher *--> ExtensionMatcher
+PatternMatcher --|> ExtensionMatcher
+
+MorphConfiguration --> ExtensionMatcher
+
+class ResourceMappingContainer {
+	+ getResourceMappings() : ResourceMapping[]
+	+ hasResourceMapping(sourceFile) : bool
+	+ addResourceMapping(mapping : ResourceMapping)
+	+ getResourceMapping(sourceFile) : ResourceMapping
+}
+
+class ClassMappingContainer {
+	+ getClassMappings() : ClassMapping[]
+	+ hasClassMapping(oldClassName) : bool
+	+ addClassMapping(mapping : ClassMapping)
+	+ getClassMapping(oldClassName) : ClassMapping
+	+ getClassMappingByNewClassName(newClassName : string) : ClassMapping
+	+ getClassMappingByFilter(filter : callable) : ClassMapping
+}
+
+class PackageMappingContainer {
+	+ getPackageMappings() : PackageMapping[]
+	+ hasPackageMapping(extensionKey) : bool
+	+ addPackageMapping(mapping : PackageMapping)
+	+ getPackageMapping(extensionKey) : PackageMapping
+	+ getPackageMappingByFilter(filter : callable) : PackageMapping
+	+ removePackageMapping(extensionKey)
+}
+
+class ResourceMapping {
+	# sourceFile : string
+	# targetFile : string
+	# package : string
+	# action : string
+}
+
+class ClassMapping {
+	# sourceFile : string
+	# oldClassName : string
+	# newClassName : string
+	# package : string
+	# targetFile : string
+	# action : string
+}
+
+class PackageMapping {
+	# extensionKey: string
+	# packageKey : string
+	# filePath : string
+	# action : string
+	# description : string
+	# version : string
+	# authors : array<array<string,string>>
+}
+
+class Reviewable << (T,#FF7700) >> {
+	# reviewed : bool
+}
+
+ResourceMappingContainer *--> ResourceMapping
+ClassMappingContainer *--> ClassMapping
+PackageMappingContainer *--> PackageMapping
+
+MorphConfiguration --> ResourceMappingContainer
+MorphConfiguration --> ClassMappingContainer
+MorphConfiguration --> PackageMappingContainer
+
+ResourceMappingContainer --|> Reviewable
+ClassMappingContainer --|> Reviewable
+PackageMappingContainer --|> Reviewable
+---------------------------------------------------------------------
+
+==== Morph configuration
+
+The most central entity of the domain model is the `MorphConfiguration` class (unless otherwise noted, the `Mw\Metamorph\Domain\Model` namespace is implied for all classes). This is the entity that you create using the `morph:create` command and get presented using the `morph:list` command.
+
+A morph configuration object has the following properties:
+
+`name`:: This must be a valid TYPO3 Flow package key.
+`sourceDirectory`:: The directory from where to import extensions. This usually should be the root directory of a TYPO3 CMS installation.
+`tableStructureMode`:: The value of this property determines how Metamorph should treat an Extbase extension's table structure. If this value is `MIGRATE`, Metamorph will simply migrate your domain entity classes and then have _Doctrine_ generate a new table schema from the class definitions. If this value is `KEEP`, Metamorph will enrich your domain model classes with doctrine annotations so that the table schema stays identical to the Extbase version.
+`extensionMatcher`:: This property contains a configuration on how TYPO3 extensions to be migrated should be selected. See the <<Extension selection>> section for more information.
+`{package|class|resource}MappingContainer`:: See the <<Mapping configurations>> section for more information.
+
+NOTE: The attributes `name`, `sourceDirectory`, `extensionMatcher` and `tableStructureMode` are queried by the morph creation wizard. All other properties are filled dynamically by transformation steps when the morph configuration is actually executed.
+
+==== Extension selection
+
+Each morph configuration object is associated to an `ExtensionMatcher` object. This object determines which extensions from the source TYPO3 site should be migrated to Flow. The `ExtensionMatcher` object looks as follows:
+
+[source,php]
+----
+namespace Mw\Metamorph\Domain\Model\Extension;
+
+interface ExtensionMatcher
+{
+    public function match($extensionKey);
+}
+----
+
+When creating a morph configuration using the CLI wizard, you will typically get one or several instances of the `PatternExtensionMatcher` class, which contains a regular expression that extension keys must match in order to be migrated.
+
+==== Mapping configurations
+
+The _mapping configurations_ describe what should happen to individual source items during the migration process. For example, the _package mapping_ describes, which TYPO3 extensions should be migrated to Flow packages, which package keys should be used and what metadata to write into the target package's `composer.json`.
+
+Package mapping:: Describes *for each TYPO3 extension*, (1) whether to migrate this extension or not, (2) which package key to use and (3) what metadata to write into the `composer.json` file (author, description, versions, ...).
+
+Class mapping:: Describes *for each PHP class* in all migrated extensions, (1) whether to migrate this class or not, (2) which (new) class name to use and (3) in which package the class should be migrated.
+
+Resource mapping:: Describes *for each resource file* in all migrated extensions, (1) whether to migrate this resource or not and (2) to which location in the file system the resource should be migrated.
+
+NOTE: Typically, the package, class and resource mappings are auto-generated during one of the first transformation steps. During this process, Metamorph will make assumptions concerning package keys (see <<Building the package map>>), new class names (see <<Building the class map>>) and resource file names (see <<Building the resource map>>). These can then be manually edited later.
+
+In order to prevent apocalyptic scenarios, Metamorph will require auto-generated mappings to be reviewed by the user before doing anything. While Metamorph is capable of performing quite sound assumptions when migrating Extbase extensions, converting pibase extensions is largely guesswork.
+
+==== Class schemata
+
+The `ClassDefinition` and `PropertyDefinition` classes model a TYPO3 extension's class schema. You can use these classes to inquire (and store) facts about classes and properties.
+
+NOTE: The class schema is built during run-time (see the <<Analyzing the class definitions>> section).
+
+A common use case might be to inqure about inheritance hierarchies in the source code:
+
+[source,php]
+----
+class SomeTransformation {
+  /**
+   * @var \Mw\Metamorph\Domain\Model\ClassDefinitionContainer
+   * @Flow\Inject
+   */
+  protected $classDefinitionContainer; // <1>
+
+  public function execute(MorphConfiguration $configuration) {
+    $frontendUserSubclasses = $this
+      ->classDefinitionContainer
+      ->findByFilter(function(ClassDefinition $d) {
+        return
+          $d->doesInherit('TYPO3\\CMS\\Extbase\\Domain\\Model\\FrontendUser') ||
+          $d->doesInherit('Tx_Extbase_Domain_Model_FrontendUser'); // <2>
+        });
+
+    // Do some magic!
+  }
+}
+----
+<1> You can access the class definitions by injecting the `Mw\Metamorph\Domain\Model\ClassDefinitionContainer` class (it's a singleton).
+<2> Metamorph *does not* resolve compatibility class names (yet). If you want to transform older TYPO3 extensions too, you should also check for legacy class names.
+
+=== Persistence
+
+Persisting the domain entities is not a concern of the domain model. The actual persistence logic is embedded in proxy classes that are organized in the `Mw\Metamorph\Persistence` namespace. All persistence classes use YAML files as storage backend (optionally, with a Git repository as versioning backend).
+
+IMPORTANT: Usually, you should never use these classes! Access to the persistence layer is encapsulated by the `MorphConfigurationRepository` class.
+
+As the `MorphConfiguration` class is always the aggregate root, the `MorphConfigurationWriter` class should always be used for persisting morph configurations. The writer will dump the entire aggregate into YAML files and store these in a TYPO3 Flow package. The morph configuration name will be used as package name.
+
+==== Morph configurations
+
+The following example shows a persisted morph configuration:
+
+[source,yaml]
+----
+sourceDirectory: /home/mhelmich/dev/typo3-extbasefluid-examplesite/html
+extensions:
+    - { pattern: /^helmich_/ }
+    - { pattern: /^mittwald_/ }
+tableStructureMode: MIGRATE
+pibaseRefactoringMode: PROGRESSIVE
+----
+
+==== Class mapping
+
+The following example shows a persisted class mapping configuration:
+
+[source,yaml]
+----
+reviewed: true
+classes:
+  Sjr\SjrOffers\Controller\OrganizationController:
+    source: typo3conf/ext/sjr_offers/Classes/Controller/OrganizationController.php
+    newClassname: Sjr\Offers\Controller\OrganizationController
+    package: Sjr.Offers
+    action: MORPH
+    target: Classes/Sjr/Offers/Controller/OrganizationController.php
+  Sjr\SjrOffers\Controller\OfferController:
+    source: typo3conf/ext/sjr_offers/Classes/Controller/OfferController.php
+    newClassname: Sjr\Offers\Controller\OfferController
+    package: Sjr.Offers
+    action: MORPH
+    target: Classes/Sjr/Offers/Controller/OfferController.php
+  Sjr\SjrOffers\Domain\Model\Region:
+    source: typo3conf/ext/sjr_offers/Classes/Domain/Model/Region.php
+    newClassname: Sjr\Offers\Domain\Model\Region
+    package: Sjr.Offers
+    action: MORPH
+    target: Classes/Sjr/Offers/Domain/Model/Region.php
+  Sjr\SjrOffers\Service\AccessControlService:
+    source: typo3conf/ext/sjr_offers/Classes/Service/AccessControlService.php
+    newClassname: Sjr\Offers\Service\AccessControlService
+    package: Sjr.Offers
+    action: MORPH
+    target: Classes/Sjr/Offers/Service/AccessControlService.php
+
+# ...
+----
+
+=== Constraints
+
+There are some constraints that the current state of the domain model entities must always fulfil. Since the transformation steps may change the domain entities, these constraints are checked before and after each transformation step. This is done using aspects of Flow's AOP framework.
+
+Currently, the following constraints are asserted before each transformation step:
+
+* The domain entities must be in a valid state. This means for example, that all required values are set, and the package mapping must contain valid TYPO3 Flow package keys.
+* Package, class and resource mapping must be reviewed. Whenever new values are automatically added to any of these mapping configurations, they are flagged as _unreviewed_. Metamorph will then deny any destructive operations until the changed to the mapping configuration have been reviewed. This is a safeguard against potentially harmful transformations.
+
+=== Transformations
+
+When executing a morph, Metamorph will execute a series of _transformations_; typically these will somehow process your source TYPO3 CMS installation and modify the local TYPO3 Flow installation.
+
+Each transformation step is modelled as a PHP class that needs to implement the interface `Mw\Metamorph\Transformation\Transformation`, as shown in the following listing. Typically though, you should use the class `Mw\Metamorph\Transformation\AbstractTransformation`, as this class already implements some of the basic functionality.
+
+.The transformation interface
+[source,php]
+----
+namespace Mw\Metamorph\Transformation;
+
+use Mw\Metamorph\Domain\Model\MorphConfiguration;
+use Mw\Metamorph\Domain\Service\MorphExecutionState;
+use Symfony\Component\Console\Output\OutputInterface;
+
+interface Transformation {
+    public function setSettings(array $settings);
+    public function execute(
+        MorphConfiguration $configuration,
+        MorphExecutionState $state,
+        OutputInterface $out // <1>
+    );
+}
+----
+<1> Don't depend on the `$out` parameter. It's likely to be deprecated.
+
+Metamorph comes with a set of bundled transformations, that _should_ handle most of the issues that arise when migrating Extbase or pibase extensions. These are organized in the `Mw\Metamorph\Step` namespace. They will be looked at in more detail in a later section of this document.
+
+The transformations that are executed are specified in the settings, in special in the `Mw.Metamorph.transformations` property. Have a look at the following listing to see how the transformations and their execution order is specified:
+
+.Specifying transformations and execution order in the package configuration
+[[metamorph-settings]]
+[source,yaml]
+----
+Mw:
+  Metamorph:
+    transformations:
+      extensionInventory:
+        name: ExtensionInventory # <1>
+      classInventory:
+        name: ClassInventory
+        dependsOn: [extensionInventory] # <2>
+        settings: # <3>
+          visitors: []
+      resourceInventory:
+        name: ResourceInventory
+        dependsOn: [extensionInventory]
+      createPackages:
+        name: CreatePackages:
+        dependsOn: [extensionInventory, classInventory, resourceInventory]
+----
+<1> This is a class name. If you specify an unqualified class name, Metamorph will assume the namespace `Mw\Metamorph\Transformation` for this class.
+<2> You can specify dependencies for each transformation step. Metamorph will determine the final execution order of all transformation steps using _topological sorting_.
+<3> Some transformations allow you to pass custom settings. These will be passed into the `setSettings` method of the transformation class.
+
+As you may have guessed, you are free to add additional transformation steps to this list in the settings of your own packages. This allows you to extend and modify Metamorph's default transformation process according to your own custom requirements.
+
+TIP: When overwriting/extending another package's settings, remember to add the `mittwald-typo3/metamorph` dependency to your own package's `composer.json`. TYPO3 Flow uses the Composer dependency graph to figure out in which order the settings should be merged.
+
+== Using the class definition container
+
+You have access to the class definitions after the _class analyzation step_ has been run. You can then inject an instance of the `Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer` class into your own class and use this class to find class definitions that match certain constraints.
+
+The following code example gets all class definitions that inherit from one of Extbase's _FrontendUser_ classes:
+
+[source,php]
+----
+use Mw\Metamorph\Transformation\AbstractTransformation;
+use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer;
+use TYPO3\Flow\Annotations as Flow;
+
+class MyTransformation extends AbstractTransformation {
+
+    /**
+     * @var ClassDefinitionContainer
+     * @Flow\Inject
+     */
+    protected $container;
+
+    public function execute(MorphConfiguration $configuration, MorphExecutionState $state) {
+        $userClasses = $this->container->findByFilter(function(ClassDefinition $c) {
+            return
+                $c->doesInherit('Tx_Extbase_Domain_Model_FrontendUser') ||
+                $c->doesInherit('TYPO3\\CMS\\Extbase\\Domain\\Model\\FrontendUser');
+        }); // <1>
+
+        foreach ($userClasses as $userClass) {
+            $classMapping = $userClass->getClassMapping(); // <2>
+
+            foreach ($userClass->getProperties() as $property) { // <3>
+                // Do some magic.
+            }
+        }
+    }
+}
+----
+<1> Use the `findByFilter` function with a callback to execute arbitrary queries.
+<2> Each class definition is associated to the respective class mapping.
+<3> Each class definition is associated to property definitions.
+
+== Facts
+
+After the class analyzation step (see <<Analyzing the class definitions>>), Metamorph will offer access to a series of _facts_ about each class that can be used in subsequent transformation steps.
+
+You can query facts about a specific class definition by calling the `getFact` method on any `ClassDefinition` object:
+
+.Retrieving facts from class definitions
+[source,php]
+----
+$classDefinition = $this->classDefinitionContainer->get('My\\Example\\Class');
+if ($classDefinition->getFact('isSingleton')) {
+    // ...
+}
+----
+
+You can also set you own facts for existing class definitions by calling the `setFact` method at any time:
+
+.Setting facts for individual class definitions
+[source,php]
+----
+$classDefinition = $this->classDefinitionContainer->get('My\\Example\\Class');
+$classDefinition->setFact('myFactName', TRUE); // <1>
+----
+<1> The second parameter can be an arbitrary value.
+
+You can also find all facts for which a given fact is _true_:
+
+.Searching classes by facts
+[source,php]
+----
+$classDefinitions = $this->classDefinitionContainer->findByFact('myFactName', TRUE);
+----
+
+=== Predefined facts
+
+The following list presents a list of the predefined facts that can be used without further configuration:
+
+isAbstract::
+	_True_ for abstract classes.
+isFinal::
+	_True_ for final classes.
+isEntity::
+	Is _true_ when the class inherits from the `TYPO3\CMS\Extbase\DomainObject\AbstractEntity` class (or its legacy variant `Tx_Extbase_DomainObject_AbstractEntity`). This is also true for transitive inheritance.
+isValueObject::
+	Same as `isEntity`, except for value objects (inheriting the `TYPO3\CMS\Extbase\DomainObject\AbstractValueObject` class or its legacy variant).
+isEntityOrValueObject::
+	Should be self-explanatory.
+isSingleton::
+	Is _true_ when the class is marked as _singleton-scoped_. This is the case when the class or any of its parent classes implement the `TYPO3\CMS\Core\SingletonInterface` or its legacy variant `t3lib_Singleton`.
+isPrototype::
+	Negation of `isSingleton`.
+isDirectEntityDescendant::
+	_True_ when the class directly inherits `TYPO3\CMS\Extbase\DomainObject\AbstractEntity` (or its legacy variant).
+isDirectValueObjectDescendant::
+	_True_ when the class directly inherits `TYPO3\CMS\Extbase\DomainObject\AbstractValueObject` (or its legacy variant).
+isDirectEntityOrValueObjectDescendant::
+	Should be self-explanatory.
+
+=== Defining new facts
+
+==== As PHP classes
+
+Facts are defined by configuration in the `Mw.Metamorph.facts` setting. Dynamic facts are described by the `Mw\Metamorph\Domain\Model\Definition\Fact` interface, which needs to be implemented by custom facts:
+
+.The `Fact` interface
+[source,php]
+----
+<?php
+namespace Mw\Metamorph\Domain\Model\Definition;
+
+interface Fact {
+    public function evaluate(ClassDefinition $classDefinition);
+}
+----
+
+As you can see, each dynamic fact operates on a single class definition. You can implement a new fact using this interface:
+
+.Example for a custom fact implementation
+[source,php]
+----
+class IsFrontendUserFact implements Fact {
+    public function evaluate(ClassDefinition $class) {
+        return
+            $class->doesInherit('TYPO3\\CMS\\Extbase\\Domain\\Model\\FrontendUser') ||
+            $class->doesInherit('Tx_Extbase_Domain_Model_FrontendUser');
+    }
+}
+----
+
+You can then register this fact in the settings:
+
+.Example for registering new fact classes
+[source,yaml]
+----
+Mw:
+  Metamorph:
+    facts:
+      isFrontendUser: # <1>
+        class: My\Example\Facts\IsFrontendUserFact
+----
+<1> This is the actual name of the fact that you will have to supply later-on when retrieving the fact by the `getFact` method.
+
+When your fact is registered like this, you can access it at any time after the _class analyzation_ step, by simply calling `getFact` on any class definition:
+
+[source,php]
+----
+$class = $this->classDefinitionContainer->get('My\\Example\\Class');
+$class->getFact('isFrontendUser');
+----
+
+==== As EEL expression
+
+As you may have noticed, many of the existing facts follow more or less the same pattern: checking for certain inheritance or implememtation patterns on the given classes. Since most facts only re-use some of the already-known facts about each class, there is an easier way to define these kinds of facts.
+
+You can declare a fact as an EEL expression (not much reading on this subject, the best I could find is from the http://docs.typo3.org/neos/TYPO3NeosDocumentation/IntegratorGuide/EelFlowQuery.html[TYPO3 Neos manual]). In an EEL expression, you have access to the class definition object inside the `class` variable and can then call any method you like.
+
+For example, the _isSingleton_ fact that you saw in <<Predefined facts>> is actually an EEL expression:
+
+[source,eel]
+----
+class.doesImplement('TYPO3\\CMS\\Core\\SingletonInterface') ||
+class.doesImplement('t3lib_Singleton') ||
+(class.getParentClass() != null && class.getParentClass().getFact('isSingleton')) ||
+class.doesInherit('TYPO3\\CMS\\Extbase\\Persistence\\Repository') ||
+class.doesInherit('Tx_Extbase_Persistence_Repository')
+----
+
+You can declare EEL-based facts just as easily in the configuration settings. Let's stay with the frontend user example from the previous section:
+
+[source,yaml]
+----
+Mw:
+  Metamorph:
+    facts:
+      isFrontendUser:
+        expr: |
+          class.doesInherit('TYPO3\\CMS\\Extbase\\Domain\\Model\\FrontendUser') ||
+          class.doesInherit('Tx_Extbase_Domain_Model_FrontendUser')
+----
+
+== Modifying source code inside transformations
+
+Metamorph relies heavily on Nikita Popov's https://github.com/nikic/PHP-Parser[_PHP-Parser_ library] for parsing and modifying PHP source code. Source code transformation is accomplished by parsing PHP code into a http://en.wikipedia.org/wiki/Abstract_syntax_tree[syntax tree] using the PHP parser, then transforming that syntax tree according to your requirements and then dumping the tree back into source code.
+
+Using the PHP Parser, this might look as follows:
+
+[source,php]
+----
+$lexer   = new \PhpParser\Lexer();
+$parser  = new \PhpParser\Parser($lexer);
+$printer = new \PhpParser\PrettyPrinter\Standard();
+
+$source = file_get_contents("Some/Source/Class.php");
+$stmts  = $parser->parse($source);
+
+// Do the magic on $stmts
+
+file_put_contents("Some/Target/Class.php", $printer->prettyPrintFile($stmts));
+----
+
+In the above example, `$stmts` is simply a list of tree nodes (that is, instances of `PhpParser\Node`). While you could now walk this tree manually, it is usually easier to use the `PhpParser\NodeTraverser` class and providing a custom node http://en.wikipedia.org/wiki/Visitor_pattern[visitor]. For this, you need to implement the `PhpParser\NodeVisitor` interface, typically by extending the `PhpParser\NodeVisitorAbstract` class.
+
+Consider the following visitor class that replaces the name of all defined classes with "Chocolate":
+
+[source,php]
+----
+use PhpParser\NodeVisitorAbstract;
+use PhpParser\Node;
+
+class MyNodeVisitor extends NodeVisitorAbstract {
+    public function leaveNode(Node $node) { // <1>
+        if ($node instanceof Node\Stmt\Class_) {
+            $node->name = "Chocolate";
+            return $node; // <2>
+        }
+        return NULL; // <3>
+    }
+}
+----
+<1> This method is called for each node, when the traverser _leaves_ the node (effectively implementing a depth-first traversal of the tree). You can also implement the `enterNode(Node $node)` function to implement a breath-first search or even combine the two methods.
+<2> If a node was modified by the visitor, it needs to be returned.
+<3> Return `NULL` for unchanged nodes. You can also return `FALSE` to completely remove a node (and all sub-nodes) from the syntax tree.
+
+You can call this visitor as follows:
+
+[source,php]
+----
+$traverser = new \PhpParser\NodeTraverser();
+$traverser->addVisitor(new MyNodeVisitor()); // <1>
+
+$stmts = $traverser->traverse();
+----
+<1> You can actually add as many visitors as you like to a single traverser.

@@ -1,0 +1,250 @@
+= Metamorph "getting started" guide
+Martin Helmich <m.helmich@mittwald.de>
+2015-01-11
+:source-highlighter: coderay
+:icons: font
+:toc:
+
+.Indended audience, prerequisites and learning goals
+****
+You should read this document, when:
+
+- You have a TYPO3 CMS installation that contain extbase extensions with business logic that you want to migrate to TYPO3 Flow
+
+Before reading this document, you should have knowledge of:
+
+- TYPO3 Flow basics (basic principles and installation)
+- Version control systems, especially http://git-scm.org[Git]
+- How http://getcomposer.org[Composer] works
+- How YAML files are built
+
+After reading this document, you will:
+
+- Have a understanding of the basic concepts of Metamorph
+- Be able to configure migrations for TYPO3 CMS sites with Extbase extensions
+- Perform continuous migrations of said sites into TYPO3 Flow installations
+****
+
+.Building this document
+****
+
+This is an *ASCIIdoc* document. To render it, you will need the `asciidoctor` and `pygments.rb` gems. You can then render it into an HTML document with the following command
+line call:
+
+----
+asciidoctor -r asciidoctor-diagram GettingStarted.adoc
+----
+
+Build the PDF using `wkhtmltopdf` with the following command line call:
+
+----
+wkhtmltopdf -T 20 -B 20 GettingStarted.html GettingStarted.pdf
+----
+****
+
+== Prerequisites
+
+To run Metamorph, you will need a working TYPO3 Flow installation with at least version 2.3.
+
+NOTE: TYPO3 Flow packages generated with Metamorph *will* run on older TYPO3 Flow versions; it's just Metamorph itself that requires Flow 2.3.
+
+The easiest way to obtain a TYPO3 Flow installation quickly is using http://getcomposer.org[Composer] with the following command-line call:
+
+----
+$ composer create-project typo3/flow-base-distribution metamorph '>= 2.3.0'
+----
+
+== Installation
+
+Install Metamorph using _Composer_. Simply require the package _mittwald-typo3/flow-metamorph_:
+
+----
+$ composer require mittwald-typo3/flow-metamorph dev-master
+----
+
+The command above will directly add Metamorph to your _composer.json_ and install the dependency. You can also specify this dependency manually in your _composer.json_, followed by calling `composer install`:
+
+[source,json]
+----
+{
+    "require": {
+        "mittwald-typo3/flow-metamorph": "dev-master"
+    }
+}
+----
+
+This will install Metamorph and all required dependencies into your local TYPO3 Flow installation.
+
+== Basic concepts
+
+Metamorph is able to migrate TYPO3 CMS extensions from existing TYPO3 CMS sites into TYPO3 Flow packages. Metamorph is able to store migrations persistently, so you can reproducibly migrate the same TYPO3 CMS site several times (to an extent, even when the source site changes).
+
+Migrations configurations are called _morphs_. Each _morph_ is persisted in its own TYPO3 Flow package in the form of YAML configuration files. Optionally, these configuration files will be put unter version control.
+
+== Commands
+
+Metamorph offers a simple command-line interface as user interface. It is integrated in to the TYPO3 Flow command-line utility. Here, you can use the following commands:
+
+morph:list::
+    Lists all available morph configurations. Use the `--quiet` switch for less verbose output.
++
+----
+$ ./flow morph:list
++----------------+------------------------------------------+
+| Name           | Source directory                         |
++----------------+------------------------------------------+
+| Mw.ExampleSite | /.../typo3-extbasefluid-examplesite/html |
++----------------+------------------------------------------+
+----
+
+morph:create::
+    Starts a wizard for creating a new morph configuration. See <<Creating a new morph configuration>> for more information.
+
+morph:execute::
+    Executes an existing morph configuration. See <<Executing the morph configuration>> for more information.
+
+== First steps
+
+=== Creating a new morph configuration
+
+Start by creating a new morph configuration. For this, call the `morph:create` command. You will need to specify the configuration name as first command-line argument:
+
+----
+$ ./flow morph:create My.ExampleSite
+----
+
+IMPORTANT: As each morph is stored as its own TYPO3 Flow package, 
+the morph name has to be a valid TYPO3 Flow package key!
+
+When this command is executed, the _morph creation wizard_ will launch and you will be prompted for further configuration data. You will be asked to specify the following settings:
+
+Source directory::
+    This is the path to the TYPO3 CMS site from which you want to migrate extensions. This *must* be a path in the local file system (support for remote URLs may be added later) and point to the TYPO3 root directory (it needs to contain a `typo3conf` directory).
+
+Migrate extensions::
+    You will be promted which extensions should be migrated. For this, you can specify a list of regular expression. Each TYPO3 extension that matches any of these expressions will be migrated.
++
+You can specify any number of regular expressions. To stop, simply enter an empty string.
++
+[CAUTION]
+.On regular expressions
+====
+You need to specify the regular expression *with delimiters*. So, for example, simply `tt_news` will be invalid. Use `/tt_news/` instead. Better yet, use `/^tt_news$/`, as just `/tt_news/` might also match an extension like _tt_news_foobar_.
+====
+
+Database structure::
+    You can then choose how Metamorph should treat the database structure of Extbase extensions. In some cases, you might want to re-use you already existing database without changing it too much. In that case, choose the `KEEP` option. When migrating your Extbase entities to _Doctrine_, Metamorph will add the appropriate _Doctrine_ annotations that allow you to continue using your database schema.
+
+Refactoring mode::
+    No effect yet.
+
+Version control system::
+    Choose a version control system that Metamorph will use to track changes to both the morph configuration themselves and to migrated packages. It is highly suggestes that you choose a system here, because that will allow you to continuously migrate your source site and merge changes to your source site with local changes on migrated packages.
+
+After completing the wizard, Metamorph will create a new TYPO3 Flow package with the specified package key. Your morph configuration will be stored in the `Configuration/Metamorph/Morph.yml` file. If you change your mind about some configuration options later, you can always edit this file. See the code example below for an example on how this configuration file looks like:
+
+[source,yaml]
+----
+sourceDirectory: .../typo3-extbasefluid-examplesite/html
+extensions:
+    - { pattern: /^inventory$/ }
+    - { pattern: /^sjr_/ }
+tableStructureMode: MIGRATE
+pibaseRefactoringMode: PROGRESSIVE
+----
+
+=== Executing the morph configuration
+
+You can now execute the morph configuration that you have just created. To do this, simply call the `morph:execute` command:
+
+----
+$ ./flow morph:execute My.ExampleSite
+----
+
+NOTE: Please note that the migration *will not* pass non-interactively and will abort a few times whenever some input is required from you.
+
+Metamorph will now execute a series of _transformations_ on the source site in order to create new packages in your target site (meaning the local Flow instance). This command will run in several steps, prompting you to review automatically generated files:
+
+. In the first step, the *package map* will be created. During this step, Metamorph will find all TYPO3 extensions that match one of the regular expression matchers defined in the morph configuration. It will write a file `Configuration/Metamorph/Work/PackageMap.yml` into your morph package. In this file, you will find a mapping from TYPO3 extension names to TYPO3 Flow package names.
++
+This is how this file will look like:
++
+[source,yaml]
+----
+reviewed: false
+extensions:
+  sjr_offers:
+    path: typo3conf/ext/sjr_offers
+    packageKey: Sjr.Offers # <1>
+    action: MORPH # <2>
+    description: 'This is an example of a complex extension based on Extbase and Fluid. Its purpose is to manage, search and display offers of a youth organization. The code is discussed in the book "Zukunftssichere TYPO3-Extensions mit Extbase und Fluid". Thanks to the "Stadtjugendring Stuttgart e.V." who allowed to publish this extension as Open Source.'
+    version: 2.0.2
+    authors: # <3>
+      - { name: 'Jochen Rau' }
+      - { name: 'Martin Helmich' }
+----
+<1> Metamorph will try to auto-derive the package names from the extension keys.
+<2> Change this to `IGNORE` if you *do not* want to migrate this extension.
+<3> These metadata will be extracted from the source extension's _ext_emconf.php_ file.
++
+You can adjust the auto-generated package names as you see fit and then change the `reviewed` property in this file to `true` and re-run `morph:execute` again.
++
+If extensions are added later-on to the original TYPO3 CMS site, these will be added to the package map.
+
+. In the second step, metamorph will scan the configured extensions for PHP classes and generate a *class map* from all found classes. It will write a file `Configuration/Metamorph/Work/ClassMap.yml`, in which all classes and their new class names will be stored.
++
+[source,yaml]
+----
+reviewed: true
+classes:
+  Sjr\SjrOffers\Controller\OrganizationController:
+    source: typo3conf/ext/sjr_offers/Classes/Controller/OrganizationController.php
+    newClassname: Sjr\Offers\Controller\OrganizationController # <1>
+    package: Sjr.Offers
+    action: MORPH # <2>
+    target: Classes/Sjr/Offers/Controller/OrganizationController.php
+  Sjr\SjrOffers\Controller\OfferController:
+    source: typo3conf/ext/sjr_offers/Classes/Controller/OfferController.php
+    newClassname: Sjr\Offers\Controller\OfferController
+    package: Sjr.Offers
+    action: MORPH
+    target: Classes/Sjr/Offers/Controller/OfferController.php
+
+# ...
+----
+<1> The target class names will be auto-derived by Metamorph. This works reasonably well for Extbase classes (both using PHP namespaces and pseudo-namespaces). Some attention might be required for pibase classes.
+<2> Again, change this to `IGNORE` to skip a particular class.
++
+Again, the target class names will be auto-derived by metamorph and you can change
+them as you like. Then set the `reviewed` property and re-run `morph:execute`.
+
+. In the third step, Metamorph will scan for resource files in your extensions. If
+  you have a `Resources/` directory, this will simply be copied into your TYPO3 Flow
+  package. The resource mapping will be written into the file
+  `Configuration/Metamorph/Work/ResourceMap.yml`. Simply proceed as like before.
+
+. After that, Metamorph will start with actually migrating the selected extensions. The TYPO3 Flow packages will be created, classes and resources are copied and automatically refactored as necessary. If errors occur along the way, you can simply re-run `morph:execute` as many times as you like after you have fixed them.
+
+=== Cleaning up manually
+
+Currently, there are some tasks that need to be fixed manually after the migration:
+
+- First of all, you should flush your caches and validate your Doctrine entities, to make sure everything was migrated correctly:
++
+----
+$ ./flow flow:cache:flush --force
+$ ./flow doctrine:validate
+----
++
+It is entirely possible that some errors still occur. Fix these remaining errors and proceed.
++
+- Metamorph does not actually create any Doctrine migrations. If you should require this, generate the migrations now manually:
++
+----
+$ ./flow doctrine:migrationgenerate
+----
++
+WARNING: If you migrated several Extbase extensions at once, Doctrine will generate *one* migration for all new packages (which is probably not what you want). You will then have to manually split the generated migration into several package-specific migrations.
++
+- Open the migrated packages in your IDE. IDE warnings (for instance, about unknown classes) are usually a bad sign and should be fixed.
+- Test thoroughly. There's a good chance something broke.
