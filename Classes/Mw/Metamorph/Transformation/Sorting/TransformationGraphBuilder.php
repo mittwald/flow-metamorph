@@ -8,7 +8,7 @@ namespace Mw\Metamorph\Transformation\Sorting;
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
 
-use TYPO3\Flow\Annotations;
+use TYPO3\Flow\Annotations as Flow;
 
 /**
  * Builds the transformation graph from the package settings.
