@@ -43,17 +43,20 @@ Alternatively, you can require it using composer:
       framework.
     * Translate locallang XML files to XLIFF.
     * Create Doctrine migrations for converted entity classes.
+    * Option to keep the existing database structure
+
+- Convert pibase extensions into TYPO3 Flow packages. This includes:
+
+    * Rewriting non-namespaced classes to namespaced classes
 
 == Features (planned)
 
 - More features for Extbase migration:
 
-    * Option to keep the existing database structure
     * _(add custom wishes here)_
 
 - Convert pibase extensions into TYPO3 Flow packages. This includes:
 
-    * Rewriting non-namespaced classes to namespaced classes
     * Rewrite classes to use TYPO3 Flow APIs where possible, and provice
       compatibility classes otherwise
     * Generate controller classes wrapping the migrated plugin classes
