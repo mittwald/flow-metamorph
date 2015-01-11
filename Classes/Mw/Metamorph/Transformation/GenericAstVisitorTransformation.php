@@ -16,6 +16,12 @@ class GenericAstVisitorTransformation extends AbstractTransformation implements 
 	use ProgressibleTrait;
 
 	/**
+	 * @var string
+	 * @Flow\InjectSettings(path="defaults.transformationVisitorNamespace")
+	 */
+	protected $defaultNamespace;
+
+	/**
 	 * @var ParserInterface
 	 * @Flow\Inject
 	 */
@@ -41,7 +47,7 @@ class GenericAstVisitorTransformation extends AbstractTransformation implements 
 
 		foreach ($this->settings['visitors'] as $visitorClass) {
 			if (!class_exists($visitorClass)) {
-				$visitorClass = 'Mw\\Metamorph\\Transformation\\RewriteNodeVisitors\\' . $visitorClass;
+				$visitorClass = $this->defaultNamespace . $visitorClass;
 			}
 
 			/** @var \Mw\Metamorph\Transformation\TransformationVisitor\AbstractVisitor $visitor */
