@@ -1,10 +1,10 @@
 <?php
 namespace Mw\Metamorph\Transformation;
 
+use Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Parser\ParserInterface;
 use Mw\Metamorph\Transformation\Task\TaskQueue;
 use PhpParser\Lexer;
@@ -44,7 +44,7 @@ class GenericAstVisitorTransformation extends AbstractTransformation implements 
 				$visitorClass = 'Mw\\Metamorph\\Transformation\\RewriteNodeVisitors\\' . $visitorClass;
 			}
 
-			/** @var \Mw\Metamorph\Transformation\RewriteNodeVisitors\AbstractVisitor $visitor */
+			/** @var \Mw\Metamorph\Transformation\TransformationVisitor\AbstractVisitor $visitor */
 			$visitor = new $visitorClass();
 			$visitor->setMorphConfiguration($configuration);
 			$visitor->setClassMap($classMappingContainer);

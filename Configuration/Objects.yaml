@@ -12,11 +12,11 @@ Mw\Metamorph\Transformation\Sorting\TransformationGraphBuilder:
 Mw\Metamorph\Transformation\Sorting\TransformationSorter:
   className: Mw\Metamorph\Transformation\Sorting\TopologicalTransformationSorter
 
-Mw\Metamorph\Transformation\ClassInventory:
+Mw\Metamorph\Step\ClassInventory:
   properties:
     classNameConversionStrategy:
       object:
-        name: Mw\Metamorph\Transformation\ClassNameConversion\CompoundConversionStrategy
+        name: Mw\Metamorph\Step\ClassNameConversion\CompoundConversionStrategy
     parser:
       object:
         name: Mw\Metamorph\Parser\CachingDecorator
@@ -38,7 +38,7 @@ Mw\Metamorph\Transformation\PackageClassRewrite:
             object:
               name: Mw\Metamorph\Parser\PHP\PHPParser
 
-Mw\Metamorph\Transformation\AnalyzeClasses:
+Mw\Metamorph\Step\AnalyzeClasses:
   properties:
     parser:
       object:
@@ -48,13 +48,13 @@ Mw\Metamorph\Transformation\AnalyzeClasses:
             object:
               name: Mw\Metamorph\Parser\PHP\PHPParser
 
-Mw\Metamorph\Transformation\DatabaseMigration\Strategy\CompatibleMigrationStrategy:
+Mw\Metamorph\Step\DatabaseMigration\Strategy\CompatibleMigrationStrategy:
   properties:
     printer:
       object:
         name: PhpParser\PrettyPrinter\Standard
 
-Mw\Metamorph\Transformation\DatabaseMigration\Strategy\FullMigrationStrategy:
+Mw\Metamorph\Step\DatabaseMigration\Strategy\FullMigrationStrategy:
   properties:
     printer:
       object:

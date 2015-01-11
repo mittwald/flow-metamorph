@@ -1,7 +1,6 @@
 <?php
 namespace Mw\Metamorph\Tests\Transformation\Sorting;
 
-use Mw\Metamorph\Transformation\AbstractTransformation;
 use Mw\Metamorph\Transformation\Sorting\TransformationNode;
 use TYPO3\Flow\Tests\UnitTestCase;
 
@@ -14,8 +13,8 @@ class TransformationNodeTest extends UnitTestCase {
 	 * @test
 	 */
 	public function constructorAddsDefaultNamespaceWhenClassDoesNotExist() {
-		$node = new TransformationNode('AbstractTransformation');
-		$this->assertEquals(AbstractTransformation::class, $node->getClassName());
+		$node = new TransformationNode('AnalyzeClasses');
+		$this->assertEquals('Mw\\Metamorph\\Step\\AnalyzeClasses', $node->getClassName());
 	}
 
 	/**
@@ -30,7 +29,7 @@ class TransformationNodeTest extends UnitTestCase {
 	 * @test
 	 */
 	public function constructorSetsSettings() {
-		$node = new TransformationNode('AbstractTransformation', ['foo' => 'bar']);
+		$node = new TransformationNode('AnalyzeClasses', ['foo' => 'bar']);
 		$this->assertEquals(['foo' => 'bar'], $node->getSettings());
 	}
 
@@ -38,8 +37,8 @@ class TransformationNodeTest extends UnitTestCase {
 	 * @test
 	 */
 	public function predecessorsAreAddedBidirectionally() {
-		$a = new TransformationNode('AbstractTransformation');
-		$b = new TransformationNode('AbstractTransformation');
+		$a = new TransformationNode('AnalyzeClasses');
+		$b = new TransformationNode('AnalyzeClasses');
 
 		$a->addPredecessor($b);
 
@@ -53,8 +52,8 @@ class TransformationNodeTest extends UnitTestCase {
 	 * @test
 	 */
 	public function predecessorsAreAddedOnlyOnce() {
-		$a = new TransformationNode('AbstractTransformation');
-		$b = new TransformationNode('AbstractTransformation');
+		$a = new TransformationNode('AnalyzeClasses');
+		$b = new TransformationNode('AnalyzeClasses');
 
 		$a->addPredecessor($b);
 		$a->addPredecessor($b);
@@ -70,12 +69,13 @@ class TransformationNodeTest extends UnitTestCase {
 		$nodes[0]->removePredecessor($nodes[1]);
 		$this->assertCount(0, $nodes[0]->getPredecessors());
 	}
+
 	/**
 	 * @test
 	 */
 	public function predecessorsCanBeCounted() {
-		$a = new TransformationNode('AbstractTransformation');
-		$b = new TransformationNode('AbstractTransformation');
+		$a = new TransformationNode('AnalyzeClasses');
+		$b = new TransformationNode('AnalyzeClasses');
 
 		$a->addPredecessor($b);
 

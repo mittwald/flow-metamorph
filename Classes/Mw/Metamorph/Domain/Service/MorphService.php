@@ -17,8 +17,6 @@ use Mw\Metamorph\Domain\Service\Concern\MorphCreationConcern;
 use Mw\Metamorph\Domain\Service\Concern\MorphExecutionConcern;
 use Mw\Metamorph\Domain\Service\Concern\MorphResetConcern;
 use Mw\Metamorph\Domain\Service\Dto\MorphCreationDto;
-use Mw\Metamorph\Io\DecoratedOutput;
-use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Package\MetaData;
 

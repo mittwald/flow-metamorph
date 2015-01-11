@@ -8,12 +8,12 @@ namespace Mw\Metamorph\Persistence\Mapping;
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
 
+use Mw\Metamorph\Domain\Exception\InvalidConfigurationException;
 use Mw\Metamorph\Domain\Model\Extension\AllMatcher;
 use Mw\Metamorph\Domain\Model\Extension\ExtensionMatcher;
 use Mw\Metamorph\Domain\Model\Extension\PatternExtensionMatcher;
 use Mw\Metamorph\Domain\Model\Extension\UnionMatcher;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
-use Mw\Metamorph\Exception\InvalidConfigurationException;
 use Mw\Metamorph\Persistence\Mapping\State\ClassMappingContainerProxy;
 use Mw\Metamorph\Persistence\Mapping\State\PackageMappingContainerProxy;
 use Mw\Metamorph\Persistence\Mapping\State\ResourceMappingContainerProxy;
@@ -71,7 +71,7 @@ class MorphConfigurationProxy extends MorphConfiguration {
 	/**
 	 * @param array $data
 	 * @return ExtensionMatcher
-	 * @throws InvalidConfigurationException
+	 * @throws \Mw\Metamorph\Domain\Exception\InvalidConfigurationException
 	 */
 	private function buildExtensionMatcher(array $data) {
 		$rootExtensionMatcher = new AllMatcher();

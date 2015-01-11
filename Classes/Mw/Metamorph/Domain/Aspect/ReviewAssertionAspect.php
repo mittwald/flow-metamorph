@@ -1,9 +1,9 @@
 <?php
 namespace Mw\Metamorph\Domain\Aspect;
 
+use Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\Reviewable;
-use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Aop\JoinPointInterface;
 
@@ -32,7 +32,7 @@ class ReviewAssertionAspect {
 
 	/**
 	 * @param JoinPointInterface $joinPoint
-	 * @throws HumanInterventionRequiredException
+	 * @throws \Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException
 	 *
 	 * @Flow\Before("Mw\Metamorph\Domain\Aspect\ReviewAssertionAspect->packageMapReviewPointcut")
 	 */
@@ -45,7 +45,7 @@ class ReviewAssertionAspect {
 
 	/**
 	 * @param JoinPointInterface $joinPoint
-	 * @throws HumanInterventionRequiredException
+	 * @throws \Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException
 	 *
 	 * @Flow\Before("Mw\Metamorph\Domain\Aspect\ReviewAssertionAspect->classMapReviewPointcut")
 	 */
@@ -58,7 +58,7 @@ class ReviewAssertionAspect {
 
 	/**
 	 * @param JoinPointInterface $joinPoint
-	 * @throws HumanInterventionRequiredException
+	 * @throws \Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException
 	 *
 	 * @Flow\Before("Mw\Metamorph\Domain\Aspect\ReviewAssertionAspect->resourceMapReviewPointcut")
 	 */

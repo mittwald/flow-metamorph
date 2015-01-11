@@ -8,9 +8,9 @@ namespace Mw\Metamorph\Domain\Aspect;
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
 
+use Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Service\MorphValidationService;
-use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\View\ValidationResultRenderer;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Aop\JoinPointInterface;

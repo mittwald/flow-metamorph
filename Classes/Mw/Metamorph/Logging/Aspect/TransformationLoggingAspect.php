@@ -2,8 +2,8 @@
 namespace Mw\Metamorph\Logging\Aspect;
 
 use Helmich\Scalars\Types\String;
+use Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
-use Mw\Metamorph\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Logging\LoggingWrapper;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Aop\JoinPointInterface;

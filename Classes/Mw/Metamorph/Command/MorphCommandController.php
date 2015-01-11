@@ -8,14 +8,14 @@ namespace Mw\Metamorph\Command;
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
 
-use Mw\Metamorph\Command\Prompt\MorphCreationDataPrompt;
+use Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException;
+use Mw\Metamorph\Domain\Exception\MorphNotFoundException;
 use Mw\Metamorph\Domain\Repository\MorphConfigurationRepository;
 use Mw\Metamorph\Domain\Service\Dto\MorphCreationDto;
 use Mw\Metamorph\Domain\Service\MorphServiceInterface;
-use Mw\Metamorph\Exception\HumanInterventionRequiredException;
-use Mw\Metamorph\Exception\MorphNotFoundException;
-use Mw\Metamorph\Io\DecoratedOutput;
 use Mw\Metamorph\Logging\LoggingWrapper;
+use Mw\Metamorph\View\DecoratedOutput;
+use Mw\Metamorph\View\Prompt\MorphCreationDataPrompt;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -125,7 +125,7 @@ class MorphCommandController extends CommandController {
 	 *
 	 * @param string $morphConfigurationName The name of the morph configuration to execute.
 	 * @param bool   $reset                  Completely reset stored state before beginning.
-	 * @throws \Mw\Metamorph\Exception\MorphNotFoundException
+	 * @throws \Mw\Metamorph\Domain\Exception\MorphNotFoundException
 	 * @return void
 	 */
 	public function executeCommand($morphConfigurationName, $reset = FALSE) {

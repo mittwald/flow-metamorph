@@ -8,6 +8,8 @@ namespace Mw\Metamorph\Transformation\Sorting;
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
 
+use TYPO3\Flow\Annotations as Flow;
+
 /**
  * Helper class for building the transformation graph.
  *
@@ -15,8 +17,12 @@ namespace Mw\Metamorph\Transformation\Sorting;
  *
  * @package    Mw\Metamorph
  * @subpackage Transformation\Sorting
+ *
+ * @Flow\Scope("prototype")
  */
 class TransformationNode {
+
+	const DEFAULT_NAMESPACE = 'Mw\\Metamorph\\Step\\';
 
 	/** @var string */
 	private $className;
@@ -32,7 +38,7 @@ class TransformationNode {
 
 	public function __construct($className, array $settings = []) {
 		if (FALSE === class_exists($className)) {
-			$className = 'Mw\\Metamorph\\Transformation\\' . $className;
+			$className = static::DEFAULT_NAMESPACE . $className;
 		}
 
 		if (FALSE === class_exists($className)) {
