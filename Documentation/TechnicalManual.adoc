@@ -1086,6 +1086,14 @@ $classDefinition->setFact('myFactName', TRUE); // <1>
 ----
 <1> The second parameter can be an arbitrary value.
 
+You can also find all facts for which a given fact is _true_:
+
+.Searching classes by facts
+[source,php]
+----
+$classDefinitions = $this->classDefinitionContainer->findByFact('myFactName', TRUE);
+----
+
 === Predefined facts
 
 The following list presents a list of the predefined facts that can be used without further configuration:
