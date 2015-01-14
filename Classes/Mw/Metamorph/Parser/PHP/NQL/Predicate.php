@@ -115,7 +115,7 @@ class Predicate {
 	}
 
 	public function _and(Predicate $pred) {
-		return new Predicate($this->staticPredicate(TRUE), $this->node, $pred);
+		return new Predicate(function() use ($pred) { return $pred->evaluate(); }, $this->node, $this);
 	}
 
 	protected function buildPredicate(callable $pred) {
