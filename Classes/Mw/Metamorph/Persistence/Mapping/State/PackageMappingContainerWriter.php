@@ -22,9 +22,6 @@ class PackageMappingContainerWriter {
 		$data            = ['reviewed' => $packageMappings->isReviewed(), 'extensions' => []];
 
 		foreach ($packageMappings->getPackageMappings() as $packageMapping) {
-			var_dump($packageMapping->getFilePath());
-			var_dump($this->getSourceRelativePath($packageMapping->getFilePath(), $morphConfiguration));
-
 			$data['extensions'][$packageMapping->getExtensionKey()] = [
 				'path'        => $this->getSourceRelativePath($packageMapping->getFilePath(), $morphConfiguration),
 				'packageKey'  => $packageMapping->getPackageKey(),
