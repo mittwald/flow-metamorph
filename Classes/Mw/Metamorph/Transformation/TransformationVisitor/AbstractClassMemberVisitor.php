@@ -99,7 +99,7 @@ abstract class AbstractClassMemberVisitor extends AbstractVisitor {
 			}
 			return $return;
 		}
-		return FALSE;
+		return NULL;
 	}
 
 	/**
