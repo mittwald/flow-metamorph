@@ -34,6 +34,11 @@ abstract class AbstractClassMemberVisitor extends AbstractVisitor {
 	protected $currentClass;
 
 	/**
+	 * @var array
+	 */
+	protected $filters = [];
+
+	/**
 	 * Called when the visitor enters _any_ node.
 	 *
 	 * @param Node $node The node replacement
@@ -50,11 +55,14 @@ abstract class AbstractClassMemberVisitor extends AbstractVisitor {
 
 			$this->currentClass = $class;
 		} else if (NULL !== $this->currentClass) {
-			$return = $this->enterClassMemberNode(new NodeWrapper($node));
-			if ($return instanceof NodeWrapper) {
-				$return = $return->node();
+			$wrapper = new NodeWrapper($node);
+			if ($this->applyFilters($wrapper)) {
+				$return = $this->enterClassMemberNode($wrapper);
+				if ($return instanceof NodeWrapper) {
+					$return = $return->node();
+				}
+				return $return;
 			}
-			return $return;
 		}
 
 		return NULL;
@@ -83,11 +91,15 @@ abstract class AbstractClassMemberVisitor extends AbstractVisitor {
 			$this->currentClass = NULL;
 		}
 
-		$return = $this->leaveClassMemberNode(new NodeWrapper($node));
-		if ($return instanceof NodeWrapper) {
-			$return = $return->node();
+		$wrapper = new NodeWrapper($node);
+		if ($this->applyFilters($wrapper)) {
+			$return = $this->leaveClassMemberNode($wrapper);
+			if ($return instanceof NodeWrapper) {
+				$return = $return->node();
+			}
+			return $return;
 		}
-		return $return;
+		return FALSE;
 	}
 
 	/**
@@ -97,5 +109,18 @@ abstract class AbstractClassMemberVisitor extends AbstractVisitor {
 	 * @return array|null|Node The node replacement
 	 */
 	protected function leaveClassMemberNode(NodeWrapper $node) { }
+
+	private function applyFilters(NodeWrapper $node) {
+		if (count($this->filters) === 0) {
+			return TRUE;
+		} else {
+			foreach ($this->filters as $filter) {
+				if ($node->e($filter)) {
+					return TRUE;
+				}
+			}
+		}
+		return FALSE;
+	}
 
 }

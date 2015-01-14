@@ -9,23 +9,25 @@ use PhpParser\Node;
 
 class DatabaseAccessVisitor extends AbstractClassMemberVisitor {
 
+	protected $filters = [
+		'isMethodCall().onObject().isGlobalsAccess("TYPO3_DB")'
+	];
+
 	/**
 	 * @param NodeWrapper $node
 	 * @return array|null|Node|void
 	 */
 	protected function leaveClassMemberNode(NodeWrapper $node) {
-		if ($node->e('isMethodCall().onObject().isGlobalsAccess("TYPO3_DB")')) {
-			/** @var Node\Expr\MethodCall $call */
-			$call = $node->node();
+		/** @var Node\Expr\MethodCall $call */
+		$call = $node->node();
 
-			$call->var = new Node\Expr\PropertyFetch(
-				new Node\Expr\Variable('this'),
-				'databaseBackend'
-			);
+		$call->var = new Node\Expr\PropertyFetch(
+			new Node\Expr\Variable('this'),
+			'databaseBackend'
+		);
 
-			$this->addDatabaseInjectionToCurrentClass();
-			return $call;
-		}
+		$this->addDatabaseInjectionToCurrentClass();
+		return $call;
 	}
 
 	protected function addDatabaseInjectionToCurrentClass() {
