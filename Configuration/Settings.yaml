@@ -133,8 +133,8 @@ Mw:
           class.getParentClass().getFullyQualifiedName() == 'Tx_Extbase_DomainObject_AbstractEntity'
       isDirectValueObjectDescendant:
         expr: |
-          class.getParentClass().getFullyQualifiedName() == 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity' ||
-          class.getParentClass().getFullyQualifiedName() == 'Tx_Extbase_DomainObject_AbstractEntity'
+          class.getParentClass().getFullyQualifiedName() == 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject' ||
+          class.getParentClass().getFullyQualifiedName() == 'Tx_Extbase_DomainObject_AbstractValueObject'
       isDirectEntityOrValueObjectDescendant:
         expr: class.getFact('isDirectEntityDescendant') || class.getFact('isDirectValueObjectDescendant')
 
