@@ -159,7 +159,8 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor {
 		foreach ($this->classMap->getClassMappings() as $classMapping) {
 			$old = $classMapping->getOldClassName();
 			$new = $classMapping->getNewClassName();
-			if (strpos($text, $old) !== FALSE) {
+
+			if (strpos($text, $old) === 0) {
 				$text = str_replace($old, $new, $text);
 			}
 		}
