@@ -29,13 +29,13 @@ class FactContainer {
 
 	/**
 	 * @var array
-	 * @Flow\InjectSettings(path="facts")
+	 * @Flow\Inject(setting="facts")
 	 */
 	protected $factSettings;
 
 	/**
 	 * @var string
-	 * @Flow\InjectSettings(path="defaults.factNamespace")
+	 * @Flow\Inject(setting="defaults.factNamespace")
 	 */
 	protected $defaultNamespace;
 
