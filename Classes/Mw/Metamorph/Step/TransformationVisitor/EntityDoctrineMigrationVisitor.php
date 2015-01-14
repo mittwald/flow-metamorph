@@ -72,7 +72,7 @@ class EntityDoctrineMigrationVisitor extends AbstractVisitor {
 				$annotation = new AnnotationRenderer('Flow', 'Entity');
 			}
 
-			if ($classDefinition->getFact('isDirectValueObjectDescendant')) {
+			if ($classDefinition->getFact('isDirectEntityOrValueObjectDescendant')) {
 				$node->extends = NULL;
 			}
 
