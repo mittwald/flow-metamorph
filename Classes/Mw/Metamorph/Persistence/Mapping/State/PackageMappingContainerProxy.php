@@ -20,7 +20,7 @@ class PackageMappingContainerProxy extends PackageMappingContainer {
 		$packageMappings = [];
 
 		foreach ($this->getArrayProperty($data, 'extensions', []) as $extensionKey => $extensionData) {
-			$packageMappings[] = new PackageMappingProxy($extensionKey, $extensionData);
+			$packageMappings[] = new PackageMappingProxy($extensionKey, $extensionData, $this->configuration);
 		}
 
 		$this->packageMappings = $packageMappings;

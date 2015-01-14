@@ -29,7 +29,7 @@ class ExtensionInventory extends AbstractTransformation {
 	protected $morphRepository;
 
 	public function execute(MorphConfiguration $configuration, MorphExecutionState $state) {
-		$rootDirectory     = $configuration->getSourceDirectory() . '/typo3conf/ext';
+		$rootDirectory     = $configuration->getSourceDirectory() . 'typo3conf/ext';
 		$directoryIterator = new \DirectoryIterator($rootDirectory);
 		$matcher           = $configuration->getExtensionMatcher();
 

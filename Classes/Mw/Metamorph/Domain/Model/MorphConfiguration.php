@@ -99,7 +99,7 @@ class MorphConfiguration {
 	 * @return string
 	 */
 	public function getSourceDirectory() {
-		return $this->sourceDirectory;
+		return rtrim($this->sourceDirectory, '/') . '/';
 	}
 
 	/**

@@ -20,7 +20,7 @@ class ResourceMappingContainerProxy extends ResourceMappingContainer {
 		$resourceMappings = [];
 
 		foreach ($this->getArrayProperty($data, 'resources', []) as $sourceFile => $resourceData) {
-			$resourceMappings[] = new ResourceMappingProxy($sourceFile, $resourceData);
+			$resourceMappings[] = new ResourceMappingProxy($sourceFile, $resourceData, $this->configuration);
 		}
 
 		$this->resourceMappings = $resourceMappings;

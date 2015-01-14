@@ -23,15 +23,20 @@ class ResourceMappingContainerWriter {
 
 		foreach ($resourceMappings->getResourceMappings() as $resourceMapping) {
 			$mapped = [
-				'target'  => $resourceMapping->getTargetFile(),
+				'target' => $resourceMapping->getTargetFile(),
 				'package' => $resourceMapping->getPackage()
 			];
 
 			if ($resourceMapping->getTargetFile()) {
-				$mapped['target'] = $resourceMapping->getTargetFile();
+				$mapped['target'] = $this->getTargetRelativePath(
+					$resourceMapping->getTargetFile(),
+					$resourceMapping->getPackage()
+				);
 			}
 
-			$data['resources'][$resourceMapping->getSourceFile()] = $mapped;
+			$sourceFile = $this->getSourceRelativePath($resourceMapping->getSourceFile(), $morphConfiguration);
+
+			$data['resources'][$sourceFile] = $mapped;
 		}
 
 		if (count($resourceMappings->getResourceMappings())) {
