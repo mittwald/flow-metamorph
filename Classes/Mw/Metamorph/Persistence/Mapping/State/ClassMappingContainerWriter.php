@@ -21,19 +21,19 @@ class ClassMappingContainerWriter {
 		$classMappings = $morphConfiguration->getClassMappingContainer();
 		$data          = ['reviewed' => $classMappings->isReviewed(), 'classes' => []];
 
-		foreach ($classMappings->getClassMappings() as $classMapping) {
+		foreach ($classMappings->getClassMappings() as $cls) {
 			$mapped = [
-				'source'       => $classMapping->getSourceFile(),
-				'newClassname' => $classMapping->getNewClassName(),
-				'package'      => $classMapping->getPackage(),
-				'action'       => $classMapping->getAction()
+				'source'       => $this->getSourceRelativePath($cls->getSourceFile(), $morphConfiguration),
+				'newClassname' => $cls->getNewClassName(),
+				'package'      => $cls->getPackage(),
+				'action'       => $cls->getAction()
 			];
 
-			if ($classMapping->getTargetFile()) {
-				$mapped['target'] = $classMapping->getTargetFile();
+			if ($cls->getTargetFile()) {
+				$mapped['target'] = $this->getTargetRelativePath($cls->getTargetFile(), $cls->getPackage());
 			}
 
-			$data['classes'][$classMapping->getOldClassName()] = $mapped;
+			$data['classes'][$cls->getOldClassName()] = $mapped;
 		}
 
 		if (count($classMappings->getClassMappings())) {

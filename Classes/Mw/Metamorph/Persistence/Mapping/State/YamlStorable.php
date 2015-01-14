@@ -4,6 +4,7 @@ namespace Mw\Metamorph\Persistence\Mapping\State;
 use Helmich\EventBroker\Annotations as Event;
 use Mw\Metamorph\Domain\Event\MorphConfigurationFileModifiedEvent;
 use Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException;
+use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Symfony\Component\Yaml\Yaml;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Utility\Files;
@@ -58,6 +59,17 @@ trait YamlStorable {
 
 	protected function getArrayProperty(array $array, $key, $default = NULL) {
 		return array_key_exists($key, $array) ? $array[$key] : $default;
+	}
+
+	protected function getSourceRelativePath($path, MorphConfiguration $morphConfiguration) {
+		$prefix = $morphConfiguration->getSourceDirectory();
+		return substr($path, strlen($prefix));
+	}
+
+	protected function getTargetRelativePath($path, $package) {
+		$prefix = FLOW_PATH_ROOT . 'Packages/Application/' . $package . '/';
+		return str_replace($prefix, '', $path);
+		return substr($path, strlen($prefix));
 	}
 
 	/**

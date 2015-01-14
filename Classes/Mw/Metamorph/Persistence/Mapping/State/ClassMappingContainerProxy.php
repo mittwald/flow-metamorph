@@ -20,7 +20,7 @@ class ClassMappingContainerProxy extends ClassMappingContainer {
 		$classMappings = [];
 
 		foreach ($this->getArrayProperty($data, 'classes', []) as $oldClassName => $classData) {
-			$classMappings[] = new ClassMappingProxy($oldClassName, $classData);
+			$classMappings[] = new ClassMappingProxy($oldClassName, $classData, $this->configuration);
 		}
 
 		$this->classMappings = $classMappings;
