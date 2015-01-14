@@ -87,7 +87,11 @@ class CreateClasses extends AbstractTransformation implements Progressible {
 	 */
 	private function getAbsoluteFilename(String $relativeFilename, PackageInterface $package) {
 		if (FALSE === $this->isClassTestCase($relativeFilename)) {
-			return $package->getClassesPath() . '/' . $relativeFilename;
+			return (new String($package->getClassesPath()))
+				->stripRight('/')
+				->append('/')
+				->append($relativeFilename)
+				->toPrimitive();
 		} else {
 			return (new String(''))
 				->append($package->getPackagePath())
