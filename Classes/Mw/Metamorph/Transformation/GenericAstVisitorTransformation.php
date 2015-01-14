@@ -17,7 +17,7 @@ class GenericAstVisitorTransformation extends AbstractTransformation implements 
 
 	/**
 	 * @var string
-	 * @Flow\InjectSettings(path="defaults.transformationVisitorNamespace")
+	 * @Flow\Inject(setting="defaults.transformationVisitorNamespace")
 	 */
 	protected $defaultNamespace;
 
