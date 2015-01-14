@@ -139,6 +139,10 @@ Mw:
           class.getParentClass().getFullyQualifiedName() == 'Tx_Extbase_DomainObject_AbstractValueObject'
       isDirectEntityOrValueObjectDescendant:
         expr: class.getFact('isDirectEntityDescendant') || class.getFact('isDirectValueObjectDescendant')
+      isController:
+        expr: |
+          class.doesInherit('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\ActionController') ||
+          class.doesInherit('Tx_Extbase_Mvc_Controller_ActionController')
 
     classNameStrategies:
       extbase:
