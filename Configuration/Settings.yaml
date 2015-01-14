@@ -57,6 +57,8 @@ Mw:
             - InjectUtilitiesVisitor
             - FlashMessageVisitor
             - PackageRedirectVisitor
+            - DatabaseAccessVisitor
+            - InjectStaticDependenciesVisitor
       transformLocallang:
         name: XliffConversion
         dependsOn:
@@ -74,6 +76,7 @@ Mw:
       TYPO3\CMS\Extbase\Mvc\Controller\ActionController: TYPO3\Flow\Mvc\Controller\ActionController
       TYPO3\CMS\Core\Utility\GeneralUtility: Mw\T3Compat\Utility\GeneralUtility
       TYPO3\CMS\Core\Utility\ExtensionManagementUtility: Mw\T3Compat\Utility\ExtensionManagementUtility
+      TYPO3\CMS\Core\Database\DatabaseConnection: Mw\T3Compat\Database\DatabaseConnection
       TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper: TYPO3\Fluid\Core\ViewHelper\AbstractViewHelper
       TYPO3\CMS\Fluid\ViewHelpers\IfViewHelper: TYPO3\Fluid\ViewHelpers\IfViewHelper
       TYPO3\CMS\Extbase\Persistence\ObjectStorage: Doctrine\Common\Collections\Collection
@@ -98,6 +101,7 @@ Mw:
       Tx_Extbase_Domain_Repository_FrontendUserGroupRepository: Mw\T3Compat\Domain\Repository\FrontendUserGroupRepository
       Tx_Extbase_Tests_Unit_BaseTestCase: TYPO3\Flow\Tests\UnitTestCase
       Tx_Extbase_Validation_Validator_AbstractValidator: TYPO3\Flow\Validation\Validator\AbstractValidator
+      t3lib_DB: Mw\T3Compat\Database\DatabaseConnection
       t3lib_div: Mw\T3Compat\Utility\GeneralUtility
       t3lib_extMgm: Mw\T3Compat\Utility\ExtensionManagementUtility
       tslib_pibase: Mw\T3Compat\Plugin\AbstractPlugin
