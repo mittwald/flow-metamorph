@@ -67,6 +67,6 @@ class FactContainer {
 			return $this->factObjects[$factName];
 		}
 
-		return new NullFact();
+		throw new \InvalidArgumentException('Invalid fact name: "' . $factName . '"!');
 	}
 }
