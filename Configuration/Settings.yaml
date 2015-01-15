@@ -43,6 +43,10 @@ Mw:
         name: AnalyzeClasses
         dependsOn:
           - rewritePackageClasses
+      cleanClassFiles:
+        name: CleanClassFiles
+        dependsOn:
+          - analyzeClasses
       refactorClasses:
         name: Mw\Metamorph\Transformation\GenericAstVisitorTransformation
         dependsOn:
