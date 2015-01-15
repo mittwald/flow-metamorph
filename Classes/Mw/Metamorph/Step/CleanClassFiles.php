@@ -32,7 +32,7 @@ class CleanClassFiles extends AbstractTransformation implements Progressible {
 	protected $printer;
 
 	public function execute(MorphConfiguration $configuration, MorphExecutionState $state) {
-		$mappings = $configuration->getClassMappingContainer()->getClassMappings();
+		$mappings = $configuration->getClassMappingContainer()->getClassMappingsByAction(ClassMapping::ACTION_MORPH);
 
 		$this->startProgress('Cleaning class files', count($mappings));
 		foreach ($mappings as $mapping) {
