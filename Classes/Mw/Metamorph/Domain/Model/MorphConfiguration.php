@@ -17,11 +17,11 @@ use TYPO3\Flow\Package\PackageInterface;
  */
 class MorphConfiguration {
 
-	const TABLE_STRUCTURE_KEEP    = 'KEEP';
+	const TABLE_STRUCTURE_KEEP = 'KEEP';
 	const TABLE_STRUCTURE_MIGRATE = 'MIGRATE';
 
 	const PIBASE_REFACTOR_CONSERVATIVE = 'CONSERVATIVE';
-	const PIBASE_REFACTOR_PROGRESSIVE  = 'PROGRESSIVE';
+	const PIBASE_REFACTOR_PROGRESSIVE = 'PROGRESSIVE';
 
 	/**
 	 * @var string
@@ -71,28 +71,26 @@ class MorphConfiguration {
 	protected $pibaseRefactoringMode = self::PIBASE_REFACTOR_CONSERVATIVE;
 
 	/**
-	 * @var \Mw\Metamorph\Domain\Model\State\ClassMappingContainer
+	 * @var array
 	 */
-	protected $classMappingContainer = NULL;
+	protected $containers = [];
 
 	/**
-	 * @var \Mw\Metamorph\Domain\Model\State\PackageMappingContainer
+	 * @var array
+	 * @Flow\Inject(setting="containers")
 	 */
-	protected $packageMappingContainer = NULL;
-
-	/**
-	 * @var \Mw\Metamorph\Domain\Model\State\ResourceMappingContainer
-	 */
-	protected $resourceMappingContainer = NULL;
+	protected $containerConfiguration;
 
 	public function __construct($name, $sourceDirectory) {
 		$this->name             = $name;
 		$this->sourceDirectory  = $sourceDirectory;
 		$this->extensionMatcher = new AllMatcher();
+	}
 
-		$this->classMappingContainer    = new ClassMappingContainer();
-		$this->packageMappingContainer  = new PackageMappingContainer();
-		$this->resourceMappingContainer = new ResourceMappingContainer();
+	public function initializeObject() {
+		foreach ($this->containerConfiguration as $name => $configuration) {
+			$this->containers[$name] = new $configuration['class']();
+		}
 	}
 
 	/**
@@ -155,21 +153,28 @@ class MorphConfiguration {
 	 * @return ClassMappingContainer
 	 */
 	public function getClassMappingContainer() {
-		return $this->classMappingContainer;
+		return $this->containers['classes'];
 	}
 
 	/**
 	 * @return PackageMappingContainer
 	 */
 	public function getPackageMappingContainer() {
-		return $this->packageMappingContainer;
+		return $this->containers['packages'];
 	}
 
 	/**
 	 * @return ResourceMappingContainer
 	 */
 	public function getResourceMappingContainer() {
-		return $this->resourceMappingContainer;
+		return $this->containers['resources'];
+	}
+
+	public function getContainer($name) {
+		if (array_key_exists($name, $this->containers)) {
+			return $this->containers[$name];
+		}
+		throw new \InvalidArgumentException('No container named "' . $name . '" is known.');
 	}
 
 	/**
@@ -187,9 +192,9 @@ class MorphConfiguration {
 	}
 
 	public function __clone() {
-		$this->packageMappingContainer  = clone $this->packageMappingContainer;
-		$this->classMappingContainer    = clone $this->classMappingContainer;
-		$this->resourceMappingContainer = clone $this->resourceMappingContainer;
+		foreach ($this->containers as $key => $container) {
+			$this->containers[$key] = clone $container;
+		}
 	}
 
 }
