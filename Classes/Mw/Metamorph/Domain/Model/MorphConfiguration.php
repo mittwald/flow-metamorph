@@ -170,6 +170,10 @@ class MorphConfiguration {
 		return $this->containers['resources'];
 	}
 
+	public function getContainers() {
+		return $this->containers;
+	}
+
 	public function getContainer($name) {
 		if (array_key_exists($name, $this->containers)) {
 			return $this->containers[$name];
