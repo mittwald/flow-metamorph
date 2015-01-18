@@ -102,6 +102,8 @@ class MorphConfigurationRepository implements RepositoryInterface {
 	 * @api
 	 */
 	public function findByIdentifier($identifier) {
+		$identifier = $this->packageManager->getCaseSensitivePackageKey($identifier);
+
 		$package  = $this->packageManager->getPackage($identifier);
 		$filename = Files::concatenatePaths([$package->getConfigurationPath(), 'Metamorph', 'Morph.yml']);
 
