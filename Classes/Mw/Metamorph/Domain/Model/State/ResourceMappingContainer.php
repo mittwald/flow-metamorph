@@ -9,9 +9,9 @@ use TYPO3\Flow\Annotations as Flow;
  *
  * @Flow\Scope("prototype")
  */
-class ResourceMappingContainer {
+class ResourceMappingContainer implements Reviewable {
 
-	use Reviewable;
+	use ReviewableTrait;
 
 	/**
 	 * @var array<\Mw\Metamorph\Domain\Model\State\ResourceMapping>

@@ -3,7 +3,7 @@ namespace Mw\Metamorph\Domain\Aspect;
 
 use Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
-use Mw\Metamorph\Domain\Model\State\Reviewable;
+use Mw\Metamorph\Domain\Model\State\ReviewableTrait;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Aop\JoinPointInterface;
 
@@ -72,7 +72,7 @@ class ReviewAssertionAspect {
 	private function assertReviewableIsReviewed(JoinPointInterface $joinPoint, callable $getter) {
 		$configuration = array_values($joinPoint->getMethodArguments())[0];
 		if ($configuration instanceof MorphConfiguration) {
-			/** @var Reviewable $reviewable */
+			/** @var ReviewableTrait $reviewable */
 			$reviewable = call_user_func_array($getter, [$configuration]);
 			$reviewable->assertReviewed();
 		}
