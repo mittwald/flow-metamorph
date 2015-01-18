@@ -71,6 +71,17 @@ class ClassMappingContainer {
 	}
 
 	/**
+	 * @param string $action
+	 * @return ClassMapping[]
+	 */
+	public function getClassMappingsByAction($action) {
+		$filter = function(ClassMapping $mapping) use ($action) {
+			return $mapping->getAction() === $action;
+		};
+		return $this->getClassMappingsByFilter($filter);
+	}
+
+	/**
 	 * @param callable $filter
 	 * @return ClassMapping
 	 */

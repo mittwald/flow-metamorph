@@ -48,6 +48,12 @@ Mw\Metamorph\Step\AnalyzeClasses:
             object:
               name: Mw\Metamorph\Parser\PHP\PHPParser
 
+Mw\Metamorph\Step\CleanClassFiles:
+  properties:
+    printer:
+      object:
+        name: PhpParser\PrettyPrinter\Standard
+
 Mw\Metamorph\Step\DatabaseMigration\Strategy\CompatibleMigrationStrategy:
   properties:
     printer:

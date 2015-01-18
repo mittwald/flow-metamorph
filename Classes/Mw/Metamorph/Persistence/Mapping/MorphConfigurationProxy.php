@@ -40,10 +40,12 @@ class MorphConfigurationProxy extends MorphConfiguration {
 			FALSE,
 			self::PIBASE_REFACTOR_CONSERVATIVE
 		);
+	}
 
-		$this->packageMappingContainer  = new PackageMappingContainerProxy($this);
-		$this->classMappingContainer    = new ClassMappingContainerProxy($this);
-		$this->resourceMappingContainer = new ResourceMappingContainerProxy($this);
+	public function initializeObject() {
+		foreach ($this->containerConfiguration as $name => $configuration) {
+			$this->containers[$name] = new $configuration['proxy']($this);
+		}
 	}
 
 	/**

@@ -43,6 +43,10 @@ Mw:
         name: AnalyzeClasses
         dependsOn:
           - rewritePackageClasses
+      cleanClassFiles:
+        name: CleanClassFiles
+        dependsOn:
+          - analyzeClasses
       refactorClasses:
         name: Mw\Metamorph\Transformation\GenericAstVisitorTransformation
         dependsOn:
@@ -163,6 +167,20 @@ Mw:
     defaults:
       transformationVisitorNamespace: Mw\Metamorph\Step\TransformationVisitor\
       factNamespace: Mw\Metamorph\Domain\Model\Fact\
+
+    containers:
+      packages:
+        class: Mw\Metamorph\Domain\Model\State\PackageMappingContainer
+        proxy: Mw\Metamorph\Persistence\Mapping\State\PackageMappingContainerProxy
+        writer: Mw\Metamorph\Persistence\Mapping\State\PackageMappingContainerWriter
+      classes:
+        class: Mw\Metamorph\Domain\Model\State\ClassMappingContainer
+        proxy: Mw\Metamorph\Persistence\Mapping\State\ClassMappingContainerProxy
+        writer: Mw\Metamorph\Persistence\Mapping\State\ClassMappingContainerWriter
+      resources:
+        class: Mw\Metamorph\Domain\Model\State\ResourceMappingContainer
+        proxy: Mw\Metamorph\Persistence\Mapping\State\ResourceMappingContainerProxy
+        writer: Mw\Metamorph\Persistence\Mapping\State\ResourceMappingContainerWriter
 
 TYPO3:
   Flow:

@@ -11,11 +11,11 @@ namespace Mw\Metamorph\Persistence\Mapping\State;
 use Mw\Metamorph\Domain\Event\MorphConfigurationFileModifiedEvent;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 
-class PackageMappingContainerWriter {
+class PackageMappingContainerWriter implements ContainerWriterInterface {
 
 	use YamlStorable;
 
-	public function writeMorphPackageMapping(MorphConfiguration $morphConfiguration) {
+	public function writeMorphContainer(MorphConfiguration $morphConfiguration) {
 		$this->initializeWorkingDirectory($morphConfiguration->getName());
 
 		$packageMappings = $morphConfiguration->getPackageMappingContainer();
