@@ -66,9 +66,7 @@ class RewriteSingletonsVisitor extends AbstractVisitor {
 
 			$this->taskQueue->enqueue(
 				(new AddImportToClassTaskBuilder())
-					->setTargetClassName($node->namespacedName->toString())
-					->setImport('TYPO3\\Flow\\Annotations')
-					->setNamespaceAlias('Flow')
+					->importFlowAnnotations($node->namespacedName->toString())
 					->buildTask()
 			);
 

@@ -63,9 +63,7 @@ class InjectUtilitiesVisitor extends AbstractVisitor {
 
 				$this->taskQueue->enqueue(
 					(new AddImportToClassTaskBuilder())
-						->setTargetClassName($this->currentClass->namespacedName->toString())
-						->setImport('TYPO3\\Flow\\Annotations')
-						->setNamespaceAlias('Flow')
+						->importFlowAnnotations($this->currentClass->namespacedName->toString())
 						->buildTask()
 				);
 			}

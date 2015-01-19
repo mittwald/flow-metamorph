@@ -30,6 +30,13 @@ class AddImportToClassTaskBuilder {
 		return $this;
 	}
 
+	public function importFlowAnnotations($targetClassName) {
+		$this->setTargetClassName($targetClassName);
+		$this->setImport('TYPO3\\Flow\\Annotations');
+		$this->setNamespaceAlias('Flow');
+		return $this;
+	}
+
 	public function buildTask() {
 		return new AddImportToClassTask(
 			$this->class,

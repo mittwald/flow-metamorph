@@ -2,6 +2,7 @@
 namespace Mw\Metamorph\Step\TransformationVisitor;
 
 use Mw\Metamorph\Parser\PHP\NodeWrapper;
+use Mw\Metamorph\Step\Task\Builder\AddImportToClassTaskBuilder;
 use Mw\Metamorph\Step\Task\Builder\AddPropertyToClassTaskBuilder;
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
 use Mw\Metamorph\Transformation\TransformationVisitor\AbstractClassMemberVisitor;
@@ -35,6 +36,12 @@ class DatabaseAccessVisitor extends AbstractClassMemberVisitor {
 				->setProtected()
 				->addAnnotation(new AnnotationRenderer('Flow', 'Inject'))
 				->setPropertyType('\\Mw\\T3Compat\\Database\\DatabaseConnection')
+				->buildTask()
+		);
+
+		$this->taskQueue->enqueue(
+			(new AddImportToClassTaskBuilder())
+				->importFlowAnnotations($this->currentClass->getFullyQualifiedName())
 				->buildTask()
 		);
 	}
