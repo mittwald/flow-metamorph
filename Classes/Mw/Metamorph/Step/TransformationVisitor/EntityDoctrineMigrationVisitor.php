@@ -54,7 +54,7 @@ class EntityDoctrineMigrationVisitor extends AbstractVisitor {
 					return FALSE;
 				}
 			}
-		} else if ($node instanceof Node\Stmt\Class_) {
+		} else if ($node instanceof Node\Stmt\Class_ && $this->currentClass) {
 			$classDefinition       = $this->currentClass;
 			$annotation            = NULL;
 			$isEntityOrValueObject = $classDefinition->getFact('isEntityOrValueObject');

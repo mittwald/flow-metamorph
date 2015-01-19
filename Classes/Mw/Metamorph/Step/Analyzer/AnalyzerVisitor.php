@@ -49,8 +49,10 @@ class AnalyzerVisitor extends NodeVisitorAbstract {
 
 	public function leaveNode(Node $node) {
 		if ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Interface_) {
-			$this->classDefinitionContainer->add($this->currentClassDefinition);
-			$this->currentClassDefinition = NULL;
+			if (NULL !== $this->currentClassDefinition) {
+				$this->classDefinitionContainer->add($this->currentClassDefinition);
+				$this->currentClassDefinition = NULL;
+			}
 		}
 	}
 
@@ -77,7 +79,7 @@ class AnalyzerVisitor extends NodeVisitorAbstract {
 		);
 
 		if (NULL === $mapping) {
-			throw new \Exception("No class mapping found for class {$this->currentNamespace}\\{$node->name}!");
+			return NULL;
 		}
 
 		$classDef = new ClassDefinition($node->name, $this->currentNamespace);
@@ -113,6 +115,10 @@ class AnalyzerVisitor extends NodeVisitorAbstract {
 	 * @return void
 	 */
 	private function addPropertyDefinitionsToClass(Node\Stmt\Property $node) {
+		if (NULL === $this->currentClassDefinition) {
+			return;
+		}
+
 		foreach ($node->props as $subProp) {
 			$this->currentClassDefinition->addProperty(
 				new PropertyDefinition(
