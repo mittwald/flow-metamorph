@@ -33,7 +33,7 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor {
 			$this->currentNamespaceNode = $node;
 		} elseif ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Interface_) {
 			return $this->convertClassNameForOldClass($node);
-		} elseif ($node instanceof Node\Name) {
+		} elseif ($node instanceof Node\Name && !$node->getAttribute('renamed', FALSE)) {
 			return $this->convertClassNameForOldClassUsage($node);
 		} elseif ($node instanceof Node\Scalar\String) {
 			return $this->convertClassNameInString($node);
@@ -106,7 +106,7 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor {
 			if ($this->classMap->hasClassMapping($oldName)) {
 				list($namespace, $relativeClassName) = $this->getNamespaceAndRelativeNameForOldClass($oldName);
 
-				$node->name           = new Node\Name($relativeClassName);
+				$node->name           = new Node\Name($relativeClassName, ['renamed' => TRUE]);
 				$node->namespacedName = new Node\Name($namespace . '\\' . $relativeClassName);
 
 				$this->newNamespace = new Node\Name($namespace);
@@ -129,7 +129,7 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor {
 			if ($this->currentClassNode === NULL || $this->currentClassNode->namespacedName->toString() != $fqcn) {
 				$this->imports[$fqcn] = new Node\Name($fqcn);
 			}
-			return new Node\Name($relativeClassName);
+			return new Node\Name\FullyQualified($fqcn);
 		}
 		return NULL;
 	}
