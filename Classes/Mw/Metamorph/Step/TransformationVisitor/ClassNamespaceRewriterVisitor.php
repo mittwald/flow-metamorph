@@ -45,12 +45,9 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor {
 		if ($node instanceof Node\Stmt\Namespace_) {
 			$this->currentNamespaceNode = NULL;
 			if ($this->newNamespace !== NULL) {
-				$uses = $this->getUseStatements();
-
-				$node->name  = $this->newNamespace;
-				$node->stmts = array_merge($uses, $node->stmts);
-
+				$node->name         = $this->newNamespace;
 				$this->newNamespace = NULL;
+
 				return $node;
 			}
 		}
@@ -59,9 +56,7 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor {
 
 	public function afterTraverse(array $nodes) {
 		if (NULL !== $this->newNamespace) {
-			$useNodes      = $this->getUseStatements();
-			$namespaceNode = new Node\Stmt\Namespace_($this->newNamespace, array_merge($useNodes, $nodes));
-
+			$namespaceNode = new Node\Stmt\Namespace_($this->newNamespace, $nodes);
 			return [$namespaceNode];
 		}
 		return NULL;
@@ -75,17 +70,6 @@ class ClassNamespaceRewriterVisitor extends AbstractVisitor {
 		$namespace         = implode('\\', $newNameComponents);
 
 		return [$namespace, $relativeClassName];
-	}
-
-	private function getUseStatements() {
-		$uses = [];
-
-		foreach ($this->imports as $fqcn => $name) {
-			$useuse = new Node\Stmt\UseUse($name);
-			$uses[] = new Node\Stmt\Use_([$useuse]);
-		}
-
-		return $uses;
 	}
 
 	/**
