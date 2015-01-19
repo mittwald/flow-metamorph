@@ -46,11 +46,7 @@ abstract class AbstractControllerVisitor extends AbstractVisitor {
 				return NULL;
 			}
 
-			$isController =
-				$class->doesInherit('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\ActionController') ||
-				$class->doesInherit('Tx_Extbase_Mvc_Controller_ActionController');
-
-			$this->isInController = $isController;
+			$this->isInController = $class->getFact('isController');
 		}
 	}
 

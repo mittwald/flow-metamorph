@@ -33,7 +33,28 @@ class EelFact implements Fact {
 	}
 
 	public function evaluate(ClassDefinition $classDefinition) {
-		$context = new Context(['class' => $classDefinition]);
+		$context = new Context($this->buildWrapperForClass($classDefinition));
 		return $this->evaluator->evaluate($this->expression, $context);
+	}
+
+	protected function buildWrapperForClass($cls) {
+		if ($cls instanceof ClassDefinition) {
+			return [
+				'inherits'   => function ($parent) use ($cls) { return $cls->doesInherit($parent); },
+				'implements' => function ($parent) use ($cls) { return $cls->doesImplement($parent); },
+				'parent'     => function () use ($cls) { return $this->buildWrapperForClass($cls->getParentClass()); },
+				'fact'       => function ($fact) use ($cls) { return $cls->getFact($fact); },
+				'name'       => function ($name) use ($cls) { return $cls->getFullyQualifiedName() == $name; }
+			];
+		} else {
+			$false = function() { return FALSE; };
+			return [
+				'inherits'   => $false,
+				'implements' => $false,
+				'parent'     => function () { return $this->buildWrapperForClass(NULL); },
+				'fact'       => $false,
+				'name'       => $false
+			];
+		}
 	}
 }

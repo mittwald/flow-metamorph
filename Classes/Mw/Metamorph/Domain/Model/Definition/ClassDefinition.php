@@ -31,6 +31,13 @@ class ClassDefinition {
 	/** @var ClassMapping */
 	private $classMapping;
 
+	static public function fromFqdn($fqdn) {
+		$parts = explode('\\', $fqdn);
+		$class = array_pop($parts);
+
+		return new ClassDefinition($class, implode('\\', $parts));
+	}
+
 	public function __construct($name, $namespace) {
 		$this->name      = $name;
 		$this->namespace = $namespace;
@@ -63,6 +70,14 @@ class ClassDefinition {
 
 	public function getFullyQualifiedName() {
 		return ltrim($this->namespace . '\\' . $this->name, '\\');
+	}
+
+	public function getRelativeName() {
+		return $this->name;
+	}
+
+	public function getNamespace() {
+		return $this->namespace;
 	}
 
 	public function doesInherit($fullyQualifiedName) {

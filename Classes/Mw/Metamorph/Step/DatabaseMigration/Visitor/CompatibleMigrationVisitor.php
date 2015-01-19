@@ -136,9 +136,7 @@ class CompatibleMigrationVisitor extends AbstractMigrationVisitor {
 
 			$this->taskQueue->enqueue(
 				(new AddImportToClassTaskBuilder())
-					->setTargetClassName($targetClassName)
-					->setImport('TYPO3\\Flow\\Annotations')
-					->setNamespaceAlias('Flow')
+					->importFlowAnnotations($targetClassName)
 					->buildTask()
 			);
 

@@ -11,27 +11,25 @@ namespace Mw\Metamorph\Persistence\Mapping\State;
 use Mw\Metamorph\Domain\Event\MorphConfigurationFileModifiedEvent;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 
-class PackageMappingContainerWriter {
+class PackageMappingContainerWriter implements ContainerWriterInterface {
 
 	use YamlStorable;
 
-	public function writeMorphPackageMapping(MorphConfiguration $morphConfiguration) {
+	public function writeMorphContainer(MorphConfiguration $morphConfiguration) {
 		$this->initializeWorkingDirectory($morphConfiguration->getName());
 
 		$packageMappings = $morphConfiguration->getPackageMappingContainer();
 		$data            = ['reviewed' => $packageMappings->isReviewed(), 'extensions' => []];
 
 		foreach ($packageMappings->getPackageMappings() as $packageMapping) {
-			var_dump($packageMapping->getFilePath());
-			var_dump($this->getSourceRelativePath($packageMapping->getFilePath(), $morphConfiguration));
-
 			$data['extensions'][$packageMapping->getExtensionKey()] = [
-				'path'        => $this->getSourceRelativePath($packageMapping->getFilePath(), $morphConfiguration),
-				'packageKey'  => $packageMapping->getPackageKey(),
-				'action'      => $packageMapping->getAction(),
-				'description' => $packageMapping->getDescription(),
-				'version'     => $packageMapping->getVersion(),
-				'authors'     => $packageMapping->getAuthors()
+				'path'            => $this->getSourceRelativePath($packageMapping->getFilePath(), $morphConfiguration),
+				'packageKey'      => $packageMapping->getPackageKey(),
+				'action'          => $packageMapping->getAction(),
+				'description'     => $packageMapping->getDescription(),
+				'version'         => $packageMapping->getVersion(),
+				'authors'         => $packageMapping->getAuthors(),
+				'excludePatterns' => $packageMapping->getFileExcludePatterns()
 			];
 		}
 

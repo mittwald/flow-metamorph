@@ -9,9 +9,9 @@ use TYPO3\Flow\Annotations as Flow;
  *
  * @Flow\Scope("prototype")
  */
-class PackageMappingContainer {
+class PackageMappingContainer implements Reviewable {
 
-	use Reviewable;
+	use ReviewableTrait;
 
 	/** @var array<Mw\Metamorph\Domain\Model\State\PackageMapping> */
 	protected $packageMappings = [];

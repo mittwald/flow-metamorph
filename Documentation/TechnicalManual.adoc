@@ -477,18 +477,42 @@ $class->getFact('isFrontendUser');
 
 As you may have noticed, many of the existing facts follow more or less the same pattern: checking for certain inheritance or implememtation patterns on the given classes. Since most facts only re-use some of the already-known facts about each class, there is an easier way to define these kinds of facts.
 
-You can declare a fact as an EEL expression (not much reading on this subject, the best I could find is from the http://docs.typo3.org/neos/TYPO3NeosDocumentation/IntegratorGuide/EelFlowQuery.html[TYPO3 Neos manual]). In an EEL expression, you have access to the class definition object inside the `class` variable and can then call any method you like.
+You can declare a fact as an EEL expression (not much reading on this subject, the best I could find is from the http://docs.typo3.org/neos/TYPO3NeosDocumentation/IntegratorGuide/EelFlowQuery.html[TYPO3 Neos manual]). In an EEL expression, you have access to the class definition object inside your expression by using the operators listed in the table below:
 
-For example, the _isSingleton_ fact that you saw in <<Predefined facts>> is actually an EEL expression:
+.Class fact accessors
+[cols="1a,2a"]
+|===
+|Operator | Purpose
+
+|`inherits(cls)`
+|_True_ when the class inherits from the class `cls`.
+
+|`implements(if)`
+|_True_ when the class implements the interface `if`.
+
+|`parent()`
+|Returns an accessor for the parent class. Will also return an accessor when no parent class exists, but all method calls on that object will return _false_.
+
+|`fact(f)`
+|Return value of fact `f`.
+
+|`name(n)`
+|_True_ when the class name matches `n`.
+|===
+
+IMPORTANT: Note that you *cannot call* methods of the `ClassDefinition` class directly within our EEL expression. Refer to the operator table above.
+
+For example, the _isSingleton_ fact that you saw in <<Predefined facts>> is actually an EEL expression. This is actually a good example to demonstrate how complex these expressions can get (note that they can even be defined recursively):
 
 [source,eel]
 ----
-class.doesImplement('TYPO3\\CMS\\Core\\SingletonInterface') ||
-class.doesImplement('t3lib_Singleton') ||
-(class.getParentClass() != null && class.getParentClass().getFact('isSingleton')) ||
-class.doesInherit('TYPO3\\CMS\\Extbase\\Persistence\\Repository') ||
-class.doesInherit('Tx_Extbase_Persistence_Repository')
+parent().fact('isSingleton') || # <1>
+implements('TYPO3\\CMS\\Core\\SingletonInterface') ||
+implements('t3lib_Singleton') ||
+inherits('TYPO3\\CMS\\Extbase\\Persistence\\Repository') ||
+inherits('Tx_Extbase_Persistence_Repository')
 ----
+<1> You do not have to worry that `parent()` might return _null_. When the class does not have a parent class, the `parent()` method will return an empty accessor object, anyway.
 
 You can declare EEL-based facts just as easily in the configuration settings. Let's stay with the frontend user example from the previous section:
 

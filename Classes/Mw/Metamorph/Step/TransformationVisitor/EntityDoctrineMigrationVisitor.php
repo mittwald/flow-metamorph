@@ -3,6 +3,7 @@ namespace Mw\Metamorph\Step\TransformationVisitor;
 
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinition;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer;
+use Mw\Metamorph\Step\Task\Builder\AddImportToClassTaskBuilder;
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
 use Mw\Metamorph\Transformation\Helper\Annotation\DocCommentModifier;
 use Mw\Metamorph\Transformation\Helper\Namespaces\ImportHelper;
@@ -36,12 +37,7 @@ class EntityDoctrineMigrationVisitor extends AbstractVisitor {
 	 */
 	private $currentClass;
 
-	private $neededNamespaceImports = [];
-
 	public function enterNode(Node $node) {
-		if ($node instanceof Node\Stmt\Namespace_) {
-			$this->neededNamespaceImports = [];
-		}
 		if ($node instanceof Node\Stmt\Class_) {
 			$classDefinition    = $this->classDefinitionContainer->get($node->namespacedName->toString());
 			$this->currentClass = $classDefinition;
@@ -51,19 +47,14 @@ class EntityDoctrineMigrationVisitor extends AbstractVisitor {
 	}
 
 	public function leaveNode(Node $node) {
-		if ($node instanceof Node\Stmt\Namespace_ && count($this->neededNamespaceImports)) {
-			foreach ($this->neededNamespaceImports as $alias => $namespace) {
-				$node = $this->importHelper->importNamespaceIntoOtherNamespace($node, $namespace, $alias);
-			}
-			return $node;
-		} else if ($node instanceof Node\Stmt\If_) {
+		if ($node instanceof Node\Stmt\If_) {
 			$cond = $node->cond;
 			if ($cond instanceof Node\Expr\Instanceof_) {
 				if ($cond->class == 'TYPO3\\CMS\\Extbase\\Persistence\\LazyLoadingProxy') {
 					return FALSE;
 				}
 			}
-		} else if ($node instanceof Node\Stmt\Class_) {
+		} else if ($node instanceof Node\Stmt\Class_ && $this->currentClass) {
 			$classDefinition       = $this->currentClass;
 			$annotation            = NULL;
 			$isEntityOrValueObject = $classDefinition->getFact('isEntityOrValueObject');
@@ -79,7 +70,11 @@ class EntityDoctrineMigrationVisitor extends AbstractVisitor {
 			if (NULL !== $annotation) {
 				$comment = $this->getCommentForNode($node);
 
-				$this->neededNamespaceImports['Flow'] = 'TYPO3\\Flow\\Annotations';
+				$this->taskQueue->enqueue(
+					(new AddImportToClassTaskBuilder())
+						->importFlowAnnotations($classDefinition->getFullyQualifiedName())
+						->buildTask()
+				);
 				$this->commentModifier->addAnnotationToDocComment($comment, $annotation);
 			}
 
@@ -89,7 +84,13 @@ class EntityDoctrineMigrationVisitor extends AbstractVisitor {
 				$annotation = new AnnotationRenderer('ORM', 'InheritanceType');
 				$annotation->setArgument('JOINED');
 
-				$this->neededNamespaceImports['ORM'] = 'Doctrine\\ORM\\Mapping';
+				$this->taskQueue->enqueue(
+					(new AddImportToClassTaskBuilder())
+						->setTargetClassName($classDefinition->getFullyQualifiedName())
+						->setImport('Doctrine\\ORM\\Mapping')
+						->setNamespaceAlias('ORM')
+						->buildTask()
+				);
 				$this->commentModifier->addAnnotationToDocComment($comment, $annotation);
 			}
 

@@ -1,42 +1,27 @@
 <?php
 namespace Mw\Metamorph\Domain\Model\State;
 
-use Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException;
-use Mw\Metamorph\Domain\Model\MorphConfiguration;
-
 /**
+ * Interface definition for objects that need manual user-review.
+ *
  * @package    Mw\Metamorph
  * @subpackage Domain\Model\State
  */
-trait Reviewable {
+interface Reviewable {
 
 	/**
-	 * @var bool
+	 * Asserts that the object has been user-reviewed.
+	 *
+	 * Will throw a HumanInterventionRequiredException when not.
+	 *
+	 * @return void
 	 */
-	protected $reviewed = TRUE;
+	public function assertReviewed();
 
-	/** @var MorphConfiguration */
-	protected $configuration;
-
-	public function assertReviewed() {
-		if (FALSE === $this->reviewed) {
-			$classComponents = explode('\\', get_class($this));
-			$class           = array_pop($classComponents);
-
-			$what = strtolower(trim(preg_replace(',[A-Z],', ' $0', $class)));
-			$what = trim(str_replace(['container', 'proxy'], '', $what));
-
-			throw new HumanInterventionRequiredException(
-				'Please review the <comment>' . $what . '</comment> in the ' .
-				'<comment>Configuration/Metamorph/Work</comment> directory of the <comment>' .
-				$this->configuration->getName() . '</comment> package by changing the <comment>reviewed</comment> ' .
-				'property to TRUE.'
-			);
-		}
-	}
-
-	public function isReviewed() {
-		return $this->reviewed;
-	}
-
+	/**
+	 * Determines whether the object has been user-reviewed.
+	 *
+	 * @return bool TRUE, when the object has been user-reviewed, otherwise FALSE.
+	 */
+	public function isReviewed();
 }

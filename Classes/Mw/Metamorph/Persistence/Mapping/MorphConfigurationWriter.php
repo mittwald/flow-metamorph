@@ -13,6 +13,7 @@ use Mw\Metamorph\Domain\Model\Extension\PatternExtensionMatcher;
 use Mw\Metamorph\Domain\Model\Extension\UnionMatcher;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Persistence\Mapping\State\ClassMappingContainerWriter;
+use Mw\Metamorph\Persistence\Mapping\State\ContainerWriterInterface;
 use Mw\Metamorph\Persistence\Mapping\State\PackageMappingContainerWriter;
 use Mw\Metamorph\Persistence\Mapping\State\ResourceMappingContainerWriter;
 use Symfony\Component\Yaml\Yaml;
@@ -39,22 +40,21 @@ class MorphConfigurationWriter {
 	protected $packageManager;
 
 	/**
-	 * @var PackageMappingContainerWriter
-	 * @Flow\Inject
+	 * @var ContainerWriterInterface[]
 	 */
-	protected $packageMappingWriter;
+	protected $writers = [];
 
 	/**
-	 * @var ClassMappingContainerWriter
-	 * @Flow\Inject
+	 * @var array
+	 * @Flow\Inject(setting="containers")
 	 */
-	protected $classMappingWriter;
+	protected $containerConfiguration;
 
-	/**
-	 * @var ResourceMappingContainerWriter
-	 * @Flow\Inject
-	 */
-	protected $resourceMappingWriter;
+	public function initializeObject() {
+		foreach ($this->containerConfiguration as $name => $configuration) {
+			$this->writers[$name] = new $configuration['writer']();
+		}
+	}
 
 	public function createMorph(MorphConfiguration $morphConfiguration) {
 		$metaData = new MetaData($morphConfiguration->getName());
@@ -87,9 +87,9 @@ class MorphConfigurationWriter {
 		Files::createDirectoryRecursively(dirname($morphPath));
 		file_put_contents($morphPath, Yaml::dump($morphData));
 
-		$this->packageMappingWriter->writeMorphPackageMapping($morphConfiguration);
-		$this->classMappingWriter->writeMorphClassMapping($morphConfiguration);
-		$this->resourceMappingWriter->writeMorphResourceMapping($morphConfiguration);
+		foreach ($this->writers as $writer) {
+			$writer->writeMorphContainer($morphConfiguration);
+		}
 	}
 
 	private function exportExtensionMatcher(ExtensionMatcher $matcher) {

@@ -9,9 +9,9 @@ use TYPO3\Flow\Annotations as Flow;
  *
  * @Flow\Scope("prototype")
  */
-class ClassMappingContainer {
+class ClassMappingContainer implements Reviewable {
 
-	use Reviewable;
+	use ReviewableTrait;
 
 	/**
 	 * @var array<\Mw\Metamorph\Domain\Model\State\ClassMapping>
@@ -68,6 +68,17 @@ class ClassMappingContainer {
 					$mapping->getNewClassName() === '\\' . $newClassName;
 			}
 		);
+	}
+
+	/**
+	 * @param string $action
+	 * @return ClassMapping[]
+	 */
+	public function getClassMappingsByAction($action) {
+		$filter = function(ClassMapping $mapping) use ($action) {
+			return $mapping->getAction() === $action;
+		};
+		return $this->getClassMappingsByFilter($filter);
 	}
 
 	/**

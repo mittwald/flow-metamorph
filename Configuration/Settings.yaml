@@ -43,6 +43,10 @@ Mw:
         name: AnalyzeClasses
         dependsOn:
           - rewritePackageClasses
+      cleanClassFiles:
+        name: CleanClassFiles
+        dependsOn:
+          - analyzeClasses
       refactorClasses:
         name: Mw\Metamorph\Transformation\GenericAstVisitorTransformation
         dependsOn:
@@ -57,6 +61,8 @@ Mw:
             - InjectUtilitiesVisitor
             - FlashMessageVisitor
             - PackageRedirectVisitor
+            - DatabaseAccessVisitor
+            - InjectStaticDependenciesVisitor
       transformLocallang:
         name: XliffConversion
         dependsOn:
@@ -74,6 +80,7 @@ Mw:
       TYPO3\CMS\Extbase\Mvc\Controller\ActionController: TYPO3\Flow\Mvc\Controller\ActionController
       TYPO3\CMS\Core\Utility\GeneralUtility: Mw\T3Compat\Utility\GeneralUtility
       TYPO3\CMS\Core\Utility\ExtensionManagementUtility: Mw\T3Compat\Utility\ExtensionManagementUtility
+      TYPO3\CMS\Core\Database\DatabaseConnection: Mw\T3Compat\Database\DatabaseConnection
       TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper: TYPO3\Fluid\Core\ViewHelper\AbstractViewHelper
       TYPO3\CMS\Fluid\ViewHelpers\IfViewHelper: TYPO3\Fluid\ViewHelpers\IfViewHelper
       TYPO3\CMS\Extbase\Persistence\ObjectStorage: Doctrine\Common\Collections\Collection
@@ -98,6 +105,7 @@ Mw:
       Tx_Extbase_Domain_Repository_FrontendUserGroupRepository: Mw\T3Compat\Domain\Repository\FrontendUserGroupRepository
       Tx_Extbase_Tests_Unit_BaseTestCase: TYPO3\Flow\Tests\UnitTestCase
       Tx_Extbase_Validation_Validator_AbstractValidator: TYPO3\Flow\Validation\Validator\AbstractValidator
+      t3lib_DB: Mw\T3Compat\Database\DatabaseConnection
       t3lib_div: Mw\T3Compat\Utility\GeneralUtility
       t3lib_extMgm: Mw\T3Compat\Utility\ExtensionManagementUtility
       tslib_pibase: Mw\T3Compat\Plugin\AbstractPlugin
@@ -112,33 +120,35 @@ Mw:
     facts:
       isSingleton:
         expr: |
-          class.doesImplement('TYPO3\\CMS\\Core\\SingletonInterface') ||
-          class.doesImplement('t3lib_Singleton') ||
-          (class.getParentClass() != null && class.getParentClass().getFact('isSingleton')) ||
-          class.doesInherit('TYPO3\\CMS\\Extbase\\Persistence\\Repository') ||
-          class.doesInherit('Tx_Extbase_Persistence_Repository')
+          parent().fact('isSingleton') ||
+          implements('TYPO3\\CMS\\Core\\SingletonInterface') || implements('t3lib_Singleton') ||
+          inherits('TYPO3\\CMS\\Extbase\\Persistence\\Repository') || inherits('Tx_Extbase_Persistence_Repository')
       isPrototype:
-        expr: !class.getFact('isSingleton')
+        expr: !fact('isSingleton')
       isEntity:
         expr: |
-          class.doesInherit('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity') ||
-          class.doesInherit('Tx_Extbase_DomainObject_AbstractEntity')
+          inherits('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity') ||
+          inherits('Tx_Extbase_DomainObject_AbstractEntity')
       isValueObject:
         expr: |
-          class.doesInherit('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject') ||
-          class.doesInherit('Tx_Extbase_DomainObject_AbstractValueObject')
+          inherits('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject') ||
+          inherits('Tx_Extbase_DomainObject_AbstractValueObject')
       isEntityOrValueObject:
-        expr: class.getFact('isEntity') || class.getFact('isValueObject')
+        expr: fact('isEntity') || fact('isValueObject')
       isDirectEntityDescendant:
         expr: |
-          class.getParentClass().getFullyQualifiedName() == 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity' ||
-          class.getParentClass().getFullyQualifiedName() == 'Tx_Extbase_DomainObject_AbstractEntity'
+          parent().name('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity') ||
+          parent().name('Tx_Extbase_DomainObject_AbstractEntity')
       isDirectValueObjectDescendant:
         expr: |
-          class.getParentClass().getFullyQualifiedName() == 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject' ||
-          class.getParentClass().getFullyQualifiedName() == 'Tx_Extbase_DomainObject_AbstractValueObject'
+          parent().name('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject') ||
+          parent().name('Tx_Extbase_DomainObject_AbstractValueObject')
       isDirectEntityOrValueObjectDescendant:
-        expr: class.getFact('isDirectEntityDescendant') || class.getFact('isDirectValueObjectDescendant')
+        expr: fact('isDirectEntityDescendant') || fact('isDirectValueObjectDescendant')
+      isController:
+        expr: |
+          inherits('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\ActionController') ||
+          inherits('Tx_Extbase_Mvc_Controller_ActionController')
 
     classNameStrategies:
       extbase:
@@ -157,6 +167,20 @@ Mw:
     defaults:
       transformationVisitorNamespace: Mw\Metamorph\Step\TransformationVisitor\
       factNamespace: Mw\Metamorph\Domain\Model\Fact\
+
+    containers:
+      packages:
+        class: Mw\Metamorph\Domain\Model\State\PackageMappingContainer
+        proxy: Mw\Metamorph\Persistence\Mapping\State\PackageMappingContainerProxy
+        writer: Mw\Metamorph\Persistence\Mapping\State\PackageMappingContainerWriter
+      classes:
+        class: Mw\Metamorph\Domain\Model\State\ClassMappingContainer
+        proxy: Mw\Metamorph\Persistence\Mapping\State\ClassMappingContainerProxy
+        writer: Mw\Metamorph\Persistence\Mapping\State\ClassMappingContainerWriter
+      resources:
+        class: Mw\Metamorph\Domain\Model\State\ResourceMappingContainer
+        proxy: Mw\Metamorph\Persistence\Mapping\State\ResourceMappingContainerProxy
+        writer: Mw\Metamorph\Persistence\Mapping\State\ResourceMappingContainerWriter
 
 TYPO3:
   Flow:
