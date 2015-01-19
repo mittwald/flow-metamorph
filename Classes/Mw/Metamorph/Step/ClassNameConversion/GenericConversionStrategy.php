@@ -22,18 +22,21 @@ class GenericConversionStrategy implements ClassNameConversionStrategy {
 	 * @return string An appropriate class name for the migrated TYPO3 Flow package
 	 */
 	public function convertClassName($namespaceRoot, $className, $filename, $extensionKey) {
-		$className              = (new String($className))->replace('\\', '_')->toLower();
+		$className              = (new String($className))->replace('\\', '_');
+		$lcClassName            = $className->toLower();
 		$extensionKeyNormalized = (new String($extensionKey))->replace('_', '')->toLower();
 
-		$components = $className->split('_');
-		if ($components->length() >= 2 && $components[1] == $extensionKeyNormalized) {
+		$components   = $className->split('_');
+		$lcComponents = $lcClassName->split('_');
+
+		if ($lcComponents->length() >= 2 && $lcComponents[1] == $extensionKeyNormalized) {
 			$components = $components->slice(2);
 		}
 
 		return (new String($namespaceRoot . '\\'))
 			->append(
 				$components
-					->map(function(String $c) { return $c->toUpperFirst(); })
+					->map(function (String $c) { return $c->toUpperFirst(); })
 					->join('\\')
 			)->toPrimitive();
 	}
