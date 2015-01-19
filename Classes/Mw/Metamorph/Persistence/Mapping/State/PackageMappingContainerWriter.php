@@ -23,12 +23,13 @@ class PackageMappingContainerWriter implements ContainerWriterInterface {
 
 		foreach ($packageMappings->getPackageMappings() as $packageMapping) {
 			$data['extensions'][$packageMapping->getExtensionKey()] = [
-				'path'        => $this->getSourceRelativePath($packageMapping->getFilePath(), $morphConfiguration),
-				'packageKey'  => $packageMapping->getPackageKey(),
-				'action'      => $packageMapping->getAction(),
-				'description' => $packageMapping->getDescription(),
-				'version'     => $packageMapping->getVersion(),
-				'authors'     => $packageMapping->getAuthors()
+				'path'            => $this->getSourceRelativePath($packageMapping->getFilePath(), $morphConfiguration),
+				'packageKey'      => $packageMapping->getPackageKey(),
+				'action'          => $packageMapping->getAction(),
+				'description'     => $packageMapping->getDescription(),
+				'version'         => $packageMapping->getVersion(),
+				'authors'         => $packageMapping->getAuthors(),
+				'excludePatterns' => $packageMapping->getFileExcludePatterns()
 			];
 		}
 

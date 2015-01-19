@@ -70,7 +70,9 @@ class ClassInventory extends AbstractTransformation {
 
 		foreach ($regexIterator as $match) {
 			$filename = $match[0];
-			$this->readClassesFromFile($filename, $classList);
+			if ($packageMapping->isFileIncluded($filename)) {
+				$this->readClassesFromFile($filename, $classList);
+			}
 		}
 
 		$this->log(

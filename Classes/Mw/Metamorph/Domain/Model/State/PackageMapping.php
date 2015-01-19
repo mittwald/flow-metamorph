@@ -1,7 +1,6 @@
 <?php
 namespace Mw\Metamorph\Domain\Model\State;
 
-use Helmich\Scalars\Types\String;
 use TYPO3\Flow\Annotations as Flow;
 
 /**
@@ -58,22 +57,33 @@ class PackageMapping {
 	 */
 	protected $authors = [];
 
+	/**
+	 * @var array
+	 */
+	protected $fileExcludePatterns = [];
+
 	public function __construct($filePath, $extensionKey = NULL) {
 		$this->filePath     = $filePath;
 		$this->extensionKey = $extensionKey ?: basename($filePath);
 	}
 
 	/**
-	 * @return mixed
+	 * @return string
 	 */
 	public function getFilePath() {
 		return $this->filePath;
 	}
 
+	/**
+	 * @return string
+	 */
 	public function getExtensionKey() {
 		return $this->extensionKey;
 	}
 
+	/**
+	 * @param string $packageKey
+	 */
 	public function setPackageKey($packageKey) {
 		$this->packageKey = $packageKey;
 	}
@@ -107,12 +117,16 @@ class PackageMapping {
 	}
 
 	/**
-	 * @return mixed
+	 * @return string
 	 */
 	public function getVersion() {
 		return $this->version;
 	}
 
+	/**
+	 * @param string $name
+	 * @param string $email
+	 */
 	public function addAuthor($name, $email = NULL) {
 		$author = ['name' => $name];
 		if (NULL !== $email) {
@@ -135,10 +149,21 @@ class PackageMapping {
 		return $this->action;
 	}
 
-	public function isPackageKeyValid() {
-		return (new String($this->packageKey))
-			->split('.')
-			->length() >= 2;
+	public function addFileExcludePattern($pattern) {
+		$this->fileExcludePatterns[] = $pattern;
+	}
+
+	public function getFileExcludePatterns() {
+		return $this->fileExcludePatterns;
+	}
+
+	public function isFileIncluded($filename) {
+		foreach ($this->fileExcludePatterns as $pattern) {
+			if (preg_match($pattern, $filename)) {
+				return FALSE;
+			}
+		}
+		return TRUE;
 	}
 
 }
