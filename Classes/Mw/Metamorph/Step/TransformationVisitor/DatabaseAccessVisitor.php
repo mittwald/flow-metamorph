@@ -28,6 +28,18 @@ class DatabaseAccessVisitor extends AbstractClassMemberVisitor {
 		return $result;
 	}
 
+	protected function leaveClassNode(NodeWrapper $node) {
+		if ($node->e('isClassDefinition().inherits("Mw\\T3Compat\\Database\\DatabaseConnection")')) {
+			/** @var Node\Stmt\Class_ $real */
+			$real          = $node->node();
+			$real->extends = new Node\Name\FullyQualified(['Mw', 'T3Compat', 'Database', 'DatabaseConnectionImpl']);
+
+			return $real;
+		} else {
+			return NULL;
+		}
+	}
+
 	protected function addDatabaseInjectionToCurrentClass() {
 		$this->taskQueue->enqueue(
 			(new AddPropertyToClassTaskBuilder())

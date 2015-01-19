@@ -88,16 +88,14 @@ abstract class AbstractClassMemberVisitor extends AbstractVisitor {
 		}
 
 		if ($node instanceof Node\Stmt\Class_) {
+			$return = $this->leaveClassNode(new NodeWrapper($node));
 			$this->currentClass = NULL;
+			return $this->unwrapNodeWrapper($return);
 		}
 
 		$wrapper = new NodeWrapper($node);
 		if ($this->applyFilters($wrapper)) {
-			$return = $this->leaveClassMemberNode($wrapper);
-			if ($return instanceof NodeWrapper) {
-				$return = $return->node();
-			}
-			return $return;
+			return $this->unwrapNodeWrapper($this->leaveClassMemberNode($wrapper));
 		}
 		return NULL;
 	}
@@ -109,6 +107,22 @@ abstract class AbstractClassMemberVisitor extends AbstractVisitor {
 	 * @return array|null|Node The node replacement
 	 */
 	protected function leaveClassMemberNode(NodeWrapper $node) { }
+
+	/**
+	 * Called when the visitor leaves the class node itself.
+	 *
+	 * @param NodeWrapper $node The class node to process
+	 * @return array|null|Node The node replacement
+	 */
+	protected function leaveClassNode(NodeWrapper $node) { }
+
+	private function unwrapNodeWrapper($obj) {
+		if ($obj instanceof NodeWrapper) {
+			return $obj->node();
+		} else {
+			return $obj;
+		}
+	}
 
 	private function applyFilters(NodeWrapper $node) {
 		if (count($this->filters) === 0) {

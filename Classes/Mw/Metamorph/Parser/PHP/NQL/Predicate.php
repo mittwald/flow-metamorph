@@ -87,16 +87,17 @@ class Predicate {
 
 	public function isArrayAccess() {
 		return new ArrayAccessPredicate(
-			function() {
+			function () {
 				return $this->is(Node\Expr\ArrayDimFetch::class);
 			},
 			$this->node,
 			$this
 		);
 	}
+
 	public function isPropertyAccess() {
 		return new PropertyAccessPredicate(
-			function() {
+			function () {
 				return $this->is(Node\Expr\PropertyFetch::class);
 			},
 			$this->node,
@@ -109,13 +110,21 @@ class Predicate {
 		return $array->keyIs($name)->_and($array->left()->isVariable('GLOBALS'));
 	}
 
+	public function isClassDefinition() {
+		return new ClassDefinitionPredicate(
+			function() { return $this->is(Node\Stmt\Class_::class); },
+			$this->node,
+			$this
+		);
+	}
+
 	public function evaluate() {
 		$result = $this->previous ? $this->previous->evaluate() : TRUE;
 		return $result && call_user_func_array($this->predicate, []);
 	}
 
 	public function _and(Predicate $pred) {
-		return new Predicate(function() use ($pred) { return $pred->evaluate(); }, $this->node, $this);
+		return new Predicate(function () use ($pred) { return $pred->evaluate(); }, $this->node, $this);
 	}
 
 	protected function buildPredicate(callable $pred) {
