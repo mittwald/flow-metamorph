@@ -84,7 +84,13 @@ class AnalyzerVisitor extends NodeVisitorAbstract {
 		$classDef->setClassMapping($mapping);
 
 		if (NULL !== $node->extends && [] !== $node->extends) {
-			list($class, $namespace) = $this->splitNameIntoClassAndNamespace($node->extends);
+			if (is_array($node->extends)) {
+				$extends = $node->extends[0];
+			} else {
+				$extends = $node->extends;
+			}
+
+			list($class, $namespace) = $this->splitNameIntoClassAndNamespace($extends);
 			$classDef->setParentClass(new ClassDefinitionDeferred($class, $namespace));
 		}
 
