@@ -11,6 +11,9 @@ use TYPO3\Flow\Utility\Files;
 
 trait YamlStorable {
 
+	/**
+	 * @var string
+	 */
 	protected $workingDirectory = NULL;
 
 	/**

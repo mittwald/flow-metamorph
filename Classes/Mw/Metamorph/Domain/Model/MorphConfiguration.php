@@ -72,6 +72,7 @@ class MorphConfiguration {
 
 	/**
 	 * @var array
+	 * @Flow\Validate(type="Mw.Metamorph:ContainerSet")
 	 */
 	protected $containers = [];
 
