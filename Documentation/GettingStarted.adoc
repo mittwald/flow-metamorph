@@ -139,7 +139,7 @@ Refactoring mode::
     No effect yet.
 
 Version control system::
-    Choose a version control system that Metamorph will use to track changes to both the morph configuration themselves and to migrated packages. It is highly suggestes that you choose a system here, because that will allow you to continuously migrate your source site and merge changes to your source site with local changes on migrated packages.
+    Choose a version control system that Metamorph will use to track changes to both the morph configuration themselves and to migrated packages. It is highly suggested to choose a system here. This will allow you to continuously migrate your source site and merge changes to your source site with local changes on migrated packages.
 
 After completing the wizard, Metamorph will create a new TYPO3 Flow package with the specified package key. Your morph configuration will be stored in the `Configuration/Metamorph/Morph.yml` file. If you change your mind about some configuration options later, you can always edit this file. See the code example below for an example on how this configuration file looks like:
 
