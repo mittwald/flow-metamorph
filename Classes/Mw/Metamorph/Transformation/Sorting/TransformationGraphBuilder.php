@@ -8,6 +8,7 @@ namespace Mw\Metamorph\Transformation\Sorting;
  *          Mittwald CM Service GmbH & Co. KG                             *
  *                                                                        */
 
+use Mw\Metamorph\Transformation\NoopTransformation;
 use TYPO3\Flow\Annotations as Flow;
 
 /**
@@ -39,10 +40,19 @@ class TransformationGraphBuilder {
 	 */
 	public function build() {
 		/** @var TransformationNode[] $nodes */
-		$nodes = [];
+		$nodes = [
+			'finalize' => new TransformationNode('finalize', NoopTransformation::class)
+		];
+
 		foreach ($this->settings as $name => $configuration) {
-			$settings     = isset($configuration['settings']) ? $configuration['settings'] : [];
-			$nodes[$name] = new TransformationNode($configuration['name'], $settings);
+			$settings = isset($configuration['settings']) ? $configuration['settings'] : [];
+			$node     = new TransformationNode($name, $configuration['name'], $settings);
+
+			if (!isset($configuration['dependsOn']) || !in_array('finalize', $configuration['dependsOn'])) {
+				$node->addSuccessor($nodes['finalize']);
+			}
+
+			$nodes[$name] = $node;
 		}
 
 		foreach ($this->settings as $name => $configuration) {

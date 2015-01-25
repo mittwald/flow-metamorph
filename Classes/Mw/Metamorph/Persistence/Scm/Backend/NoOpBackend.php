@@ -9,4 +9,6 @@ class NoOpBackend implements ScmBackendInterface {
 
 	public function isModified($directory) { return FALSE; }
 
+	public function checkout($directory, $branch) { }
+
 }

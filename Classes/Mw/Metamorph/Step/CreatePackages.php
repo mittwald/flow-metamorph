@@ -1,6 +1,8 @@
 <?php
 namespace Mw\Metamorph\Step;
 
+use Helmich\EventBroker\Annotations as Event;
+use Mw\Metamorph\Domain\Event\TargetPackageCreatedEvent;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
@@ -22,16 +24,15 @@ class CreatePackages extends AbstractTransformation {
 
 		foreach ($packageMappingContainer->getPackageMappings() as $packageMapping) {
 			if (FALSE === $this->packageManager->isPackageAvailable($packageMapping->getPackageKey())) {
-				$this->packageManager->createPackage(
+				$package = $this->packageManager->createPackage(
 					$packageMapping->getPackageKey(),
 					$this->createPackageMetaData($packageMapping),
 					NULL,
 					'typo3-flow-package'
 				);
-				$this->log(
-					'PKG:<comment>%s</comment>: <fg=green>CREATED</fg=green>',
-					[$packageMapping->getPackageKey()]
-				);
+				$this->log('PKG:<comment>%s</comment>: <fg=green>CREATED</fg=green>', [$packageMapping->getPackageKey()]);
+
+				$this->emitTargetPackageCreatedEvent(new TargetPackageCreatedEvent($configuration, $package));
 			} else {
 				$this->log(
 					'PKG:<comment>%s</comment>: <fg=cyan>EXISTS</fg=cyan>',
@@ -55,4 +56,10 @@ class CreatePackages extends AbstractTransformation {
 
 		return $metaData;
 	}
-} 
+
+	/**
+	 * @param TargetPackageCreatedEvent $event
+	 * @Event\Event
+	 */
+	protected function emitTargetPackageCreatedEvent(TargetPackageCreatedEvent $event) { }
+}

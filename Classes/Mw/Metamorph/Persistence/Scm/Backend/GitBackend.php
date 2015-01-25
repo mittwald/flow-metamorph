@@ -7,21 +7,27 @@ use Gitonomy\Git\WorkingCopy;
 
 class GitBackend implements ScmBackendInterface {
 
+	const METAMORPH_BRANCH = 'metamorph';
+
 	/**
 	 * @var Repository[]
 	 */
 	private $repositories = [];
 
-	public function initialize($directory) {
+	public function initialize($directory, $initialMessage = NULL) {
+		if ($initialMessage === NULL) {
+			$initialMessage = 'Initialize new metamorph project.';
+		}
+
 		$repo = Admin::init($directory, FALSE);
 		$repo->run('config', ['user.name', 'Metamorph']);
 		$repo->run('config', ['user.email', 'metamorph@localhost']);
 
 		$repo->run('add', ['.']);
-		$repo->run('commit', ['-m', 'Initialize new metamorph project.']);
+		$repo->run('commit', ['-m', $initialMessage]);
 
 		$references = $repo->getReferences();
-		$references->createBranch('metamorph', 'master');
+		$references->createBranch(self::METAMORPH_BRANCH, 'master');
 	}
 
 	public function commit($directory, $message, array $files = []) {
@@ -41,14 +47,14 @@ class GitBackend implements ScmBackendInterface {
 			$files = ['.'];
 		}
 
-		$work->checkout('metamorph');
+		$work->checkout(self::METAMORPH_BRANCH);
 
 		$repo->run('add', $files);
 		$repo->run('commit', ['-m', $message]);
 
 		$work->checkout('master');
 
-		$repo->run('merge', ['metamorph']);
+		$repo->run('merge', ['--no-ff', self::METAMORPH_BRANCH]);
 	}
 
 	public function isModified($directory) {
@@ -57,6 +63,13 @@ class GitBackend implements ScmBackendInterface {
 		$untracked = $work->getUntrackedFiles();
 
 		return (count($diff->getFiles()) + count($untracked)) > 0;
+	}
+
+	public function checkout($directory, $branch) {
+		$repo = $this->getRepository($directory);
+		$copy = $repo->getWorkingCopy();
+
+		$copy->checkout($branch);
 	}
 
 	/**
