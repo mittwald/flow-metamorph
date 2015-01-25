@@ -11,6 +11,7 @@ namespace Mw\Metamorph\Persistence\Scm\Listener;
 use Helmich\EventBroker\Annotations as Event;
 use Mw\Metamorph\Domain\Event\TargetPackageCleanupEvent;
 use Mw\Metamorph\Domain\Event\TargetPackageCreatedEvent;
+use Mw\Metamorph\Domain\Event\TargetPackageResynchronizeEvent;
 use Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException;
 use TYPO3\Flow\Annotations as Flow;
 
@@ -54,6 +55,18 @@ class TargetPackageSynchronizationListener {
 		}
 
 		$backend->checkout($path, 'metamorph');
+	}
+
+	/**
+	 * @param TargetPackageResynchronizeEvent $event
+	 * @Event\Listener("Mw\Metamorph\Domain\Event\TargetPackageResynchronizeEvent", sync=TRUE)
+	 */
+	public function resyncRepositories(TargetPackageResynchronizeEvent $event) {
+		$backend = $this->locator->getBackendByConfiguration($event->getMorphConfiguration());
+		$path    = $event->getPackage()->getPackagePath();
+
+		var_dump("AARG!");
+		$backend->commit($path, 'Automated Metamorph migration.');
 	}
 
 }

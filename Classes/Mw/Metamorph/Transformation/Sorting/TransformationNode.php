@@ -36,7 +36,10 @@ class TransformationNode {
 	/** @var TransformationNode[] */
 	private $successors = [];
 
-	public function __construct($className, array $settings = []) {
+	/** @var string */
+	private $name;
+
+	public function __construct($name, $className, array $settings = []) {
 		if (FALSE === class_exists($className)) {
 			$className = static::DEFAULT_NAMESPACE . $className;
 		}
@@ -45,8 +48,16 @@ class TransformationNode {
 			throw new \InvalidArgumentException('Class ' . $className . ' does not exist!');
 		}
 
+		$this->name      = $name;
 		$this->className = $className;
 		$this->settings  = $settings;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getName() {
+		return $this->name;
 	}
 
 	public function getClassName() {
