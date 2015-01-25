@@ -8,7 +8,7 @@ use Mw\Metamorph\Domain\Event\MorphConfigurationFileModifiedEvent;
 use Mw\Metamorph\Domain\Exception\HumanInterventionRequiredException;
 use TYPO3\Flow\Annotations as Flow;
 
-class ScmSynchronizationListener {
+class ConfigurationSynchronizationListener {
 
 	/**
 	 * @var \Mw\Metamorph\Persistence\Scm\BackendLocator
