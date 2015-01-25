@@ -64,6 +64,9 @@ class TcaLoaderVisitor extends NodeVisitorAbstract {
 			]
 		);
 		$variables['GLOBALS'] = $variables;
+		$variables->setLookupFunction(function($name) {
+			return NULL;
+		});
 
 		$this->evaluator->setGlobalScope($variables);
 		$this->evaluator->setConstantStore(new ConstantStore());
