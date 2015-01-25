@@ -9,4 +9,6 @@ interface ScmBackendInterface {
 
 	public function isModified($directory);
 
+	public function checkout($directory, $branch);
+
 }
