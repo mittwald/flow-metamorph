@@ -604,7 +604,11 @@ public function fooAction($target) {
 
 === Locallang transformation
 
-Extbase still allows using locallang XML files for translation handling. This is a TYPO3-proprietary format that is not supported by TYPO3 Flow. These files will be converted into the XLIFF format (which is an OASIS standard). This is done by a XSLT transformation that is executed in the `Mw\Metamorph\Step\MigrateDatabaseStructure` step. Have a look at the XSLT stylesheet in `Resources/Xslt` if you are interested in further details.
+Extbase still allows using locallang XML files for translation handling. This is a TYPO3-proprietary format that is not supported by TYPO3 Flow. These files will be converted into the XLIFF format (which is an OASIS standard). This is done by a XSLT transformation that is executed in the `Mw\Metamorph\Step\MigrateDatabaseStructure` step.
+
+Furthermore, this step will also change the directory layout of the translation files. Files will be split by language key and moved into the _Resources/Private/Translations/<language>_ directory.
+
+Have a look at the XSLT stylesheet in `Resources/Xslt` if you are interested in further details.
 
 === Database migration
 
