@@ -1,6 +1,8 @@
 <?php
 namespace Mw\Metamorph\Step;
 
+use Helmich\EventBroker\Annotations as Event;
+use Mw\Metamorph\Domain\Event\TargetPackageCleanupEvent;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
 use Mw\Metamorph\Transformation\AbstractTransformation;
@@ -19,9 +21,18 @@ class CleanupPackages extends AbstractTransformation {
 			$packageKey = $packageMapping->getPackageKey();
 			if ($this->packageManager->isPackageAvailable($packageKey)) {
 				$this->log('PKG:<comment>%s</comment>: <fg=cyan>present</fg=cyan>', [$packageKey]);
+				$this->emitTargetPackageCleanupEvent(
+					new TargetPackageCleanupEvent($configuration, $this->packageManager->getPackage($packageKey))
+				);
 			} else {
 				$this->log('PKG:<comment>%s</comment>: <fg=green>not present</fg=green>', [$packageKey]);
 			}
 		}
 	}
+
+	/**
+	 * @param TargetPackageCleanupEvent $event
+	 * @Event\Event
+	 */
+	protected function emitTargetPackageCleanupEvent(TargetPackageCleanupEvent $event) { }
 }
