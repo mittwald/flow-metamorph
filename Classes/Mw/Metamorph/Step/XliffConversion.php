@@ -9,6 +9,7 @@ use Mw\Metamorph\Transformation\AbstractTransformation;
 use Mw\Metamorph\Transformation\Progressible;
 use Mw\Metamorph\Transformation\ProgressibleTrait;
 use TYPO3\Flow\Annotations as Flow;
+use TYPO3\Flow\Package\PackageInterface;
 use TYPO3\Flow\Package\PackageManagerInterface;
 use TYPO3\Flow\Utility\Files;
 
@@ -59,19 +60,27 @@ class XliffConversion extends AbstractTransformation implements Progressible {
 		foreach ($languages as $language) {
 			$processor->setParameter('metamorph', 'language', $language);
 
-			$targetDir  = Files::concatenatePaths([$package->getPackagePath(), dirname($mapping->getTargetFile())]);
-			$targetFile = str_replace('.xml', '.xlf', basename($mapping->getTargetFile()));
-
-			if ($language !== 'default') {
-				$targetFile = $language . '.' . $targetFile;
-			}
-
-			$targetPath = Files::concatenatePaths([$targetDir, $targetFile]);
+			$targetPath = $this->convertFilename($mapping->getTargetFile(), $language, $package);
+			Files::createDirectoryRecursively(dirname($targetPath));
 
 			$converted               = $processor->transformToDoc($document);
 			$converted->formatOutput = TRUE;
 			$converted->save($targetPath);
 		}
+	}
+
+	private function convertFilename($oldFilename, $language, PackageInterface $package) {
+		$language = ($language === 'default') ? 'en' : $language;
+		return Files::concatenatePaths(
+			[
+				$package->getPackagePath(),
+				'Resources',
+				'Private',
+				'Translations',
+				$language,
+				str_replace('.xml', '.xlf', ucfirst(basename($oldFilename)))
+			]
+		);
 	}
 
 	private function findLocallangXmlFiles(ResourceMappingContainer $resourceMappingContainer) {
