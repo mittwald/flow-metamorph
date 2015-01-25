@@ -27,11 +27,7 @@ class CreateResources extends AbstractTransformation implements Progressible {
 		);
 
 		foreach ($configuration->getResourceMappingContainer()->getResourceMappings() as $resourceMapping) {
-			$package = $this->packageManager->getPackage($resourceMapping->getPackage());
-
-			$targetFilePath  = Files::concatenatePaths(
-				[$package->getPackagePath(), $resourceMapping->getTargetFile()]
-			);
+			$targetFilePath = $resourceMapping->getTargetFile();
 			$targetDirectory = dirname($targetFilePath);
 
 			Files::createDirectoryRecursively($targetDirectory);
