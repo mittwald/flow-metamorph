@@ -2,6 +2,7 @@
 namespace Mw\Metamorph\Step\TransformationVisitor;
 
 use Mw\Metamorph\Parser\PHP\NodeWrapper;
+use Mw\Metamorph\Step\Task\Builder\AddImportToClassTaskBuilder;
 use Mw\Metamorph\Step\Task\Builder\AddPropertyToClassTaskBuilder;
 use Mw\Metamorph\Transformation\Helper\Annotation\AnnotationRenderer;
 use Mw\Metamorph\Transformation\TransformationVisitor\AbstractClassMemberVisitor;
@@ -42,6 +43,12 @@ class InjectStaticDependenciesVisitor extends AbstractClassMemberVisitor {
 					->setPropertyType('\\' . $class)
 					->addAnnotation(new AnnotationRenderer('Flow', 'Inject'))
 					->setProtected()
+					->buildTask()
+			);
+
+			$this->taskQueue->enqueue(
+				(new AddImportToClassTaskBuilder())
+					->importFlowAnnotations($this->currentClass->getFullyQualifiedName())
 					->buildTask()
 			);
 
