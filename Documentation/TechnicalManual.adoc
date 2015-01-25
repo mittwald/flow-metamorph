@@ -523,8 +523,8 @@ Mw:
     facts:
       isFrontendUser:
         expr: |
-          class.doesInherit('TYPO3\\CMS\\Extbase\\Domain\\Model\\FrontendUser') ||
-          class.doesInherit('Tx_Extbase_Domain_Model_FrontendUser')
+          inherits('TYPO3\\CMS\\Extbase\\Domain\\Model\\FrontendUser') ||
+          inherits('Tx_Extbase_Domain_Model_FrontendUser')
 ----
 
 == Modifying source code inside transformations
