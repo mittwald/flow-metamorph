@@ -17,11 +17,11 @@ use TYPO3\Flow\Package\PackageInterface;
  */
 class MorphConfiguration {
 
-	const TABLE_STRUCTURE_KEEP = 'KEEP';
+	const TABLE_STRUCTURE_KEEP    = 'KEEP';
 	const TABLE_STRUCTURE_MIGRATE = 'MIGRATE';
 
 	const PIBASE_REFACTOR_CONSERVATIVE = 'CONSERVATIVE';
-	const PIBASE_REFACTOR_PROGRESSIVE = 'PROGRESSIVE';
+	const PIBASE_REFACTOR_PROGRESSIVE  = 'PROGRESSIVE';
 
 	/**
 	 * @var string
@@ -99,6 +99,13 @@ class MorphConfiguration {
 	 */
 	public function getSourceDirectory() {
 		return rtrim($this->sourceDirectory, '/') . '/';
+	}
+
+	/**
+	 * @param string $sourceDirectory
+	 */
+	public function setSourceDirectory($sourceDirectory) {
+		$this->sourceDirectory = rtrim($sourceDirectory, '/') . '/';
 	}
 
 	/**
