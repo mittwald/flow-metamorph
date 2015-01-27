@@ -149,6 +149,7 @@ class MorphCommandController extends CommandController {
 		} catch (\Exception $e) {
 			$this->output->outputLine('<error>  UNCAUGHT EXCEPTION  </error>');
 			$this->output->outputLine('  ' . get_class($e) . ': ' . $e->getMessage());
+			$this->output->output($e->getTraceAsString());
 			$this->sendAndExit(1);
 		}
 	}

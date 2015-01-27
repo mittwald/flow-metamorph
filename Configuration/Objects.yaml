@@ -19,11 +19,11 @@ Mw\Metamorph\Step\ClassInventory:
         name: Mw\Metamorph\Step\ClassNameConversion\CompoundConversionStrategy
     parser:
       object:
-        name: Mw\Metamorph\Parser\CachingDecorator
+        factoryObjectName: Mw\Metamorph\Parser\PHP\PhpParserFactory
+        factoryMethodName: getParser
         arguments:
           1:
-            object:
-              name: Mw\Metamorph\Parser\PHP\PHPParser
+            value: true
 
 Mw\Metamorph\Transformation\GenericAstVisitorTransformation:
   properties:
@@ -32,27 +32,34 @@ Mw\Metamorph\Transformation\GenericAstVisitorTransformation:
         name: PhpParser\PrettyPrinter\Standard
     parser:
       object:
-        name: Mw\Metamorph\Parser\CachingDecorator
+        factoryObjectName: Mw\Metamorph\Parser\PHP\PhpParserFactory
+        factoryMethodName: getParser
         arguments:
           1:
-            object:
-              name: Mw\Metamorph\Parser\PHP\PHPParser
+            value: true
 
 Mw\Metamorph\Step\AnalyzeClasses:
   properties:
     parser:
       object:
-        name: Mw\Metamorph\Parser\CachingDecorator
+        factoryObjectName: Mw\Metamorph\Parser\PHP\PhpParserFactory
+        factoryMethodName: getParser
         arguments:
           1:
-            object:
-              name: Mw\Metamorph\Parser\PHP\PHPParser
+            value: true
 
 Mw\Metamorph\Step\CleanClassFiles:
   properties:
     printer:
       object:
         name: PhpParser\PrettyPrinter\Standard
+    parser:
+      object:
+        factoryObjectName: Mw\Metamorph\Parser\PHP\PhpParserFactory
+        factoryMethodName: getParser
+        arguments:
+          1:
+            value: true
 
 Mw\Metamorph\Step\DatabaseMigration\Strategy\CompatibleMigrationStrategy:
   properties:
@@ -83,11 +90,11 @@ Mw\Metamorph\Transformation\Helper\ASTBasedFileRefactoring:
         name: PhpParser\PrettyPrinter\Standard
     parser:
       object:
-        name: Mw\Metamorph\Parser\CachingDecorator
+        factoryObjectName: Mw\Metamorph\Parser\PHP\PhpParserFactory
+        factoryMethodName: getParser
         arguments:
           1:
-            object:
-              name: Mw\Metamorph\Parser\PHP\PHPParser
+            value: true
 
 PhpParser\Parser:
   className: PhpParser\Parser
