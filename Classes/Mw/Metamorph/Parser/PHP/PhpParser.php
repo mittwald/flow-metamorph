@@ -21,13 +21,19 @@ use TYPO3\Flow\Annotations as Flow;
  * @package    Mw\Metamorph
  * @subpackage Parser\PHP
  */
-class PHPParser implements ParserInterface {
+class PhpParser implements ParserInterface {
 
 	/**
 	 * @var Parser
-	 * @Flow\Inject
 	 */
 	protected $actualParser;
+
+	/**
+	 * @param Parser $parser
+	 */
+	public function __construct(Parser $parser) {
+		$this->actualParser = $parser;
+	}
 
 	/**
 	 * Parses the contents of a file.

@@ -4,7 +4,7 @@ namespace Mw\Metamorph\Step;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
 use Mw\Metamorph\Domain\Model\State\ClassMapping;
 use Mw\Metamorph\Domain\Service\MorphExecutionState;
-use Mw\Metamorph\Parser\PHP\PHPParser;
+use Mw\Metamorph\Parser\PHP\PhpParser;
 use Mw\Metamorph\Transformation\AbstractTransformation;
 use Mw\Metamorph\Transformation\Progressible;
 use Mw\Metamorph\Transformation\ProgressibleTrait;
@@ -20,7 +20,7 @@ class CleanClassFiles extends AbstractTransformation implements Progressible {
 	use ProgressibleTrait;
 
 	/**
-	 * @var PHPParser
+	 * @var PhpParser
 	 * @Flow\Inject
 	 */
 	protected $parser;
