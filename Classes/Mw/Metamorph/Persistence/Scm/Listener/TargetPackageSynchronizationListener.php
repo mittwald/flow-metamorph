@@ -65,7 +65,6 @@ class TargetPackageSynchronizationListener {
 		$backend = $this->locator->getBackendByConfiguration($event->getMorphConfiguration());
 		$path    = $event->getPackage()->getPackagePath();
 
-		var_dump("AARG!");
 		$backend->commit($path, 'Automated Metamorph migration.');
 	}
 
