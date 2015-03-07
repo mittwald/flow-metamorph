@@ -54,7 +54,8 @@ class ReplaceAnnotationsVisitor extends AbstractVisitor {
 					->render();
 			},
 			'/@dontverifyrequesthash/' => '@Flow\\SkipCsrfProtection',
-			'/@lazy/' => '@Flow\\Lazy'
+			'/@lazy/' => '@Flow\\Lazy',
+			'/@transient/' => '@Flow\\Transient'
 		];
 		// @formatter:on
 	}

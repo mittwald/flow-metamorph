@@ -11,7 +11,8 @@ class ClassReplacementChain implements ClassReplacement {
 	public function __construct() {
 		$this->classReplacements = [
 			new StaticClassReplacement(),
-//			new PatternBasedReplacement()
+			new Typo3CoreClassReplacement(),
+			new Typo3LegacyCoreClassReplacement()
 		];
 	}
 
@@ -22,11 +23,10 @@ class ClassReplacementChain implements ClassReplacement {
 		return $comment;
 	}
 
-	public function replaceName($name) {
+	public function replaceName($originalName) {
 		foreach($this->classReplacements as $replacement) {
-			$name = $replacement->replaceName($name);
-			if ($name !== NULL) {
-				return $name;
+			if (($replacementName = $replacement->replaceName($originalName)) !== NULL) {
+				return $replacementName;
 			}
 		}
 		return NULL;

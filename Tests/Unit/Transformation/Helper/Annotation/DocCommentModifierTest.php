@@ -95,6 +95,31 @@ EOT;
         $this->assertEquals($expected, $this->helper->addAnnotationToDocCommentString(new String($input), $annotation));
     }
 
+    public function testAnnotationsAreAddedToCommentInSameParagraphAsExistingAnnotations2()
+    {
+        $input = <<<'EOT'
+/**
+ * News model
+ *
+ * @package TYPO3
+ * @subpackage tx_news
+ */
+EOT;
+
+        $expected = <<<'EOT'
+/**
+ * News model
+ *
+ * @package TYPO3
+ * @subpackage tx_news
+ * @Foo\Bar
+ */
+EOT;
+
+        $annotation = new AnnotationRenderer('Foo', 'Bar');
+        $this->assertEquals($expected, $this->helper->addAnnotationToDocCommentString(new String($input), $annotation));
+    }
+
 
 
     public function testAnnotationsAreAddedInSingleLineComments()

@@ -80,14 +80,14 @@ class ReplaceMakeInstanceCallsVisitor extends AbstractVisitor {
 						if (count($args) > 0) {
 							return $this->replaceWithConstructorCall($className, $args);
 						} else {
-							return $this->replaceWithObjectManagerCall($node);
+							return $this->replaceWithObjectManagerCall($node, FALSE);
 						}
 					}
 				} else {
 					if (count($args) > 0) {
 						return $this->replaceWithDynamicConstructorCall($className, $args);
 					} else {
-						return $this->replaceWithObjectManagerCall($node);
+						return $this->replaceWithObjectManagerCall($node, FALSE);
 					}
 				}
 			}
@@ -155,9 +155,10 @@ class ReplaceMakeInstanceCallsVisitor extends AbstractVisitor {
 
 	/**
 	 * @param Node $node
+	 * @param bool $confident
 	 * @return Node\Expr\MethodCall
 	 */
-	private function replaceWithObjectManagerCall(Node $node) {
+	private function replaceWithObjectManagerCall(Node $node, $confident = FALSE) {
 		$this->taskQueue->enqueue(
 			(new AddPropertyToClassTaskBuilder())
 				->setTargetClassName($this->currentClass->namespacedName->toString())
@@ -173,7 +174,7 @@ class ReplaceMakeInstanceCallsVisitor extends AbstractVisitor {
 				->buildTask()
 		);
 
-		return new Node\Expr\MethodCall(
+		$call = new Node\Expr\MethodCall(
 			new Node\Expr\PropertyFetch(
 				new Node\Expr\Variable('this'),
 				'objectManager'
@@ -181,6 +182,15 @@ class ReplaceMakeInstanceCallsVisitor extends AbstractVisitor {
 			'get',
 			$node->args
 		);
+
+		if ($confident === FALSE) {
+			$this->commentHelper->addCommentToNode(
+				$call,
+				'@todo: This ObjectManager call might possibly be replaced with a simple "new" invocation.'
+			);
+		}
+
+		return $call;
 	}
 
 	/**

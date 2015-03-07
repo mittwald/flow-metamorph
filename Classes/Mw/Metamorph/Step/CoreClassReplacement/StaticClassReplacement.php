@@ -14,7 +14,11 @@ class StaticClassReplacement implements ClassReplacement {
 	public function replaceInComment($comment) {
 		foreach ($this->replacements as $old => $new) {
 			if (strpos($comment, $old) !== FALSE) {
-				$comment = str_replace($old, $new, $comment);
+				$comment = preg_replace(
+					',\\\\?' . preg_quote($old) . ',',
+					'\\' . $new,
+					$comment
+				);
 			}
 		}
 		return $comment;

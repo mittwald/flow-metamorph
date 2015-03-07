@@ -102,7 +102,7 @@ class EntityDoctrineMigrationVisitor extends AbstractVisitor {
 
 	/**
 	 * @param Node $node
-	 * @return null|Doc
+	 * @return Doc
 	 */
 	private function getCommentForNode(Node $node) {
 		$comment = $node->getDocComment();
@@ -111,7 +111,6 @@ class EntityDoctrineMigrationVisitor extends AbstractVisitor {
 			$comments[] = $comment = new Doc("/**\n */");
 
 			$node->setAttribute('comments', $comments);
-			return $comment;
 		}
 		return $comment;
 	}
