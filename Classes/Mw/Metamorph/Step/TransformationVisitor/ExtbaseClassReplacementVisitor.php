@@ -1,29 +1,23 @@
 <?php
 namespace Mw\Metamorph\Step\TransformationVisitor;
 
+use Mw\Metamorph\Step\CoreClassReplacement\ClassReplacement;
 use Mw\Metamorph\Transformation\TransformationVisitor\AbstractVisitor;
 use PhpParser\Node;
+use TYPO3\Flow\Annotations as Flow;
 
 class ExtbaseClassReplacementVisitor extends AbstractVisitor {
 
 	/**
-	 * @var array
+	 * @var ClassReplacement
+	 * @Flow\Inject
 	 */
-	private $replacements;
-
-	public function initializeObject() {
-		$this->replacements = $this->settings['staticReplacements'];
-	}
+	protected $classReplacement;
 
 	public function enterNode(Node $node) {
 		if ($node->getDocComment()) {
 			$text = $node->getDocComment()->getText();
-
-			foreach ($this->replacements as $old => $new) {
-				if (strpos($text, $old) !== FALSE) {
-					$text = str_replace($old, $new, $text);
-				}
-			}
+			$text = $this->classReplacement->replaceInComment($text);
 
 			$node->getDocComment()->setText($text);
 		}
@@ -39,8 +33,8 @@ class ExtbaseClassReplacementVisitor extends AbstractVisitor {
 
 		if ($node instanceof Node\Name) {
 			$name = $node->toString();
-			if (array_key_exists($name, $this->replacements)) {
-				return new Node\Name\FullyQualified($this->replacements[$name]);
+			if ($replacement = $this->classReplacement->replaceName($name)) {
+				return new Node\Name\FullyQualified($replacement);
 			}
 		}
 
