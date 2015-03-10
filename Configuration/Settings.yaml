@@ -81,38 +81,14 @@ Mw:
           - finalize
 
     staticReplacements:
-      TYPO3\CMS\Extbase\Mvc\Controller\ActionController: TYPO3\Flow\Mvc\Controller\ActionController
-      TYPO3\CMS\Core\Utility\GeneralUtility: Mw\T3Compat\Utility\GeneralUtility
-      TYPO3\CMS\Core\Utility\ExtensionManagementUtility: Mw\T3Compat\Utility\ExtensionManagementUtility
-      TYPO3\CMS\Core\Database\DatabaseConnection: Mw\T3Compat\Database\DatabaseConnection
-      TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper: TYPO3\Fluid\Core\ViewHelper\AbstractViewHelper
-      TYPO3\CMS\Fluid\ViewHelpers\IfViewHelper: TYPO3\Fluid\ViewHelpers\IfViewHelper
+      DateTime: DateTime
       TYPO3\CMS\Extbase\Persistence\ObjectStorage: Doctrine\Common\Collections\Collection
-      TYPO3\CMS\Extbase\Persistence\QueryInterface: TYPO3\Flow\Persistence\QueryInterface
-      TYPO3\CMS\Extbase\Persistence\Repository: TYPO3\Flow\Persistence\Repository
-      TYPO3\CMS\Extbase\Domain\Model\FrontendUser: Mw\T3Compat\Domain\Model\FrontendUser
-      TYPO3\CMS\Extbase\Domain\Model\FrontendUserGroup: Mw\T3Compat\Domain\Model\FrontendUserGroup
-      TYPO3\CMS\Extbase\Domain\Repository\FrontendUserRepository: Mw\T3Compat\Domain\Repository\FrontendUserRepository
-      TYPO3\CMS\Extbase\Domain\Repository\FrontendUserGroupRepository: Mw\T3Compat\Domain\Repository\FrontendUserGroupRepository
       TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase: TYPO3\Flow\Tests\UnitTestCase
-      TYPO3\CMS\Extbase\Validation\Validator\AbstractValidator: TYPO3\Flow\Validation\Validator\AbstractValidator
-      TYPO3\CMS\Frontend\Plugin\AbstractPlugin: Mw\T3Compat\Plugin\AbstractPlugin
-      Tx_Extbase_Mvc_Controller_ActionController: TYPO3\Flow\Mvc\Controller\ActionController
-      Tx_Fluid_Core_ViewHelper_AbstractViewHelper: TYPO3\Fluid\Core\ViewHelper\AbstractViewHelper
-      Tx_Fluid_ViewHelpers_IfViewHelper: TYPO3\Fluid\ViewHelpers\IfViewHelper
+      TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface: TYPO3\Flow\Configuration\ConfigurationManager
+      TYPO3\CMS\Extbase\Reflection\ObjectAccess: TYPO3\Flow\Reflection\ObjectAccess
+
       Tx_Extbase_Persistence_ObjectStorage: Doctrine\Common\Collections\Collection
-      Tx_Extbase_Persistence_QueryInterface: TYPO3\Flow\Persistence\QueryInterface
-      Tx_Extbase_Persistence_Repository: TYPO3\Flow\Persistence\Repository
-      Tx_Extbase_Domain_Model_FrontendUser: Mw\T3Compat\Domain\Model\FrontendUser
-      Tx_Extbase_Domain_Model_FrontendUserGroup: Mw\T3Compat\Domain\Model\FrontendUserGroup
-      Tx_Extbase_Domain_Repository_FrontendUserRepository: Mw\T3Compat\Domain\Repository\FrontendUserRepository
-      Tx_Extbase_Domain_Repository_FrontendUserGroupRepository: Mw\T3Compat\Domain\Repository\FrontendUserGroupRepository
       Tx_Extbase_Tests_Unit_BaseTestCase: TYPO3\Flow\Tests\UnitTestCase
-      Tx_Extbase_Validation_Validator_AbstractValidator: TYPO3\Flow\Validation\Validator\AbstractValidator
-      t3lib_DB: Mw\T3Compat\Database\DatabaseConnection
-      t3lib_div: Mw\T3Compat\Utility\GeneralUtility
-      t3lib_extMgm: Mw\T3Compat\Utility\ExtensionManagementUtility
-      tslib_pibase: Mw\T3Compat\Plugin\AbstractPlugin
 
     resourceExtensions:
       templates: {targetPath: Private/Templates, extensions: [html, htm]}

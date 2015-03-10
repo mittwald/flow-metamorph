@@ -73,6 +73,12 @@ Mw\Metamorph\Step\DatabaseMigration\Strategy\FullMigrationStrategy:
       object:
         name: PhpParser\PrettyPrinter\Standard
 
+Mw\Metamorph\Step\TransformationVisitor\ExtbaseClassReplacementVisitor:
+  properties:
+    classReplacement:
+      object:
+        name: Mw\Metamorph\Step\CoreClassReplacement\ClassReplacementChain
+
 Mw\Metamorph\Parser\CachingDecorator:
   properties:
     cache:
