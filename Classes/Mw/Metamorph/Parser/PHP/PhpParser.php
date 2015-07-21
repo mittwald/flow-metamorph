@@ -20,6 +20,7 @@ use TYPO3\Flow\Annotations as Flow;
  *
  * @package    Mw\Metamorph
  * @subpackage Parser\PHP
+ * @Flow\Scope("singleton")
  */
 class PhpParser implements ParserInterface {
 

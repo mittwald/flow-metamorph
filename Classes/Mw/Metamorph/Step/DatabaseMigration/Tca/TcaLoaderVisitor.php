@@ -6,13 +6,13 @@ use Helmich\PhpEvaluator\Evaluator\Evaluator;
 use Helmich\PhpEvaluator\Evaluator\FunctionStore;
 use Helmich\PhpEvaluator\Evaluator\VariableStore;
 use Mw\Metamorph\Domain\Model\State\PackageMapping;
+use Mw\Metamorph\Parser\PHP\PhpParser;
 use PhpParser\Lexer;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitorAbstract;
 use PhpParser\Parser;
-use PhpParser\PrettyPrinter\Standard;
 use TYPO3\Flow\Annotations as Flow;
 
 class TcaLoaderVisitor extends NodeVisitorAbstract {
@@ -25,9 +25,10 @@ class TcaLoaderVisitor extends NodeVisitorAbstract {
 	private $packageMapping;
 
 	/**
-	 * @var Parser
+	 * @var PhpParser
+	 * @Flow\Inject
 	 */
-	private $parser;
+	protected $parser;
 
 	/**
 	 * @var string
@@ -44,7 +45,6 @@ class TcaLoaderVisitor extends NodeVisitorAbstract {
 		$this->tca            = $tca;
 		$this->packageMapping = $packageMapping;
 		$this->currentFile    = $currentFile;
-		$this->parser         = new Parser(new Lexer());
 	}
 
 	public function initializeObject() {
@@ -93,8 +93,7 @@ class TcaLoaderVisitor extends NodeVisitorAbstract {
 
 			if (isset($val['ctrl']['dynamicConfigFile']) && $val['ctrl']['dynamicConfigFile'] !== $this->currentFile) {
 				$tcaFile = $val['ctrl']['dynamicConfigFile'];
-				$content = file_get_contents($tcaFile);
-				$stmts   = $this->parser->parse($content);
+				$stmts   = $this->parser->parseFile($tcaFile);
 
 				$traverser = new NodeTraverser();
 				$traverser->addVisitor(new NameResolver());

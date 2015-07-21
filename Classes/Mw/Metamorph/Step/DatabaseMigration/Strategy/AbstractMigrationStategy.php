@@ -4,16 +4,15 @@ namespace Mw\Metamorph\Step\DatabaseMigration\Strategy;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinition;
 use Mw\Metamorph\Domain\Model\Definition\ClassDefinitionContainer;
 use Mw\Metamorph\Domain\Model\MorphConfiguration;
+use Mw\Metamorph\Parser\PHP\PhpParser;
 use Mw\Metamorph\Step\DatabaseMigration\Tca\Tca;
 use Mw\Metamorph\Step\DatabaseMigration\Tca\TcaLoader;
 use Mw\Metamorph\Transformation\Progressible;
 use Mw\Metamorph\Transformation\ProgressibleTrait;
 use Mw\Metamorph\Transformation\Task\TaskQueue;
-use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor;
 use PhpParser\NodeVisitor\NameResolver;
-use PhpParser\Parser;
 use PhpParser\PrettyPrinterAbstract;
 use TYPO3\Flow\Annotations as Flow;
 
@@ -45,7 +44,7 @@ abstract class AbstractMigrationStategy implements MigrationStrategyInterface, P
 	protected $tca;
 
 	/**
-	 * @var Parser
+	 * @var PhpParser
 	 * @Flow\Inject
 	 */
 	protected $parser;
@@ -88,8 +87,7 @@ abstract class AbstractMigrationStategy implements MigrationStrategyInterface, P
 		$this->startProgress('Refactoring classes', count($classes));
 		foreach ($classes as $class) {
 			$file    = $class->getClassMapping()->getTargetFile();
-			$content = file_get_contents($file);
-			$stmts   = $this->parser->parse($content);
+			$stmts   = $this->parser->parseFile($file);
 
 			$traverser = new NodeTraverser();
 			$traverser->addVisitor(new NameResolver());
