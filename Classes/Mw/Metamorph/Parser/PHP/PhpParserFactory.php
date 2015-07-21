@@ -15,7 +15,7 @@ use TYPO3\Flow\Annotations as Flow;
 class PhpParserFactory {
 
 	public function getParser($cached = FALSE) {
-		$phpParser = new Parser(new Lexer());
+		$phpParser = new Parser\Php5(new Lexer());
 		$adapter   = new PhpParser($phpParser);
 
 		if ($cached) {
