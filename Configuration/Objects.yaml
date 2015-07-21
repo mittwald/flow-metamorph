@@ -12,6 +12,14 @@ Mw\Metamorph\Transformation\Sorting\TransformationGraphBuilder:
 Mw\Metamorph\Transformation\Sorting\TransformationSorter:
   className: Mw\Metamorph\Transformation\Sorting\TopologicalTransformationSorter
 
+Mw\Metamorph\Parser\PHP\PhpParser:
+  scope: singleton
+  factoryObjectName: Mw\Metamorph\Parser\PHP\PhpParserFactory
+  factoryMethodName: getParser
+  arguments:
+    1:
+      value: true
+
 Mw\Metamorph\Step\ClassInventory:
   properties:
     classNameConversionStrategy:
