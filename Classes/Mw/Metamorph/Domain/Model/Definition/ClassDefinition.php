@@ -49,7 +49,7 @@ class ClassDefinition {
 
 	public function doesImplement($fullyQualifiedName) {
 		foreach ($this->getInterfaces() as $interface) {
-			if ($fullyQualifiedName === $interface->getFullyQualifiedName()) {
+			if (strtolower($fullyQualifiedName) === strtolower($interface->getFullyQualifiedName())) {
 				return TRUE;
 			}
 			if ($interface->doesInherit($fullyQualifiedName)) {
@@ -82,7 +82,7 @@ class ClassDefinition {
 
 	public function doesInherit($fullyQualifiedName) {
 		if ($this->getParentClass() !== NULL) {
-			if ($fullyQualifiedName == $this->getParentClass()->getFullyQualifiedName()) {
+			if (strtolower($fullyQualifiedName) == strtolower($this->getParentClass()->getFullyQualifiedName())) {
 				return TRUE;
 			} else {
 				return $this->getParentClass()->doesInherit($fullyQualifiedName);
