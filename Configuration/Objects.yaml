@@ -140,3 +140,6 @@ Symfony\Component\Console\Output\ConsoleOutput:
   className: Symfony\Component\Console\Output\ConsoleOutput
   scope: prototype
   autowiring: off
+
+Helmich\PhpEvaluator\Evaluator\Evaluator:
+  className: Helmich\PhpEvaluator\Evaluator\Evaluator
